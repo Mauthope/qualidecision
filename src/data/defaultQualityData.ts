@@ -38278,7 +38278,15 @@ export const DEFAULT_CONCESSIONS: ConcessionShipment[] = [
     "approvedBy": "Mauricio Grigol (Qualidade)",
     "riskScore": "moderado",
     "customerFeedbackStatus": "reclamado_posteriormente",
-    "technicalNotes": "Lote expedido com aprovação de desvio de refilamento para atendimento de emergência."
+    "technicalNotes": "Lote expedido com aprovação de desvio de refilamento para atendimento de emergência.",
+    "photos": [
+      {
+        "id": "cp-001-1",
+        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80",
+        "caption": "Amostra do lote OP 00.125.880/01.01 - Refilamento liberado sob concessão",
+        "defectLocation": "ACABAMENTO"
+      }
+    ]
   },
   {
     "id": "conc-002-braskem",
@@ -38297,7 +38305,15 @@ export const DEFAULT_CONCESSIONS: ConcessionShipment[] = [
     "approvedBy": "Mauricio Grigol (Qualidade)",
     "riskScore": "baixo",
     "customerFeedbackStatus": "aceito_sem_ressalvas",
-    "technicalNotes": "Desvio leve de tonalidade na faixa lateral. Lote faturado e absorvido normalmente sem queixas."
+    "technicalNotes": "Desvio leve de tonalidade na faixa lateral. Lote faturado e absorvido normalmente sem queixas.",
+    "photos": [
+      {
+        "id": "cp-002-1",
+        "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&auto=format&fit=crop&q=80",
+        "caption": "Amostra do lote OP 00.128.340/02.01 - Tonalidade da fita lateral liberada",
+        "defectLocation": "EXTRUSÃO"
+      }
+    ]
   },
   {
     "id": "conc-003",
@@ -38316,7 +38332,15 @@ export const DEFAULT_CONCESSIONS: ConcessionShipment[] = [
     "approvedBy": "Mauricio Grigol (Qualidade)",
     "riskScore": "baixo",
     "customerFeedbackStatus": "aceito_sem_ressalvas",
-    "technicalNotes": "Recuperação de margem de matéria-prima. Big bags aceitos na esteira de envase."
+    "technicalNotes": "Recuperação de margem de matéria-prima. Big bags aceitos na esteira de envase.",
+    "photos": [
+      {
+        "id": "cp-003-1",
+        "url": "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&auto=format&fit=crop&q=80",
+        "caption": "Amostra do lote OP 00.129.450/02.01 - Linner com ligeiro bloqueio liberado para envase",
+        "defectLocation": "MONTAGEM LINNER"
+      }
+    ]
   },
   {
     "id": "conc-004",
@@ -38335,6 +38359,14 @@ export const DEFAULT_CONCESSIONS: ConcessionShipment[] = [
     "approvedBy": "Mauricio Grigol (Qualidade)",
     "riskScore": "baixo",
     "customerFeedbackStatus": "aceito_sem_ressalvas",
-    "technicalNotes": "Desencaixe leve na logomarca. Cliente liberou o recebimento sem penalidades."
+    "technicalNotes": "Desencaixe leve na logomarca. Cliente liberou o recebimento sem penalidades.",
+    "photos": [
+      {
+        "id": "cp-004-1",
+        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&auto=format&fit=crop&q=80",
+        "caption": "Amostra do lote OP 00.134.120/01.03 - Impressão com desencaixe leve aceito",
+        "defectLocation": "IMPRESSÃO"
+      }
+    ]
   }
 ];

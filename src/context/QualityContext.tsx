@@ -35,6 +35,7 @@ interface QualityContextType {
     unitSavedValue?: number;
     technicalNotes: string;
     approvedBy?: string;
+    photos?: Array<{ id: string; url: string; caption: string; defectLocation?: string }>;
   }) => ConcessionShipment;
   addCustomer: (data: {
     name: string;
@@ -156,6 +157,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     unitSavedValue?: number;
     technicalNotes: string;
     approvedBy?: string;
+    photos?: Array<{ id: string; url: string; caption: string; defectLocation?: string }>;
   }): ConcessionShipment => {
     const customer = customers.find(c => c.id === data.customerId);
     const defect = defects.find(d => d.id === data.defectTypeId);
@@ -186,7 +188,8 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       riskScore: riskResult?.riskLevel || 'baixo',
       customerFeedbackStatus: 'em_transito',
       technicalNotes: data.technicalNotes,
-      approvedBy: data.approvedBy || 'Mauricio Grigol (Qualidade)'
+      approvedBy: data.approvedBy || 'Mauricio Grigol (Qualidade)',
+      photos: data.photos || []
     };
 
     const updated = [newConcession, ...concessions];

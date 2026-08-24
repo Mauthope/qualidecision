@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { Customer, Complaint, ConcessionShipment } from '@/types';
+import React, { useState } from 'react';
+import { Customer, Complaint, ConcessionShipment, ComplaintPhoto } from '@/types';
 import {
   Send,
   AlertTriangle,
@@ -12,8 +12,12 @@ import {
   ShieldCheck,
   Package,
   DollarSign,
-  UserCheck
+  UserCheck,
+  Camera,
+  Eye,
+  Image as ImageIcon
 } from 'lucide-react';
+import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
 
 interface Props {
   customer: Customer;
@@ -26,6 +30,8 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
   concessions,
   complaints
 }) => {
+  const [activePhoto, setActivePhoto] = useState<ComplaintPhoto | null>(null);
+  const [photoTitle, setPhotoTitle] = useState('');
   // Map concessions and check if there are complaints from the shipment date onwards
   const analyzedConcessions = concessions.map(c => {
     const shipmentDate = new Date(c.date);
@@ -197,6 +203,38 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
                   </div>
                 </div>
 
+                {/* Concession Photos Gallery */}
+                {item.photos && item.photos.length > 0 && (
+                  <div className="space-y-1.5 pt-1">
+                    <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1.5">
+                      <Camera className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>Evidências Fotográficas do Desvio Concedido ({item.photos.length}):</span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2.5">
+                      {item.photos.map(photo => (
+                        <div
+                          key={photo.id}
+                          onClick={() => {
+                            setActivePhoto(photo);
+                            setPhotoTitle(`Concessão ${item.code} - ${item.defectTypeName} (Lote ${item.lotNumber})`);
+                          }}
+                          className="relative group cursor-pointer w-28 h-20 rounded-xl overflow-hidden border border-slate-700 hover:border-cyan-400 transition-all bg-black shadow-md"
+                        >
+                          <img
+                            src={photo.url}
+                            alt={photo.caption}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
+                            <Eye className="w-4 h-4 text-cyan-300" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Technical notes */}
                 {item.technicalNotes && (
                   <div className="text-xs text-slate-300 bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/60">
@@ -221,6 +259,37 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
                     <div className="p-2.5 rounded-lg bg-rose-950/70 border border-rose-500/30 text-[11px] font-mono text-rose-300 italic">
                       Laudo do SAC no ERP: "{complaint.description}"
                     </div>
+
+                    {/* Complaint Photo Gallery */}
+                    {complaint.photos && complaint.photos.length > 0 && (
+                      <div className="pt-2 border-t border-rose-500/30 space-y-1.5">
+                        <div className="text-[11px] font-bold text-rose-300 flex items-center gap-1.5">
+                          <Camera className="w-3.5 h-3.5 text-rose-400" />
+                          <span>Evidências Fotográficas do SAC Reclamado ({complaint.photos.length}):</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2.5">
+                          {complaint.photos.map(photo => (
+                            <div
+                              key={photo.id}
+                              onClick={() => {
+                                setActivePhoto(photo);
+                                setPhotoTitle(`SAC ${complaint.code} - ${complaint.defectTypeName} (Lote ${complaint.lotNumber})`);
+                              }}
+                              className="relative group cursor-pointer w-28 h-20 rounded-xl overflow-hidden border border-rose-500/50 hover:border-rose-300 transition-all bg-black shadow-md"
+                            >
+                              <img
+                                src={photo.url}
+                                alt={photo.caption}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
+                              />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
+                                <Eye className="w-4 h-4 text-rose-300" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : !isReclaimed ? (
                   <div className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/25 text-xs text-emerald-300 flex items-center gap-2">
@@ -237,6 +306,14 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
         </div>
       )}
 
+      {/* Photo Viewer Modal */}
+      {activePhoto && (
+        <PhotoViewerModal
+          photo={activePhoto}
+          title={photoTitle}
+          onClose={() => setActivePhoto(null)}
+        />
+      )}
     </div>
   );
 };

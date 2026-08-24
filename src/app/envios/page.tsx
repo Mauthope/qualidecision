@@ -13,13 +13,19 @@ import {
   DollarSign,
   PackageCheck,
   Filter,
-  Download
+  Download,
+  Camera,
+  Eye
 } from 'lucide-react';
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
+import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
+import { ComplaintPhoto } from '@/types';
 
 export default function EnviosPage() {
   const { concessions, complaints, customers, defects, stats, showToast } = useQuality();
   const [isNewConcessionOpen, setIsNewConcessionOpen] = useState(false);
+  const [activePhoto, setActivePhoto] = useState<ComplaintPhoto | null>(null);
+  const [photoTitle, setPhotoTitle] = useState('');
   const [search, setSearch] = useState('');
   const [filterCustomer, setFilterCustomer] = useState('all');
   const [filterDefect, setFilterDefect] = useState('all');
@@ -199,6 +205,7 @@ export default function EnviosPage() {
                 <th className="pb-3 px-4">Cliente Destino</th>
                 <th className="pb-3 px-4">Produto & Lote</th>
                 <th className="pb-3 px-4">Defeito Concedido</th>
+                <th className="pb-3 px-4">Evidência Fotográfica</th>
                 <th className="pb-3 px-4 text-right">Volume</th>
                 <th className="pb-3 px-4 text-right">Scrap Salvo</th>
                 <th className="pb-3 px-4">Parecer Técnico</th>
@@ -244,6 +251,34 @@ export default function EnviosPage() {
                       <div className="text-[10px] text-emerald-400 font-bold uppercase">{c.severity}</div>
                     </td>
 
+                    <td className="py-3.5 px-4">
+                      {c.photos && c.photos.length > 0 ? (
+                        <div className="flex items-center gap-1.5">
+                          {c.photos.map(p => (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => {
+                                setActivePhoto(p);
+                                setPhotoTitle(`Concessão ${c.code} - ${c.defectTypeName} (Lote ${c.lotNumber})`);
+                              }}
+                              className="relative group w-10 h-10 rounded-lg overflow-hidden border border-slate-700 hover:border-cyan-400 shrink-0 transition-all cursor-pointer bg-black"
+                            >
+                              <img src={p.url} alt={p.caption} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                <Eye className="w-3.5 h-3.5 text-cyan-300" />
+                              </div>
+                            </button>
+                          ))}
+                          <span className="text-[11px] text-slate-400 font-semibold">
+                            {c.photos.length} foto(s)
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] text-slate-500 italic">Sem anexo</span>
+                      )}
+                    </td>
+
                     <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-200">
                       {c.quantity.toLocaleString('pt-BR')} un
                     </td>
@@ -285,6 +320,15 @@ export default function EnviosPage() {
 
       {isNewConcessionOpen && (
         <NewConcessionModal isOpen={isNewConcessionOpen} onClose={() => setIsNewConcessionOpen(false)} />
+      )}
+
+      {/* Photo Viewer Modal */}
+      {activePhoto && (
+        <PhotoViewerModal
+          photo={activePhoto}
+          title={photoTitle}
+          onClose={() => setActivePhoto(null)}
+        />
       )}
     </div>
   );
