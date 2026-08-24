@@ -5,6 +5,8 @@ import { useQuality } from '@/context/QualityContext';
 import { DefectSeverity, ComplaintPhoto } from '@/types';
 import { AlertCircle, X } from 'lucide-react';
 import { PhotoUploadCamera } from '@/components/common/PhotoUploadCamera';
+import { SearchableCustomerSelect } from '@/components/common/SearchableCustomerSelect';
+import { SearchableDefectSelect } from '@/components/common/SearchableDefectSelect';
 
 interface Props {
   isOpen: boolean;
@@ -75,42 +77,32 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1 text-sm">
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Customer */}
+            {/* Customer with Search */}
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                 Cliente Reclamante *
               </label>
-              <select
-                value={customerId}
-                onChange={e => setCustomerId(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-rose-500/50"
+              <SearchableCustomerSelect
+                customers={customers}
+                selectedCustomerId={customerId}
+                onSelectCustomer={setCustomerId}
+                placeholder="Pesquisar cliente por nome ou código..."
                 required
-              >
-                {customers.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} ({c.code})
-                  </option>
-                ))}
-              </select>
+              />
             </div>
 
-            {/* Defect Type */}
+            {/* Defect Type with Search */}
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                 Tipo de Não-Conformidade *
               </label>
-              <select
-                value={defectTypeId}
-                onChange={e => setDefectTypeId(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-rose-500/50"
+              <SearchableDefectSelect
+                defects={defects}
+                selectedDefectId={defectTypeId}
+                onSelectDefect={setDefectTypeId}
+                placeholder="Pesquisar defeito..."
                 required
-              >
-                {defects.map(d => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
           </div>
 

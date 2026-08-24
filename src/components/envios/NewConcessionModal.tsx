@@ -6,6 +6,8 @@ import { DefectSeverity } from '@/types';
 import { Send, AlertTriangle, ShieldCheck, CheckCircle2, XCircle, X, Sparkles, DollarSign, UserPlus } from 'lucide-react';
 import { NewCustomerModal } from '@/components/clientes/NewCustomerModal';
 import { PhotoUploadCamera } from '@/components/common/PhotoUploadCamera';
+import { SearchableCustomerSelect } from '@/components/common/SearchableCustomerSelect';
+import { SearchableDefectSelect } from '@/components/common/SearchableDefectSelect';
 import { ComplaintPhoto } from '@/types';
 
 interface Props {
@@ -90,7 +92,7 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1 text-sm">
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Customer */}
+            {/* Customer with Search Input */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-xs font-semibold text-slate-300">
@@ -105,37 +107,27 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
                   <span>+ Novo Cliente</span>
                 </button>
               </div>
-              <select
-                value={customerId}
-                onChange={e => setCustomerId(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-cyan-500/50"
+              <SearchableCustomerSelect
+                customers={customers}
+                selectedCustomerId={customerId}
+                onSelectCustomer={setCustomerId}
+                placeholder="Pesquisar cliente por nome ou código..."
                 required
-              >
-                {customers.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} ({c.code}) - Score: {c.overallToleranceScore}%
-                  </option>
-                ))}
-              </select>
+              />
             </div>
 
-            {/* Defect Type */}
+            {/* Defect Type with Search Input */}
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                 Tipo de Desvio / Defeito *
               </label>
-              <select
-                value={defectTypeId}
-                onChange={e => setDefectTypeId(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-cyan-500/50"
+              <SearchableDefectSelect
+                defects={defects}
+                selectedDefectId={defectTypeId}
+                onSelectDefect={setDefectTypeId}
+                placeholder="Pesquisar defeito..."
                 required
-              >
-                {defects.map(d => (
-                  <option key={d.id} value={d.id}>
-                    {d.name} ({d.category.toUpperCase()})
-                  </option>
-                ))}
-              </select>
+              />
             </div>
           </div>
 
