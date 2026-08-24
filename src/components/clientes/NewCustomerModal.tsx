@@ -9,11 +9,7 @@ import {
   Building2,
   ShieldCheck,
   CheckCircle2,
-  Sparkles,
-  MapPin,
-  Mail,
-  UserCheck,
-  FileText
+  Sparkles
 } from 'lucide-react';
 
 interface Props {
@@ -27,11 +23,7 @@ export const NewCustomerModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
 
   const [name, setName] = useState('');
   const [code, setCode] = useState(`CLI-${String(customers.length + 1).padStart(3, '0')}`);
-  const [cnpj, setCnpj] = useState('');
   const [segment, setSegment] = useState('Agroindústria / Grãos & Cereais');
-  const [cityState, setCityState] = useState('Curitiba/PR');
-  const [contactName, setContactName] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
   const [initialProfile, setInitialProfile] = useState<'padrao' | 'exigente' | 'flexivel'>('padrao');
 
   if (!isOpen) return null;
@@ -43,11 +35,7 @@ export const NewCustomerModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
     const created = addCustomer({
       name: name.trim(),
       code: code.trim(),
-      cnpj: cnpj.trim() || '00.000.000/0001-00',
       segment: segment.trim(),
-      cityState: cityState.trim() || 'Curitiba/PR',
-      contactName: contactName.trim() || `Gestão de Qualidade - ${name.split(' ')[0]}`,
-      contactEmail: contactEmail.trim() || `qualidade@${name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10)}.com.br`,
       initialProfile
     });
 
@@ -119,19 +107,6 @@ export const NewCustomerModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                CNPJ
-              </label>
-              <input
-                type="text"
-                placeholder="00.000.000/0001-00"
-                value={cnpj}
-                onChange={e => setCnpj(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                 Segmento de Atuação
               </label>
               <select
@@ -147,54 +122,6 @@ export const NewCustomerModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
                 <option value="Indústria Alimentícia / Farináceos">Indústria Alimentícia / Farináceos</option>
                 <option value="Exportação / Outros">Exportação / Outros</option>
               </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Cidade / UF
-              </label>
-              <div className="relative">
-                <MapPin className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Ex: Cascavel/PR"
-                  value={cityState}
-                  onChange={e => setCityState(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Contato do CQ / Comprador
-              </label>
-              <div className="relative">
-                <UserCheck className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Ex: Carlos Silva (Inspetor CQ)"
-                  value={contactName}
-                  onChange={e => setContactName(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                E-mail de Notificação de Qualidade
-              </label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="email"
-                  placeholder="qualidade@empresa.com.br"
-                  value={contactEmail}
-                  onChange={e => setContactEmail(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
-                />
-              </div>
             </div>
           </div>
 

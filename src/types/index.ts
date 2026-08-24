@@ -17,16 +17,16 @@ export interface Customer {
   id: string;
   name: string;
   code: string;
-  segment: string;
-  cnpj: string;
-  cityState: string;
-  contactName: string;
-  contactEmail: string;
+  segment?: string;
   toleranceRatings: Record<string, { level: ToleranceLevel; notes?: string }>;
   overallToleranceScore: number; // 0 to 100
   avatarColor: string;
   createdAt: string;
   totalOrdersEstimate?: number;
+  cnpj?: string;
+  cityState?: string;
+  contactName?: string;
+  contactEmail?: string;
 }
 
 export interface ComplaintPhoto {

@@ -40,11 +40,7 @@ interface QualityContextType {
   addCustomer: (data: {
     name: string;
     code?: string;
-    cnpj?: string;
     segment?: string;
-    cityState?: string;
-    contactName?: string;
-    contactEmail?: string;
     initialProfile?: 'padrao' | 'exigente' | 'flexivel';
   }) => Customer;
   addComplaint: (data: {
@@ -202,11 +198,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const addCustomer = useCallback((data: {
     name: string;
     code?: string;
-    cnpj?: string;
     segment?: string;
-    cityState?: string;
-    contactName?: string;
-    contactEmail?: string;
     initialProfile?: 'padrao' | 'exigente' | 'flexivel';
   }): Customer => {
     const slug = data.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -272,11 +264,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       id: newId,
       name: data.name.trim(),
       code: data.code?.trim() || nextCode,
-      cnpj: data.cnpj?.trim() || '00.000.000/0001-00',
       segment: data.segment?.trim() || 'Sacaria e Big Bags',
-      cityState: data.cityState?.trim() || 'Curitiba/PR',
-      contactName: data.contactName?.trim() || `Qualidade - ${data.name.split(' ')[0]}`,
-      contactEmail: data.contactEmail?.trim() || `qualidade@${slug.slice(0, 10)}.com.br`,
       overallToleranceScore,
       avatarColor: avatarGradients[customers.length % avatarGradients.length],
       toleranceRatings,

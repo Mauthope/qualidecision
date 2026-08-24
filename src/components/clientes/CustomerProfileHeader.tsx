@@ -4,8 +4,6 @@ import React, { useState } from 'react';
 import { Customer, Complaint, ConcessionShipment } from '@/types';
 import {
   Building2,
-  Mail,
-  MapPin,
   ShieldCheck,
   Send,
   Sparkles
@@ -70,7 +68,12 @@ export const CustomerProfileHeader: React.FC<Props> = ({ customer, complaints, c
                 <span className="px-2.5 py-0.5 rounded-lg text-xs font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
                   {customer.code}
                 </span>
-                <span className="text-xs text-slate-400 font-medium">CNPJ: {customer.cnpj}</span>
+                {customer.segment && (
+                  <span className="px-2.5 py-0.5 rounded-lg text-xs font-medium bg-slate-900 text-slate-300 border border-slate-800 flex items-center gap-1">
+                    <Building2 className="w-3 h-3 text-cyan-400" />
+                    {customer.segment}
+                  </span>
+                )}
                 <span className={`px-2.5 py-0.5 rounded-lg text-xs font-medium border ${volumeRiskColor}`}>
                   ⚖️ {volumeRiskTag}
                 </span>
@@ -79,21 +82,6 @@ export const CustomerProfileHeader: React.FC<Props> = ({ customer, complaints, c
               <h1 className="text-xl sm:text-2xl font-extrabold text-white font-heading">
                 {customer.name}
               </h1>
-
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
-                <span className="flex items-center gap-1">
-                  <Building2 className="w-3.5 h-3.5 text-cyan-400" />
-                  {customer.segment}
-                </span>
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                  {customer.cityState}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Mail className="w-3.5 h-3.5 text-slate-400" />
-                  {customer.contactEmail}
-                </span>
-              </div>
             </div>
           </div>
 

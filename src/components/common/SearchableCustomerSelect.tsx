@@ -17,7 +17,7 @@ export const SearchableCustomerSelect: React.FC<Props> = ({
   customers,
   selectedCustomerId,
   onSelectCustomer,
-  placeholder = 'Pesquisar cliente por nome, código ou CNPJ...',
+  placeholder = 'Pesquisar cliente por nome ou código...',
   required = false,
   className = ''
 }) => {
@@ -28,15 +28,14 @@ export const SearchableCustomerSelect: React.FC<Props> = ({
 
   const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
 
-  // Filter customers by name, code or cnpj
+  // Filter customers by name or code
   const filteredCustomers = customers.filter(c => {
     const term = searchTerm.toLowerCase().trim();
     if (!term) return true;
     return (
       c.name.toLowerCase().includes(term) ||
       (c.code && c.code.toLowerCase().includes(term)) ||
-      (c.cnpj && c.cnpj.toLowerCase().includes(term)) ||
-      (c.cityState && c.cityState.toLowerCase().includes(term))
+      (c.segment && c.segment.toLowerCase().includes(term))
     );
   });
 
@@ -169,9 +168,6 @@ export const SearchableCustomerSelect: React.FC<Props> = ({
                       <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
                         {customer.code && (
                           <span className="font-mono text-slate-400">{customer.code}</span>
-                        )}
-                        {customer.cityState && (
-                          <span>• {customer.cityState}</span>
                         )}
                         {customer.segment && (
                           <span>• {customer.segment}</span>

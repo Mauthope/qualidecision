@@ -12,8 +12,7 @@ import {
   Bot,
   ArrowRight,
   Sparkles,
-  Building2,
-  MapPin
+  Building2
 } from 'lucide-react';
 import { ConcessionDecisionModal } from '@/components/clientes/ConcessionDecisionModal';
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
@@ -38,7 +37,7 @@ export default function ClientesPage() {
   const filteredCustomers = customers.filter(c => {
     const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.code.toLowerCase().includes(search.toLowerCase()) ||
-      c.cnpj.includes(search);
+      (c.segment && c.segment.toLowerCase().includes(search.toLowerCase()));
 
     const matchesSegment = filterSegment === 'all' || c.segment === filterSegment;
 
@@ -85,7 +84,7 @@ export default function ClientesPage() {
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Buscar por nome do cliente, código ou CNPJ..."
+            placeholder="Buscar por nome do cliente ou código..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
@@ -153,7 +152,7 @@ export default function ClientesPage() {
                     </Link>
                     <div className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
                       <Building2 className="w-3 h-3 text-cyan-400" />
-                      <span className="truncate">{customer.segment}</span>
+                      <span className="truncate">{customer.segment || 'Geral'}</span>
                     </div>
                   </div>
                 </div>
@@ -165,13 +164,10 @@ export default function ClientesPage() {
                 </div>
               </div>
 
-              {/* Quick Info & Address */}
+              {/* Quick Info */}
               <div className="text-xs text-slate-400 flex items-center justify-between">
-                <div className="flex items-center gap-1.5 truncate">
-                  <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                  <span className="truncate">{customer.cityState}</span>
-                </div>
-                <span className="font-mono text-[11px] text-slate-500 shrink-0">{customer.code}</span>
+                <span className="font-mono text-xs font-bold text-cyan-400">{customer.code}</span>
+                <span className="text-[11px] text-slate-500">{scoreText}</span>
               </div>
 
               {/* Stats Box */}
