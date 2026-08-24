@@ -71,6 +71,125 @@ export const qualityService = {
     };
   },
 
+  calculateCustomerTolerance(
+    customer: Customer,
+    complaints: Complaint[],
+    concessions: ConcessionShipment[],
+    defects: DefectType[]
+  ): { overallToleranceScore: number; toleranceRatings: Record<string, { level: ToleranceLevel; notes?: string }> } {
+    const clientComplaints = complaints.filter(c => c.customerId === customer.id);
+    const clientConcessions = concessions.filter(c => c.customerId === customer.id);
+
+    const totalKgClaimed = clientComplaints.reduce((acc, c) => acc + (c.quantityAffected || 0), 0);
+    const complaintsCount = clientComplaints.length;
+    const avgKgPerComplaint = complaintsCount > 0 ? totalKgClaimed / complaintsCount : 0;
+
+    // Concession feedback
+    const reclaimedConcessionsCount = clientConcessions.filter(
+      c =>
+        c.customerFeedbackStatus === 'reclamado_posteriormente' ||
+        clientComplaints.some(
+          comp => comp.defectTypeId === c.defectTypeId && new Date(comp.date) >= new Date(c.date)
+        )
+    ).length;
+
+    const successfulConcessionsCount = clientConcessions.filter(
+      c =>
+        c.customerFeedbackStatus === 'aceito_sem_ressalvas' &&
+        !clientComplaints.some(
+          comp => comp.defectTypeId === c.defectTypeId && new Date(comp.date) >= new Date(c.date)
+        )
+    ).length;
+
+    // 1. BASELINE SCORE CALCULATION
+    let score = 96; // Pristine client baseline
+
+    if (complaintsCount > 0) {
+      // Direct penalty by complaint frequency
+      if (complaintsCount >= 10) {
+        score -= 65; // Heavy penalty for frequent complainers (e.g. Trouw with 12 complaints)
+      } else if (complaintsCount >= 6) {
+        score -= 48;
+      } else if (complaintsCount >= 3) {
+        score -= 32;
+      } else if (complaintsCount >= 2) {
+        score -= 20;
+      } else {
+        score -= 12;
+      }
+
+      // SENSITIVITY MULTIPLIER: Small kg claimed = Extreme Pickiness (Zero-Tolerance)
+      // Clientes que reclamam de quantidades minúsculas (< 20 kg) são hiper-exigentes
+      if (avgKgPerComplaint < 10) {
+        score -= 16; // Reclamou até de míseros quilos (ex: média 2.6kg -> rigor extremo)
+      } else if (avgKgPerComplaint < 50) {
+        score -= 10;
+      } else if (avgKgPerComplaint < 150) {
+        score -= 5;
+      }
+    }
+
+    // Impact of concessions history
+    score -= reclaimedConcessionsCount * 12;
+    score += successfulConcessionsCount * 5;
+
+    // Clamp score
+    const overallToleranceScore = Math.max(8, Math.min(98, Math.round(score)));
+
+    // 2. TOLERANCE MATRIX PER DEFECT TYPE CALIBRATION
+    const toleranceRatings: Record<string, { level: ToleranceLevel; notes?: string }> = {};
+
+    // Group complaints by defect type
+    const claimedDefectCounts: Record<string, { count: number; kg: number }> = {};
+    clientComplaints.forEach(c => {
+      if (!claimedDefectCounts[c.defectTypeId]) {
+        claimedDefectCounts[c.defectTypeId] = { count: 0, kg: 0 };
+      }
+      claimedDefectCounts[c.defectTypeId].count += 1;
+      claimedDefectCounts[c.defectTypeId].kg += c.quantityAffected || 0;
+    });
+
+    defects.forEach(defect => {
+      const claimInfo = claimedDefectCounts[defect.id];
+
+      if (claimInfo) {
+        // Specifically claimed defect
+        if (claimInfo.count >= 3 || claimInfo.kg > 200 || overallToleranceScore < 35) {
+          toleranceRatings[defect.id] = {
+            level: 'intolerante',
+            notes: `🚨 Histórico de ${claimInfo.count} reclamação(ões) no ERP (${claimInfo.kg.toLocaleString('pt-BR')} kg afetados). Não enviar lotes com este desvio.`
+          };
+        } else {
+          toleranceRatings[defect.id] = {
+            level: 'baixa',
+            notes: `⚠️ Reclamado ${claimInfo.count}x no ERP (${claimInfo.kg.toLocaleString('pt-BR')} kg afetados). Exige alinhamento prévio.`
+          };
+        }
+      } else {
+        // Non-claimed defect: adapt according to customer's overall rigor
+        if (overallToleranceScore < 30) {
+          // Extremely strict customer across the board (e.g. Trouw Nutrition)
+          toleranceRatings[defect.id] = {
+            level: 'baixa',
+            notes: `Cliente hiper-exigente (${complaintsCount} SACs registrados, média de ${avgKgPerComplaint.toFixed(1)} kg/queixa). Baixa tolerância geral.`
+          };
+        } else if (overallToleranceScore < 60) {
+          toleranceRatings[defect.id] = {
+            level: 'moderada',
+            notes: 'Tolerância moderada. Desvio leve aceitável sob monitoramento.'
+          };
+        } else {
+          toleranceRatings[defect.id] = {
+            level: 'alta',
+            notes: 'Alta flexibilidade histórica. Sem registros deste defeito no ERP.'
+          };
+        }
+      }
+    });
+
+    return { overallToleranceScore, toleranceRatings };
+  },
+
   evaluateConcessionRisk(
     customer: Customer,
     defect: DefectType,
@@ -93,6 +212,10 @@ export const qualityService = {
       c => c.customerId === customer.id && c.defectTypeId === defect.id
     );
 
+    const allCustomerComplaints = complaints.filter(c => c.customerId === customer.id);
+    const totalKgClaimed = allCustomerComplaints.reduce((acc, c) => acc + (c.quantityAffected || 0), 0);
+    const avgKg = allCustomerComplaints.length > 0 ? totalKgClaimed / allCustomerComplaints.length : 0;
+
     let score = 20; // baseline
 
     // Factor: Tolerance profile
@@ -100,6 +223,15 @@ export const qualityService = {
     else if (tolerance === 'baixa') score += 35;
     else if (tolerance === 'moderada') score += 10;
     else if (tolerance === 'alta') score -= 15;
+
+    // Factor: Customer overall tolerance score impact
+    if (customer.overallToleranceScore < 30) {
+      score += 25; // Hiper-exigente (ex: Trouw)
+    } else if (customer.overallToleranceScore < 50) {
+      score += 15;
+    } else if (customer.overallToleranceScore >= 80) {
+      score -= 10;
+    }
 
     // Factor: Severity
     if (severity === 'severa') score += 30;
@@ -133,7 +265,7 @@ export const qualityService = {
     if (score >= 75) {
       riskLevel = 'critico';
       title = 'RISCO CRÍTICO: Não Enviar (Alta Probabilidade de Devolução)';
-      summary = `Cliente categorizado como INTOLERANTE ou com histórico recente de devoluções para ${defect.name}.`;
+      summary = `Cliente categorizado como INTOLERANTE ou com sensibilidade extrema (reclamações de poucos kg registradas no ERP).`;
       recommendation = `Rejeitar envio deste lote para ${customer.name}. Sugere-se retrabalhar ou direcionar este lote para clientes de alta tolerância (ex: Yara Fertilizantes ou Bunge).`;
     } else if (score >= 50) {
       riskLevel = 'alto';

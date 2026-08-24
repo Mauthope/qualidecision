@@ -93,7 +93,22 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const loadedConcessions = storageService.getConcessions();
     const loadedChat = storageService.getChatMessages();
 
-    setCustomers(loadedCustomers);
+    // Dynamically calibrate all customers according to SAC complaints & kg sensitivity
+    const calibratedCustomers = loadedCustomers.map(customer => {
+      const { overallToleranceScore, toleranceRatings } = qualityService.calculateCustomerTolerance(
+        customer,
+        loadedComplaints,
+        loadedConcessions,
+        loadedDefects
+      );
+      return {
+        ...customer,
+        overallToleranceScore,
+        toleranceRatings
+      };
+    });
+
+    setCustomers(calibratedCustomers);
     setDefects(loadedDefects);
     setComplaints(loadedComplaints);
     setConcessions(loadedConcessions);
@@ -191,6 +206,23 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const updated = [newConcession, ...concessions];
     setConcessions(updated);
     storageService.saveConcessions(updated);
+
+    const updatedCustomers = customers.map(c => {
+      const { overallToleranceScore, toleranceRatings } = qualityService.calculateCustomerTolerance(
+        c,
+        complaints,
+        updated,
+        defects
+      );
+      return {
+        ...c,
+        overallToleranceScore,
+        toleranceRatings
+      };
+    });
+    setCustomers(updatedCustomers);
+    storageService.saveCustomers(updatedCustomers);
+
     showToast(`Concessão ${newConcession.code} registrada com sucesso!`, 'success');
     return newConcession;
   }, [customers, defects, complaints, concessions, showToast]);
@@ -324,9 +356,27 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const updated = [newComplaint, ...complaints];
     setComplaints(updated);
     storageService.saveComplaints(updated);
+
+    // Recalibrate customers with the new complaint
+    const updatedCustomers = customers.map(c => {
+      const { overallToleranceScore, toleranceRatings } = qualityService.calculateCustomerTolerance(
+        c,
+        updated,
+        concessions,
+        defects
+      );
+      return {
+        ...c,
+        overallToleranceScore,
+        toleranceRatings
+      };
+    });
+    setCustomers(updatedCustomers);
+    storageService.saveCustomers(updatedCustomers);
+
     showToast(`Reclamação ${newComplaint.code} cadastrada no sistema!`, 'warning');
     return newComplaint;
-  }, [customers, defects, complaints, showToast]);
+  }, [customers, defects, complaints, concessions, showToast]);
 
   const updateCustomerTolerance = useCallback((
     customerId: string,
