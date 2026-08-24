@@ -2,11 +2,11 @@ import { Customer, DefectType, Complaint, ConcessionShipment, AiChatMessage } fr
 import { DEFAULT_CUSTOMERS, DEFAULT_DEFECTS, DEFAULT_COMPLAINTS, DEFAULT_CONCESSIONS } from '@/data/defaultQualityData';
 
 const STORAGE_KEYS = {
-  CUSTOMERS: 'qualitrack_customers_v3_exact_erp',
-  DEFECTS: 'qualitrack_defects_v3_exact_erp',
-  COMPLAINTS: 'qualitrack_complaints_v3_exact_erp',
-  CONCESSIONS: 'qualitrack_concessions_v3_exact_erp',
-  CHAT_MESSAGES: 'qualitrack_chat_v3_exact_erp'
+  CUSTOMERS: 'qualitrack_customers_v4_concession_feedback',
+  DEFECTS: 'qualitrack_defects_v4_concession_feedback',
+  COMPLAINTS: 'qualitrack_complaints_v4_concession_feedback',
+  CONCESSIONS: 'qualitrack_concessions_v4_concession_feedback',
+  CHAT_MESSAGES: 'qualitrack_chat_v4_concession_feedback'
 };
 
 const isBrowser = typeof window !== 'undefined';

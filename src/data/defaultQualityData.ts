@@ -33759,6 +33759,31 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     ]
   },
   {
+    "id": "comp-erp-492-braskem",
+    "code": "REC-492",
+    "customerId": "cli-braskem-s-a-estoque",
+    "customerName": "BRASKEM S.A - ESTOQUE",
+    "lotNumber": "OP 00.125.880/01.01",
+    "defectTypeId": "def-refilada",
+    "defectTypeName": "Refilada",
+    "severity": "severa",
+    "date": "2025-01-28",
+    "description": "[Laudo ERP] Refilada apontado no setor ACABAMENTO BIG BAG 1. Quantidade afetada: 150 kg (BAG). Parecer: PROCEDENTE. Cliente identificou rebarbas e refilamento irregular no lote expedido sob concessão.",
+    "rootCause": "Desgaste de lâmina de refilamento no setor ACABAMENTO BIG BAG 1.",
+    "correctiveAction": "Troca imediata do jogo de lâminas e revisão no padrão de liberação de concessões de corte.",
+    "status": "devolucao_total",
+    "origin": "erp_sync",
+    "quantityAffected": 150,
+    "photos": [
+      {
+        "id": "ph-492-1",
+        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80",
+        "caption": "Evidência laudo ERP - Lote OP 00.125.880/01.01 (Refilamento com rebarba)",
+        "defectLocation": "ACABAMENTO BIG BAG 1"
+      }
+    ]
+  },
+  {
     "id": "comp-erp-415-1",
     "code": "REC-415",
     "customerId": "cli-braskem-s-a-estoque",
@@ -38246,18 +38271,37 @@ export const DEFAULT_CONCESSIONS: ConcessionShipment[] = [
     "defectTypeId": "def-refilada",
     "defectTypeName": "Refilada",
     "severity": "leve",
-    "quantity": 12000,
+    "quantity": 10000,
     "unitSavedValue": 16.5,
-    "totalSavedValue": 198000,
-    "date": "2025-02-10",
+    "totalSavedValue": 165000,
+    "date": "2025-01-10",
+    "approvedBy": "Mauricio Grigol (Qualidade)",
+    "riskScore": "moderado",
+    "customerFeedbackStatus": "reclamado_posteriormente",
+    "technicalNotes": "Lote expedido com aprovação de desvio de refilamento para atendimento de emergência."
+  },
+  {
+    "id": "conc-002-braskem",
+    "code": "CONC-2025-002",
+    "customerId": "cli-braskem-s-a-estoque",
+    "customerName": "BRASKEM S.A - ESTOQUE",
+    "lotNumber": "OP 00.128.340/02.01",
+    "productName": "Big Bag One Way 1500kg",
+    "defectTypeId": "def-variacao-de-cor",
+    "defectTypeName": "Variação de cor",
+    "severity": "leve",
+    "quantity": 15000,
+    "unitSavedValue": 15,
+    "totalSavedValue": 225000,
+    "date": "2025-02-15",
     "approvedBy": "Mauricio Grigol (Qualidade)",
     "riskScore": "baixo",
     "customerFeedbackStatus": "aceito_sem_ressalvas",
-    "technicalNotes": "Lote expedido com aprovação de desvio estético de refilada. Aceito 100% pelo cliente."
+    "technicalNotes": "Desvio leve de tonalidade na faixa lateral. Lote faturado e absorvido normalmente sem queixas."
   },
   {
-    "id": "conc-002",
-    "code": "CONC-2025-002",
+    "id": "conc-003",
+    "code": "CONC-2025-003",
     "customerId": "cli-trouw-nutrition-brasil-nutricao-animal-ltda",
     "customerName": "TROUW NUTRITION BRASIL NUTRICAO ANIMAL LTDA",
     "lotNumber": "OP 00.129.450/02.01",
@@ -38275,8 +38319,8 @@ export const DEFAULT_CONCESSIONS: ConcessionShipment[] = [
     "technicalNotes": "Recuperação de margem de matéria-prima. Big bags aceitos na esteira de envase."
   },
   {
-    "id": "conc-003",
-    "code": "CONC-2025-003",
+    "id": "conc-004",
+    "code": "CONC-2025-004",
     "customerId": "cli-l-c-a-ind-e-com-de-produtos-alimenticios-ltda",
     "customerName": "L.C.A-IND.E COM. DE PRODUTOS ALIMENTICIOS LTDA",
     "lotNumber": "OP 00.134.120/01.03",
