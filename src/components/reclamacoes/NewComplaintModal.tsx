@@ -2,37 +2,15 @@
 
 import React, { useState } from 'react';
 import { useQuality } from '@/context/QualityContext';
-import { DefectSeverity } from '@/types';
-import { AlertCircle, X, Image as ImageIcon, Plus, Trash2, Camera } from 'lucide-react';
+import { DefectSeverity, ComplaintPhoto } from '@/types';
+import { AlertCircle, X } from 'lucide-react';
+import { PhotoUploadCamera } from '@/components/common/PhotoUploadCamera';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   defaultCustomerId?: string;
 }
-
-const SAMPLE_PHOTO_PRESETS = [
-  {
-    url: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&auto=format&fit=crop&q=80',
-    caption: 'Falha visual de pigmento e decalque na sacaria',
-    defectLocation: 'Painel frontal'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
-    caption: 'Borrão de impressão na área do código de barras',
-    defectLocation: 'Borda inferior'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=800&auto=format&fit=crop&q=80',
-    caption: 'Ponto de costura rompido na boca de fechamento',
-    defectLocation: 'Boca superior'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?w=800&auto=format&fit=crop&q=80',
-    caption: 'Desfiamento de filamentos na alça de sustentação',
-    defectLocation: 'Alça lateral'
-  }
-];
 
 export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCustomerId }) => {
   const { customers, defects, addComplaint } = useQuality();
@@ -46,32 +24,9 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
   const [rootCause, setRootCause] = useState('');
   const [correctiveAction, setCorrectiveAction] = useState('');
   const [origin, setOrigin] = useState<'sac_manual' | 'erp_sync'>('sac_manual');
-  const [photos, setPhotos] = useState<Array<{ id: string; url: string; caption: string; defectLocation?: string }>>([
-    {
-      id: `p-${Date.now()}`,
-      url: SAMPLE_PHOTO_PRESETS[0].url,
-      caption: SAMPLE_PHOTO_PRESETS[0].caption,
-      defectLocation: SAMPLE_PHOTO_PRESETS[0].defectLocation
-    }
-  ]);
+  const [photos, setPhotos] = useState<ComplaintPhoto[]>([]);
 
   if (!isOpen) return null;
-
-  const handleAddPresetPhoto = (preset: typeof SAMPLE_PHOTO_PRESETS[0]) => {
-    setPhotos(prev => [
-      ...prev,
-      {
-        id: `p-${Date.now()}-${Math.random()}`,
-        url: preset.url,
-        caption: preset.caption,
-        defectLocation: preset.defectLocation
-      }
-    ]);
-  };
-
-  const handleRemovePhoto = (id: string) => {
-    setPhotos(prev => prev.filter(p => p.id !== id));
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -249,48 +204,13 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
             </div>
           </div>
 
-          {/* Photos Management */}
-          <div className="space-y-2 pt-2 border-t border-slate-800">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <Camera className="w-4 h-4 text-cyan-400" />
-                Evidências Fotográficas Anexadas ({photos.length})
-              </label>
-            </div>
-
-            {/* Photo List */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-              {photos.map(p => (
-                <div key={p.id} className="relative group rounded-xl overflow-hidden border border-slate-800 bg-slate-900">
-                  <img src={p.url} alt={p.caption} className="w-full h-20 object-cover" />
-                  <div className="p-1.5 text-[10px] text-slate-300 truncate">{p.caption}</div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemovePhoto(p.id)}
-                    className="absolute top-1.5 right-1.5 p-1 rounded-md bg-black/70 text-rose-400 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {/* Quick Preset Buttons */}
-            <div className="flex flex-wrap items-center gap-1.5 pt-1">
-              <span className="text-[11px] text-slate-500">Adicionar foto de amostra:</span>
-              {SAMPLE_PHOTO_PRESETS.map((preset, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleAddPresetPhoto(preset)}
-                  className="px-2 py-1 rounded-lg text-[10px] font-medium bg-slate-900 border border-slate-800 hover:border-cyan-500/40 text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-1"
-                >
-                  <Plus className="w-3 h-3" />
-                  Foto {idx + 1}: {preset.caption.slice(0, 18)}...
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Direct Camera / File Upload for Complaint Evidence */}
+          <PhotoUploadCamera
+            photos={photos}
+            onPhotosChange={setPhotos}
+            label="Evidências Fotográficas da Não-Conformidade"
+            maxPhotos={6}
+          />
 
           {/* Footer Actions */}
           <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2.5">

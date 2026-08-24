@@ -3,37 +3,16 @@
 import React, { useState, useMemo } from 'react';
 import { useQuality } from '@/context/QualityContext';
 import { DefectSeverity } from '@/types';
-import { Send, AlertTriangle, ShieldCheck, CheckCircle2, XCircle, X, Sparkles, DollarSign, UserPlus, Camera, Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
+import { Send, AlertTriangle, ShieldCheck, CheckCircle2, XCircle, X, Sparkles, DollarSign, UserPlus } from 'lucide-react';
 import { NewCustomerModal } from '@/components/clientes/NewCustomerModal';
+import { PhotoUploadCamera } from '@/components/common/PhotoUploadCamera';
+import { ComplaintPhoto } from '@/types';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   defaultCustomerId?: string;
 }
-
-const CONCESSION_PHOTO_PRESETS = [
-  {
-    url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80',
-    caption: 'Desvio dimensional/refilamento leve dentro da tolerância fabril',
-    defectLocation: 'ACABAMENTO'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&auto=format&fit=crop&q=80',
-    caption: 'Tonalidade com ligeira variação na fita de ráfia',
-    defectLocation: 'EXTRUSÃO / TECELAGEM'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&auto=format&fit=crop&q=80',
-    caption: 'Desencaixe leve na impressão sem afetar legibilidade',
-    defectLocation: 'IMPRESSÃO'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&auto=format&fit=crop&q=80',
-    caption: 'Alça com pequeno desvio de posicionamento aceito pelo cliente',
-    defectLocation: 'COSTURA / MONTAGEM'
-  }
-];
 
 export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCustomerId }) => {
   const { customers, defects, addConcession, evaluateRisk } = useQuality();
@@ -47,14 +26,7 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
   const [technicalNotes, setTechnicalNotes] = useState('');
   const [approvedBy, setApprovedBy] = useState('Mauricio Grigol (Qualidade)');
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
-  const [photos, setPhotos] = useState<Array<{ id: string; url: string; caption: string; defectLocation?: string }>>([
-    {
-      id: `cp-${Date.now()}`,
-      url: CONCESSION_PHOTO_PRESETS[0].url,
-      caption: CONCESSION_PHOTO_PRESETS[0].caption,
-      defectLocation: CONCESSION_PHOTO_PRESETS[0].defectLocation
-    }
-  ]);
+  const [photos, setPhotos] = useState<ComplaintPhoto[]>([]);
 
   // Selected entities
   const selectedCustomer = customers.find(c => c.id === customerId);
@@ -70,22 +42,6 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
   const estimatedSavedValue = quantity * unitLoss;
 
   if (!isOpen) return null;
-
-  const handleAddPresetPhoto = (preset: typeof CONCESSION_PHOTO_PRESETS[0]) => {
-    setPhotos(prev => [
-      ...prev,
-      {
-        id: `cp-${Date.now()}-${Math.random()}`,
-        url: preset.url,
-        caption: preset.caption,
-        defectLocation: preset.defectLocation
-      }
-    ]);
-  };
-
-  const handleRemovePhoto = (id: string) => {
-    setPhotos(prev => prev.filter(p => p.id !== id));
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -301,56 +257,13 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
             </div>
           </div>
 
-          {/* Photographic Evidence of Concession / Deviation */}
-          <div className="space-y-2 p-3.5 rounded-xl bg-slate-900/60 border border-slate-800">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <Camera className="w-4 h-4 text-cyan-400" />
-                <span>Mapeamento & Evidências Fotográficas do Desvio ({photos.length})</span>
-              </label>
-              <span className="text-[11px] text-slate-500">Amostra do desvio liberado</span>
-            </div>
-
-            {/* Photo Previews */}
-            {photos.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
-                {photos.map(p => (
-                  <div key={p.id} className="relative group rounded-xl overflow-hidden border border-slate-700 bg-black aspect-video flex flex-col justify-end">
-                    <img src={p.url} alt={p.caption} className="absolute inset-0 w-full h-full object-cover" />
-                    <div className="relative z-10 p-1.5 bg-gradient-to-t from-black/90 via-black/50 to-transparent text-[10px] text-slate-200">
-                      <div className="font-semibold truncate">{p.caption}</div>
-                      <div className="text-[9px] text-cyan-400">{p.defectLocation}</div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemovePhoto(p.id)}
-                      className="absolute top-1 right-1 p-1 rounded-md bg-rose-600/80 hover:bg-rose-600 text-white opacity-0 group-hover:opacity-100 transition-opacity z-20"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Presets selector */}
-            <div className="pt-2">
-              <span className="text-[11px] text-slate-400 block mb-1.5">Adicionar foto de amostra fabril do desvio:</span>
-              <div className="flex flex-wrap gap-1.5">
-                {CONCESSION_PHOTO_PRESETS.map((preset, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => handleAddPresetPhoto(preset)}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-950 border border-slate-800 hover:border-cyan-500/50 hover:text-cyan-300 text-slate-300 transition-colors"
-                  >
-                    <Plus className="w-3 h-3 text-cyan-400" />
-                    <span>{preset.defectLocation}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+          {/* Direct Camera / File Upload for Concession Evidence */}
+          <PhotoUploadCamera
+            photos={photos}
+            onPhotosChange={setPhotos}
+            label="Evidências Fotográficas do Desvio Concedido"
+            maxPhotos={6}
+          />
 
           {/* Technical Notes */}
           <div>
