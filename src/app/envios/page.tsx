@@ -18,7 +18,7 @@ import {
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
 
 export default function EnviosPage() {
-  const { concessions, customers, defects, stats, showToast } = useQuality();
+  const { concessions, complaints, customers, defects, stats, showToast } = useQuality();
   const [isNewConcessionOpen, setIsNewConcessionOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [filterCustomer, setFilterCustomer] = useState('all');
@@ -206,55 +206,78 @@ export default function EnviosPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
-              {filteredConcessions.map(c => (
-                <tr key={c.id} className="hover:bg-slate-900/50 transition-colors">
-                  <td className="py-3.5 pr-4">
-                    <div className="font-mono font-bold text-cyan-400">{c.code}</div>
-                    <div className="text-[11px] text-slate-500">{new Date(c.date).toLocaleDateString('pt-BR')}</div>
-                  </td>
+              {filteredConcessions.map(c => {
+                const isReclaimed = complaints.some(
+                  comp => comp.customerId === c.customerId && (
+                    (comp.lotNumber && c.lotNumber && comp.lotNumber.toLowerCase().includes(c.lotNumber.toLowerCase())) ||
+                    (comp.defectTypeId === c.defectTypeId && new Date(comp.date) >= new Date(c.date))
+                  )
+                ) || c.customerFeedbackStatus === 'reclamado_posteriormente';
 
-                  <td className="py-3.5 px-4 font-medium text-slate-200">
-                    <Link href={`/clientes/${c.customerId}`} className="hover:text-cyan-300 transition-colors font-semibold">
-                      {c.customerName}
-                    </Link>
-                  </td>
+                return (
+                  <tr
+                    key={c.id}
+                    className={`transition-colors ${
+                      isReclaimed
+                        ? 'bg-rose-950/30 hover:bg-rose-950/40'
+                        : 'hover:bg-slate-900/50'
+                    }`}
+                  >
+                    <td className="py-3.5 pr-4">
+                      <div className="font-mono font-bold text-cyan-400">{c.code}</div>
+                      <div className="text-[11px] text-slate-500">{new Date(c.date).toLocaleDateString('pt-BR')}</div>
+                    </td>
 
-                  <td className="py-3.5 px-4">
-                    <div className="text-slate-200">{c.productName}</div>
-                    <div className="font-mono text-[11px] text-slate-400">Lote: {c.lotNumber}</div>
-                  </td>
+                    <td className="py-3.5 px-4 font-medium text-slate-200">
+                      <Link href={`/clientes/${c.customerId}`} className="hover:text-cyan-300 transition-colors font-semibold">
+                        {c.customerName}
+                      </Link>
+                    </td>
 
-                  <td className="py-3.5 px-4">
-                    <div className="text-slate-200 font-semibold">{c.defectTypeName}</div>
-                    <div className="text-[10px] text-emerald-400 font-bold uppercase">{c.severity}</div>
-                  </td>
+                    <td className="py-3.5 px-4">
+                      <div className="text-slate-200">{c.productName}</div>
+                      <div className="font-mono text-[11px] text-slate-400">Lote: {c.lotNumber}</div>
+                    </td>
 
-                  <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-200">
-                    {c.quantity.toLocaleString('pt-BR')} un
-                  </td>
+                    <td className="py-3.5 px-4">
+                      <div className="text-slate-200 font-semibold">{c.defectTypeName}</div>
+                      <div className="text-[10px] text-emerald-400 font-bold uppercase">{c.severity}</div>
+                    </td>
 
-                  <td className="py-3.5 px-4 text-right font-mono font-bold text-emerald-400">
-                    R$ {c.totalSavedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </td>
+                    <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-200">
+                      {c.quantity.toLocaleString('pt-BR')} un
+                    </td>
 
-                  <td className="py-3.5 px-4 text-slate-400 text-[11px] max-w-xs truncate">
-                    {c.technicalNotes}
-                  </td>
+                    <td className="py-3.5 px-4 text-right font-mono font-bold text-emerald-400">
+                      R$ {c.totalSavedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
 
-                  <td className="py-3.5 pl-4 text-center">
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
-                      c.customerFeedbackStatus === 'aceito_sem_ressalvas' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                      c.customerFeedbackStatus === 'aceito_com_observacao' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                      'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
-                    }`}>
-                      {c.customerFeedbackStatus === 'aceito_sem_ressalvas' && <CheckCircle2 className="w-3 h-3" />}
-                      {c.customerFeedbackStatus === 'aceito_com_observacao' && <AlertTriangle className="w-3 h-3" />}
-                      {c.customerFeedbackStatus === 'em_transito' && <Clock className="w-3 h-3" />}
-                      <span>{c.customerFeedbackStatus.replace(/_/g, ' ')}</span>
-                    </span>
-                  </td>
-                </tr>
-              ))}
+                    <td className="py-3.5 px-4 text-slate-400 text-[11px] max-w-xs truncate">
+                      {c.technicalNotes}
+                    </td>
+
+                    <td className="py-3.5 pl-4 text-center">
+                      {isReclaimed ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
+                          <AlertTriangle className="w-3 h-3 text-rose-400" />
+                          Reclamado Posteriormente
+                        </span>
+                      ) : (
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
+                          c.customerFeedbackStatus === 'aceito_sem_ressalvas' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                          c.customerFeedbackStatus === 'aceito_com_observacao' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                          'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+                        }`}>
+                          {c.customerFeedbackStatus === 'aceito_sem_ressalvas' && <CheckCircle2 className="w-3 h-3" />}
+                          {c.customerFeedbackStatus === 'aceito_com_observacao' && <AlertTriangle className="w-3 h-3" />}
+                          {c.customerFeedbackStatus === 'em_transito' && <Clock className="w-3 h-3" />}
+                          <span>{c.customerFeedbackStatus.replace(/_/g, ' ')}</span>
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -7,7 +7,7 @@ import { Send, CheckCircle2, Clock, AlertTriangle, ArrowRight, ExternalLink, Shi
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
 
 export const RecentConcessionsTable: React.FC = () => {
-  const { concessions } = useQuality();
+  const { concessions, complaints } = useQuality();
   const [isNewConcessionOpen, setIsNewConcessionOpen] = useState(false);
 
   return (
@@ -55,6 +55,13 @@ export const RecentConcessionsTable: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-800/60">
               {concessions.slice(0, 6).map(item => {
+                const isReclaimed = complaints.some(
+                  comp => comp.customerId === item.customerId && (
+                    (comp.lotNumber && item.lotNumber && comp.lotNumber.toLowerCase().includes(item.lotNumber.toLowerCase())) ||
+                    (comp.defectTypeId === item.defectTypeId && new Date(comp.date) >= new Date(item.date))
+                  )
+                ) || item.customerFeedbackStatus === 'reclamado_posteriormente';
+
                 let statusBadge = (
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
                     <Clock className="w-3 h-3" />
@@ -62,7 +69,14 @@ export const RecentConcessionsTable: React.FC = () => {
                   </span>
                 );
 
-                if (item.customerFeedbackStatus === 'aceito_sem_ressalvas') {
+                if (isReclaimed) {
+                  statusBadge = (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
+                      <AlertTriangle className="w-3 h-3 text-rose-400" />
+                      Reclamado Posteriormente
+                    </span>
+                  );
+                } else if (item.customerFeedbackStatus === 'aceito_sem_ressalvas') {
                   statusBadge = (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                       <CheckCircle2 className="w-3 h-3" />
@@ -79,7 +93,14 @@ export const RecentConcessionsTable: React.FC = () => {
                 }
 
                 return (
-                  <tr key={item.id} className="hover:bg-slate-900/50 transition-colors group">
+                  <tr
+                    key={item.id}
+                    className={`transition-colors group ${
+                      isReclaimed
+                        ? 'bg-rose-950/30 hover:bg-rose-950/40'
+                        : 'hover:bg-slate-900/50'
+                    }`}
+                  >
                     <td className="py-3.5 pr-4">
                       <div className="font-mono font-bold text-cyan-400">{item.code}</div>
                       <div className="text-[11px] text-slate-500">{new Date(item.date).toLocaleDateString('pt-BR')}</div>
