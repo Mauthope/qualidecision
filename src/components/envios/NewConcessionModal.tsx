@@ -40,8 +40,8 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
     return evaluateRisk(customerId, defectTypeId, quantity, severity);
   }, [customerId, defectTypeId, quantity, severity, evaluateRisk]);
 
-  const unitLoss = selectedDefect?.defaultUnitLoss || 15.00;
-  const estimatedSavedValue = quantity * unitLoss;
+  const weightKg = (quantity * 77.73) / 1000;
+  const estimatedSavedValue = weightKg * 1.5;
 
   if (!isOpen) return null;
 
@@ -56,7 +56,7 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
       defectTypeId,
       quantity,
       severity,
-      unitSavedValue: unitLoss,
+      unitSavedValue: (77.73 / 1000) * 1.5,
       technicalNotes: technicalNotes.trim() || `Envio autorizado com desvio de ${selectedDefect?.name}.`,
       approvedBy,
       photos
@@ -234,12 +234,18 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
           )}
 
           {/* Profitability Calculation Preview */}
-          <div className="p-3.5 rounded-xl bg-cyan-950/20 border border-cyan-500/25 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-cyan-400" />
+          <div className="p-3.5 rounded-xl bg-cyan-950/20 border border-cyan-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400">
+                <DollarSign className="w-4 h-4" />
+              </div>
               <div>
-                <div className="text-xs font-semibold text-slate-200">Refugo Evitado (Lucro Salvo):</div>
-                <div className="text-[11px] text-slate-400">R$ {unitLoss.toFixed(2)} por unidade reaproveitada</div>
+                <div className="text-xs font-semibold text-slate-200">
+                  Refugo Evitado (Lucro Estimado Salvo):
+                </div>
+                <div className="text-[11px] text-slate-400">
+                  {quantity.toLocaleString('pt-BR')} un × 77,73g = <strong className="text-cyan-300 font-mono">{weightKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</strong> (Fator 1,5×)
+                </div>
               </div>
             </div>
             <div className="text-right">

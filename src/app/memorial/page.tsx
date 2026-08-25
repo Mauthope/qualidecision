@@ -80,8 +80,9 @@ export default function MemorialPage() {
   const isClampedMin = rawScore < 5;
   const isClampedMax = rawScore > 98;
 
-  const unitSaved = selectedDefect?.defaultUnitLoss || 15.00;
-  const totalSavedValue = selectedQuantity * unitSaved;
+  const weightKg = (selectedQuantity * 77.73) / 1000;
+  const totalSavedValue = weightKg * 1.5;
+  const unitSaved = (77.73 / 1000) * 1.5;
 
   return (
     <div className="space-y-8 pb-12">
@@ -444,10 +445,10 @@ export default function MemorialPage() {
                 </span>
               </div>
               <p className="text-slate-300 leading-relaxed">
-                <strong>De onde vem o valor:</strong> Multiplicação de <strong>{selectedQuantity.toLocaleString('pt-BR')} unidades</strong> pelo custo de refugo evitado de <strong>R$ {unitSaved.toFixed(2)}/unidade</strong> para <em>{selectedDefect?.name}</em>.
+                <strong>De onde vem o valor:</strong> Conversão da quantidade (<strong>{selectedQuantity.toLocaleString('pt-BR')} un</strong>) pelo peso médio padrão de <strong>77,73g por saco</strong> (<strong className="text-cyan-300 font-mono">{weightKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</strong>) multiplicado pelo fator de lucratividade de <strong>1,5×</strong>.
               </p>
-              <div className="text-[11px] text-emerald-400/90 pt-1 border-t border-emerald-500/30 font-semibold">
-                Representa o dinheiro que a empresa deixou de jogar no lixo ao faturar o lote.
+              <div className="text-[11px] text-emerald-400/90 pt-1 border-t border-emerald-500/30 font-semibold font-mono">
+                Fórmula: {selectedQuantity.toLocaleString('pt-BR')} un × 0,07773 kg × 1,5 = R$ {totalSavedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
             </div>
 
@@ -462,10 +463,10 @@ export default function MemorialPage() {
                 </span>
               </div>
               <p className="text-slate-300 leading-relaxed">
-                <strong>De onde vem a porcentagem:</strong> Média aritmética das 7 notas de tolerância cadastradas no perfil da {selectedCustomer?.name.split(' ')[0]}.
+                <strong>De onde vem a porcentagem:</strong> Média calibrada de tolerância do perfil da {selectedCustomer?.name.split(' ')[0]} baseada no histórico de SACs.
               </p>
               <div className="text-[11px] text-cyan-400/90 pt-1 border-t border-cyan-500/30 font-semibold">
-                Score &gt; 75%: Flexível | 50% a 74%: Moderado | &lt; 50%: Rígido.
+                Score &gt; 75%: Flexível | 50% a 74%: Moderado | &lt; 50%: Rígido / Baixa Tolerância.
               </div>
             </div>
 
@@ -498,29 +499,16 @@ export default function MemorialPage() {
       {/* SECTION 1: Detalhamento do Índice Geral de Tolerância */}
       <div className="glow-card p-6 sm:p-7 rounded-3xl bg-slate-950/80 border border-slate-800 space-y-6">
         <div className="flex items-center gap-3 border-b border-slate-800/80 pb-4">
-          <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 text-cyan-400">
+          <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 text-cyan-400">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
             <h2 className="text-lg sm:text-xl font-bold text-white font-heading">
-              1. Tabela de Ponderação do Índice de Tolerância do Cliente
+              1. Índice Geral de Tolerância do Cliente (0 a 100%)
             </h2>
             <p className="text-xs text-slate-400">
-              Como cada resposta no cadastro técnico do cliente se converte em pontos numéricos de 0 a 100%
+              Algoritmo de calibração que afere o rigor do cliente conforme a frequência e a sensibilidade a baixos quilos reclamados
             </p>
-          </div>
-        </div>
-
-        {/* Formula Display */}
-        <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Fórmula Matemática:</div>
-            <div className="text-lg sm:text-xl font-mono font-bold text-cyan-300">
-              Score Geral (%) = ( Σ Pontos_Defeito_i ) / 7
-            </div>
-          </div>
-          <div className="text-xs text-slate-400 max-w-md">
-            Soma-se a pontuação obtida nos 7 tipos de defeito cadastrados e divide-se por 7 para encontrar a média percentual de flexibilidade do cliente.
           </div>
         </div>
 
@@ -532,7 +520,7 @@ export default function MemorialPage() {
                 <th className="pb-3 pr-4">Classificação Cadastrada</th>
                 <th className="pb-3 px-4 text-center">Pontos Atribuídos (P_i)</th>
                 <th className="pb-3 px-4">Significado Técnico no Chão de Fábrica</th>
-                <th className="pb-3 pl-4 text-center">Exemplo Real</th>
+                <th className="pb-3 pl-4 text-center">Diretriz</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
@@ -540,32 +528,32 @@ export default function MemorialPage() {
                 <td className="py-3 pr-4 font-bold text-emerald-400">🟢 Alta Tolerância</td>
                 <td className="py-3 px-4 text-center font-mono font-bold text-slate-200">100 pontos</td>
                 <td className="py-3 px-4 text-slate-300">Cliente aceita o desvio sem restrições ou impacto no processo de envase.</td>
-                <td className="py-3 pl-4 text-center text-slate-400 font-mono text-[11px]">Alisul com "Vinco"</td>
+                <td className="py-3 pl-4 text-center text-emerald-400 font-semibold text-[11px]">Envio Liberado</td>
               </tr>
               <tr className="hover:bg-slate-900/40">
                 <td className="py-3 pr-4 font-bold text-amber-400">🟡 Tolerância Moderada</td>
                 <td className="py-3 px-4 text-center font-mono font-bold text-slate-200">70 pontos</td>
                 <td className="py-3 px-4 text-slate-300">Aceita com ressalvas desde que o defeito seja leve/estético.</td>
-                <td className="py-3 pl-4 text-center text-slate-400 font-mono text-[11px]">Bunge com "Borrão"</td>
+                <td className="py-3 pl-4 text-center text-amber-400 font-semibold text-[11px]">Monitorar Entrega</td>
               </tr>
               <tr className="hover:bg-slate-900/40">
                 <td className="py-3 pr-4 font-bold text-orange-400">🟠 Baixa Tolerância</td>
                 <td className="py-3 px-4 text-center font-mono font-bold text-slate-200">40 pontos</td>
-                <td className="py-3 px-4 text-slate-300">Risco elevado de devolução; requer alinhamento ou desconto comercial.</td>
-                <td className="py-3 pl-4 text-center text-slate-400 font-mono text-[11px]">Copacol com "Costura"</td>
+                <td className="py-3 px-4 text-slate-300">Risco elevado de devolução; requer alinhamento prévio ou validação da qualidade.</td>
+                <td className="py-3 pl-4 text-center text-orange-400 font-semibold text-[11px]">Alinhamento Prévio</td>
               </tr>
               <tr className="hover:bg-slate-900/40">
                 <td className="py-3 pr-4 font-bold text-rose-400">🔴 Zero Tolerância / Intolerante</td>
                 <td className="py-3 px-4 text-center font-mono font-bold text-slate-200">10 pontos</td>
-                <td className="py-3 px-4 text-slate-300">Rejeição imediata por comprometer estanqueidade, SIF sanitário ou esteiras automáticas.</td>
-                <td className="py-3 pl-4 text-center text-slate-400 font-mono text-[11px]">JBS com "Mancha de Óleo"</td>
+                <td className="py-3 px-4 text-slate-300">Rejeição imediata por comprometer estanqueidade, embalagem ou esteiras automáticas.</td>
+                <td className="py-3 pl-4 text-center text-rose-400 font-semibold text-[11px]">Bloqueado / Não Enviar</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* SECTION 2: Tabela de Valores Salvos por Defeito */}
+      {/* SECTION 2: Fórmula de Conversão de Peso e Lucratividade Salva */}
       <div className="glow-card p-6 sm:p-7 rounded-3xl bg-slate-950/80 border border-slate-800 space-y-6">
         <div className="flex items-center gap-3 border-b border-slate-800/80 pb-4">
           <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-400">
@@ -573,47 +561,39 @@ export default function MemorialPage() {
           </div>
           <div>
             <h2 className="text-lg sm:text-xl font-bold text-white font-heading">
-              2. Tabela de Custos Unitários de Refugo Evitado (Scrap Avoided)
+              2. Modelo de Lucro Estimado & Conversão de Peso (77,73g / Saco × 1,5)
             </h2>
             <p className="text-xs text-slate-400">
-              Valor financeiro de matéria-prima e mão de obra recuperado por cada unidade liberada sob concessão
+              Metodologia de conversão ponderada de unidades para quilos e apuração do valor financeiro de scrap evitado
             </p>
           </div>
         </div>
 
-        {/* Defect Unit Scrap Values Table */}
-        <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-slate-800 text-slate-400 uppercase font-semibold text-[11px]">
-                <th className="pb-3 pr-4">Tipo de Defeito / Desvio</th>
-                <th className="pb-3 px-4">Categoria Técnica</th>
-                <th className="pb-3 px-4 text-right">Custo de Scrap Salvo / Unidade</th>
-                <th className="pb-3 pl-4">Composição do Custo Salvo</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60 font-mono">
-              {defects.map(d => (
-                <tr key={d.id} className="hover:bg-slate-900/40">
-                  <td className="py-3.5 pr-4 font-sans font-semibold text-slate-200 flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
-                    {d.name}
-                  </td>
-                  <td className="py-3.5 px-4 text-slate-400 uppercase text-[10px] font-sans">{d.category}</td>
-                  <td className="py-3.5 px-4 text-right font-bold text-emerald-400 text-sm">
-                    R$ {d.defaultUnitLoss.toFixed(2)}
-                  </td>
-                  <td className="py-3.5 pl-4 text-slate-400 font-sans text-xs">
-                    {d.id === 'def-costura' ? 'Evita descarte completo do Big Bag com alças costuradas (tecido + fio de alta tenacidade).' :
-                     d.id === 'def-desfiamento' ? 'Recupera o valor do corte a quente e selagem de polipropileno.' :
-                     d.id === 'def-dimensional' ? 'Economiza o tecido tubular de alta gramatura cortado fora de tolerância.' :
-                     d.id === 'def-borrao' ? 'Preserva a laminação e tinta flexográfica aplicada sem necessidade de queima.' :
-                     'Economiza o tecido ráfia extrudado e evita a trituração com perda de resina virgem.'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {/* Formula Explanation Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2">
+            <span className="text-[11px] font-bold text-cyan-400 uppercase tracking-wider block">Passo 1 • Média de Peso Padrão</span>
+            <div className="text-base font-extrabold font-mono text-white">77,73 g / saco</div>
+            <p className="text-slate-400 leading-relaxed">
+              Cada sacaria possui peso médio calibrado de <strong>77,73 gramas</strong> (ou <strong>0,07773 kg</strong> por unidade).
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2">
+            <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block">Passo 2 • Conversão de Volume para Kg</span>
+            <div className="text-base font-extrabold font-mono text-emerald-300">Kg = Qtd × 0,07773</div>
+            <p className="text-slate-400 leading-relaxed">
+              O volume concedido em unidades é transformado na massa total equivalente de resina e polipropileno preservados.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2">
+            <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider block">Passo 3 • Fator de Lucro Salvo</span>
+            <div className="text-base font-extrabold font-mono text-purple-300">Lucro (R$) = Kg × 1,5</div>
+            <p className="text-slate-400 leading-relaxed">
+              Aplica-se o fator multiplicador de <strong>1,5×</strong> sobre o peso em kg para apurar o lucro aproximado de scrap evitado.
+            </p>
+          </div>
         </div>
       </div>
 

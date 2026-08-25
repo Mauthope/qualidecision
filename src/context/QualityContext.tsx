@@ -93,12 +93,19 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const loadedConcessions = storageService.getConcessions();
     const loadedChat = storageService.getChatMessages();
 
+    // Dynamically calibrate concessions scrap value with 77.73g * 1.5
+    const calibratedConcessions = loadedConcessions.map(c => ({
+      ...c,
+      totalSavedValue: qualityService.calculateSavedProfit(c.quantity),
+      unitSavedValue: (77.73 / 1000) * 1.5
+    }));
+
     // Dynamically calibrate all customers according to SAC complaints & kg sensitivity
     const calibratedCustomers = loadedCustomers.map(customer => {
       const { overallToleranceScore, toleranceRatings } = qualityService.calculateCustomerTolerance(
         customer,
         loadedComplaints,
-        loadedConcessions,
+        calibratedConcessions,
         loadedDefects
       );
       return {
@@ -111,7 +118,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setCustomers(calibratedCustomers);
     setDefects(loadedDefects);
     setComplaints(loadedComplaints);
-    setConcessions(loadedConcessions);
+    setConcessions(calibratedConcessions);
 
     if (loadedChat.length === 0) {
       const welcomeMessage: AiChatMessage = {
@@ -174,8 +181,8 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const defect = defects.find(d => d.id === data.defectTypeId);
     const customerName = customer?.name || 'Cliente';
     const defectTypeName = defect?.name || 'Defeito';
-    const unitSavedValue = data.unitSavedValue ?? (defect?.defaultUnitLoss || 15.00);
-    const totalSavedValue = data.quantity * unitSavedValue;
+    const unitSavedValue = (77.73 / 1000) * 1.5;
+    const totalSavedValue = qualityService.calculateSavedProfit(data.quantity);
 
     // Calculate risk
     const riskResult = customer && defect

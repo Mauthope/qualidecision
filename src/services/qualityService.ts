@@ -1,6 +1,19 @@
 import { Customer, DefectType, Complaint, ConcessionShipment, QualityStats, RiskEvaluationResult, ToleranceLevel, DefectSeverity } from '@/types';
 
 export const qualityService = {
+  // Constantes industriais parametrizadas
+  AVERAGE_SACK_WEIGHT_GRAMS: 77.73, // Média de peso por saco: 77,73g
+  PROFIT_FACTOR: 1.5, // Fator multiplicador de lucro: 1,5
+
+  calculateSackWeightKg(quantityUnits: number): number {
+    return (quantityUnits * 77.73) / 1000;
+  },
+
+  calculateSavedProfit(quantityUnits: number): number {
+    const weightKg = (quantityUnits * 77.73) / 1000;
+    return weightKg * 1.5;
+  },
+
   calculateStats(
     customers: Customer[],
     defects: DefectType[],
