@@ -14,7 +14,6 @@ import {
   Menu,
   X,
   Database,
-  Search,
   Calculator
 } from 'lucide-react';
 import { useQuality } from '@/context/QualityContext';
@@ -23,7 +22,7 @@ import { ExportImportModal } from '@/components/modals/ExportImportModal';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
-  const { openAiDrawer, searchQuery, setSearchQuery, stats } = useQuality();
+  const { openAiDrawer, stats } = useQuality();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isConcessionModalOpen, setIsConcessionModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -93,28 +92,6 @@ export const Navbar: React.FC = () => {
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-slate-400">Criado por</span>
                 <strong className="text-cyan-300 font-semibold tracking-wide">Mauricio Grigol</strong>
-              </div>
-            </div>
-
-            {/* Quick Global Search Bar */}
-            <div className="hidden lg:flex items-center flex-1 max-w-xs xl:max-w-md mx-2">
-              <div className="relative w-full">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Pesquisar cliente (ex: Alisul), lote ou defeito..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-900/90 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 transition-all"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
               </div>
             </div>
 
@@ -190,18 +167,6 @@ export const Navbar: React.FC = () => {
         {/* Mobile Navigation Drawer */}
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-slate-800/80 bg-slate-950/95 px-4 py-4 space-y-2 backdrop-blur-xl animate-in slide-in-from-top duration-200">
-            {/* Mobile Search */}
-            <div className="relative mb-3">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Pesquisar cliente, lote..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none"
-              />
-            </div>
-
             {navItems.map(item => {
               const isActive = pathname === item.href;
               return (
