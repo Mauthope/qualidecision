@@ -20,9 +20,11 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
   const { customers, defects, addConcession, evaluateRisk } = useQuality();
 
   const [customerId, setCustomerId] = useState(defaultCustomerId || (customers[0]?.id || ''));
+  const [customerNumber, setCustomerNumber] = useState('');
+  const [opNumber, setOpNumber] = useState(`OP 00.${Math.floor(100 + Math.random() * 899)}.${Math.floor(100 + Math.random() * 899)}/01.01`);
   const [defectTypeId, setDefectTypeId] = useState(defects[0]?.id || '');
   const [lotNumber, setLotNumber] = useState(`LT-2026-${Math.floor(800 + Math.random() * 199)}`);
-  const [productName, setProductName] = useState('Sacaria Ráfia Laminada 25kg');
+  const [productName, setProductName] = useState('Sacaria');
   const [quantity, setQuantity] = useState<number>(5000);
   const [severity, setSeverity] = useState<DefectSeverity>('leve');
   const [technicalNotes, setTechnicalNotes] = useState('');
@@ -51,6 +53,8 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
 
     addConcession({
       customerId,
+      customerNumber: customerNumber.trim() || selectedCustomer?.code,
+      opNumber: opNumber.trim(),
       lotNumber: lotNumber.trim(),
       productName: productName.trim(),
       defectTypeId,
@@ -131,7 +135,37 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
             </div>
           </div>
 
+          {/* Identificadores: Número Cliente, Número OP, Lote */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Customer Number / Code */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                Número do Cliente
+              </label>
+              <input
+                type="text"
+                value={customerNumber || selectedCustomer?.code || ''}
+                onChange={e => setCustomerNumber(e.target.value)}
+                placeholder="ex: CLI-001..."
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-cyan-500/50 font-mono"
+              />
+            </div>
+
+            {/* OP Number */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                Número da OP *
+              </label>
+              <input
+                type="text"
+                required
+                value={opNumber}
+                onChange={e => setOpNumber(e.target.value)}
+                placeholder="ex: OP 00.125.880/01.01..."
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-cyan-500/50 font-mono"
+              />
+            </div>
+
             {/* Lot Number */}
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">
@@ -144,6 +178,25 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-cyan-500/50 font-mono"
                 required
               />
+            </div>
+          </div>
+
+          {/* Produto, Quantidade e Gravidade */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Product / Packaging Identification Dropdown */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                Identificação do Produto / Embalagem *
+              </label>
+              <select
+                value={productName}
+                onChange={e => setProductName(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-cyan-500/50 font-medium"
+                required
+              >
+                <option value="Sacaria">Sacaria</option>
+                <option value="Big Bag">Big Bag</option>
+              </select>
             </div>
 
             {/* Quantity */}
@@ -177,20 +230,6 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
                 <option value="severa">Severa (Risco dimensional/funcional)</option>
               </select>
             </div>
-          </div>
-
-          {/* Product Description */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Identificação do Produto / Embalagem
-            </label>
-            <input
-              type="text"
-              value={productName}
-              onChange={e => setProductName(e.target.value)}
-              placeholder="ex: Sacaria Ráfia 25kg, Big Bag Tubular 1000kg..."
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-cyan-500/50"
-            />
           </div>
 
           {/* Live Risk & Tolerance Insight Card */}

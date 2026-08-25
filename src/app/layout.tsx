@@ -18,7 +18,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'QualiDecision - Gestão de Concessões, Qualidade & Perfil de Clientes',
+  title: 'PerfilCliente - Gestão de Concessões, Qualidade & Perfil de Clientes',
   description: 'Sistema industrial de inteligência de qualidade, controle de desvios/concessões, tolerância de clientes e assistente IA. Desenvolvido por Mauricio Grigol.',
   authors: [{ name: 'Mauricio Grigol' }]
 };

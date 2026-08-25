@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Customer, DefectType, Complaint, ConcessionShipment, QualityStats, AiChatMessage, RiskEvaluationResult, ToleranceLevel, DefectSeverity } from '@/types';
+import { Customer, DefectType, Complaint, ConcessionShipment, QualityStats, AiChatMessage, RiskEvaluationResult, ToleranceLevel, DefectSeverity, DefectCategory } from '@/types';
 import { storageService } from '@/services/storageService';
 import { qualityService } from '@/services/qualityService';
 import { aiAssistantService } from '@/services/aiAssistantService';
@@ -27,6 +27,8 @@ interface QualityContextType {
   closeAiDrawer: () => void;
   addConcession: (data: {
     customerId: string;
+    customerNumber?: string;
+    opNumber?: string;
     lotNumber: string;
     productName: string;
     defectTypeId: string;
@@ -41,8 +43,16 @@ interface QualityContextType {
     name: string;
     code?: string;
     segment?: string;
+    location?: string;
     initialProfile?: 'padrao' | 'exigente' | 'flexivel';
   }) => Customer;
+  addDefect: (data: {
+    name: string;
+    category: DefectCategory;
+    description?: string;
+    color?: string;
+    defaultUnitLoss?: number;
+  }) => DefectType;
   addComplaint: (data: {
     customerId: string;
     lotNumber: string;
@@ -167,6 +177,8 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const addConcession = useCallback((data: {
     customerId: string;
+    customerNumber?: string;
+    opNumber?: string;
     lotNumber: string;
     productName: string;
     defectTypeId: string;
@@ -194,6 +206,8 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       code: `ENV-2026-${Math.floor(100 + Math.random() * 900)}`,
       customerId: data.customerId,
       customerName,
+      customerNumber: data.customerNumber?.trim() || customer?.code,
+      opNumber: data.opNumber?.trim() || `OP-${Date.now().toString().slice(-6)}`,
       date: new Date().toISOString().split('T')[0],
       lotNumber: data.lotNumber,
       productName: data.productName,
@@ -238,6 +252,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     name: string;
     code?: string;
     segment?: string;
+    location?: string;
     initialProfile?: 'padrao' | 'exigente' | 'flexivel';
   }): Customer => {
     const slug = data.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -304,6 +319,8 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       name: data.name.trim(),
       code: data.code?.trim() || nextCode,
       segment: data.segment?.trim() || 'Sacaria e Big Bags',
+      location: data.location?.trim() || undefined,
+      cityState: data.location?.trim() || undefined,
       overallToleranceScore,
       avatarColor: avatarGradients[customers.length % avatarGradients.length],
       toleranceRatings,
@@ -316,6 +333,39 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     showToast(`Cliente ${newCustomer.name} cadastrado com sucesso!`, 'success');
     return newCustomer;
   }, [customers, defects, showToast]);
+
+  const addDefect = useCallback((data: {
+    name: string;
+    category: DefectCategory;
+    description?: string;
+    color?: string;
+    defaultUnitLoss?: number;
+  }): DefectType => {
+    const slug = data.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const newId = `def-${slug}-${Date.now().toString().slice(-4)}`;
+    const categoryColors: Record<DefectCategory, string> = {
+      costura: '#ef4444',
+      estrutural: '#f97316',
+      impressao: '#f59e0b',
+      dimensional: '#8b5cf6',
+      visual: '#06b6d4'
+    };
+
+    const newDefect: DefectType = {
+      id: newId,
+      name: data.name.trim(),
+      category: data.category,
+      description: data.description?.trim() || `Não-conformidade de ${data.name.trim()} catalogada pela equipe de qualidade.`,
+      defaultUnitLoss: data.defaultUnitLoss || 15.00,
+      color: data.color || categoryColors[data.category] || '#06b6d4'
+    };
+
+    const updated = [newDefect, ...defects];
+    setDefects(updated);
+    storageService.saveDefects(updated);
+    showToast(`Defeito "${newDefect.name}" cadastrado com sucesso!`, 'success');
+    return newDefect;
+  }, [defects, showToast]);
 
   const addComplaint = useCallback((data: {
     customerId: string;
@@ -500,6 +550,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
         closeAiDrawer,
         addConcession,
         addCustomer,
+        addDefect,
         addComplaint,
         updateCustomerTolerance,
         sendAiMessage,

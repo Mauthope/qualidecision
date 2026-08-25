@@ -78,7 +78,7 @@ export const Navbar: React.FC = () => {
                 <div className="flex flex-col">
                   <div className="flex items-center gap-1.5">
                     <span className="font-extrabold tracking-tight text-lg sm:text-xl text-white">
-                      Quali<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400">Decision</span>
+                      Perfil<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400">Cliente</span>
                     </span>
                   </div>
                   <span className="text-[10px] sm:text-[11px] text-slate-400 hidden 2xl:inline leading-none font-medium">

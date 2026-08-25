@@ -18,6 +18,7 @@ export interface Customer {
   name: string;
   code: string;
   segment?: string;
+  location?: string; // Nome da cidade/estado (ex: Chapecó/SC)
   toleranceRatings: Record<string, { level: ToleranceLevel; notes?: string }>;
   overallToleranceScore: number; // 0 to 100
   avatarColor: string;
@@ -61,9 +62,11 @@ export interface ConcessionShipment {
   code: string;
   customerId: string;
   customerName: string;
+  customerNumber?: string; // Número / Código do Cliente
+  opNumber?: string; // Número da Ordem de Produção (OP)
   date: string;
   lotNumber: string;
-  productName: string;
+  productName: string; // ex: 'Sacaria', 'Big Bag'
   defectTypeId: string;
   defectTypeName: string;
   quantity: number;

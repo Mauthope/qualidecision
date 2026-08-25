@@ -242,7 +242,14 @@ export default function EnviosPage() {
                     </td>
 
                     <td className="py-3.5 px-4">
-                      <div className="text-slate-200">{c.productName}</div>
+                      <div className="text-slate-200 font-bold flex flex-wrap items-center gap-1.5">
+                        <span>{c.productName}</span>
+                        {c.opNumber && (
+                          <span className="text-[10px] font-mono font-bold text-cyan-300 bg-cyan-950/40 px-1.5 py-0.5 rounded border border-cyan-500/20">
+                            {c.opNumber}
+                          </span>
+                        )}
+                      </div>
                       <div className="font-mono text-[11px] text-slate-400">Lote: {c.lotNumber}</div>
                     </td>
 

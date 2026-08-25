@@ -12,13 +12,14 @@ import {
   Bot,
   ArrowRight,
   Sparkles,
-  Building2
+  Building2,
+  MapPin,
+  Plus
 } from 'lucide-react';
 import { ConcessionDecisionModal } from '@/components/clientes/ConcessionDecisionModal';
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
 import { NewCustomerModal } from '@/components/clientes/NewCustomerModal';
 import { Customer } from '@/types';
-import { Plus } from 'lucide-react';
 
 export default function ClientesPage() {
   const { customers, complaints, concessions, openAiDrawer } = useQuality();
@@ -150,9 +151,17 @@ export default function ClientesPage() {
                     >
                       {customer.name}
                     </Link>
-                    <div className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                      <Building2 className="w-3 h-3 text-cyan-400" />
-                      <span className="truncate">{customer.segment || 'Geral'}</span>
+                    <div className="text-xs text-slate-400 flex flex-wrap items-center gap-2 mt-0.5">
+                      <div className="flex items-center gap-1">
+                        <Building2 className="w-3 h-3 text-cyan-400" />
+                        <span className="truncate">{customer.segment || 'Geral'}</span>
+                      </div>
+                      {(customer.location || customer.cityState) && (
+                        <div className="flex items-center gap-1 text-cyan-300">
+                          <MapPin className="w-3 h-3 text-cyan-400" />
+                          <span>{customer.location || customer.cityState}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

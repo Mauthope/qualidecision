@@ -150,6 +150,12 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
                       {item.productName}
                     </span>
 
+                    {item.opNumber && (
+                      <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-cyan-950/40 text-cyan-300 border border-cyan-500/20">
+                        {item.opNumber}
+                      </span>
+                    )}
+
                     <span className="text-xs text-slate-400 font-mono">
                       (Lote: {item.lotNumber})
                     </span>

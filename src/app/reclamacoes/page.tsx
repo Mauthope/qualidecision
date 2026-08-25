@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
 import { NewComplaintModal } from '@/components/reclamacoes/NewComplaintModal';
+import { DefectManagementModal } from '@/components/reclamacoes/DefectManagementModal';
 import { ComplaintPhoto } from '@/types';
 
 export default function ReclamacoesPage() {
@@ -23,6 +24,7 @@ export default function ReclamacoesPage() {
   const [activePhoto, setActivePhoto] = useState<ComplaintPhoto | null>(null);
   const [photoTitle, setPhotoTitle] = useState('');
   const [isNewComplaintModalOpen, setIsNewComplaintModalOpen] = useState(false);
+  const [isDefectModalOpen, setIsDefectModalOpen] = useState(false);
 
   const [search, setSearch] = useState('');
   const [filterCustomer, setFilterCustomer] = useState('all');
@@ -59,7 +61,16 @@ export default function ReclamacoesPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start md:self-auto">
+        <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
+          <button
+            onClick={() => setIsDefectModalOpen(true)}
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-900 border border-slate-800 hover:border-cyan-500/50 hover:bg-slate-850 text-cyan-300 transition-all cursor-pointer shadow-sm"
+            title="Visualizar e cadastrar defeitos no catálogo da fábrica"
+          >
+            <Layers className="w-4 h-4 text-cyan-400" />
+            <span>Gestão de Defeitos</span>
+          </button>
+
           <button
             onClick={() => setIsNewComplaintModalOpen(true)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-rose-500 text-white hover:bg-rose-400 shadow-lg shadow-rose-500/25 transition-all cursor-pointer"
@@ -240,6 +251,11 @@ export default function ReclamacoesPage() {
       <NewComplaintModal
         isOpen={isNewComplaintModalOpen}
         onClose={() => setIsNewComplaintModalOpen(false)}
+      />
+
+      <DefectManagementModal
+        isOpen={isDefectModalOpen}
+        onClose={() => setIsDefectModalOpen(false)}
       />
     </div>
   );
