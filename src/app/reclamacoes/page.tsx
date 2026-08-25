@@ -11,18 +11,18 @@ import {
   Calendar,
   Wrench,
   CheckCircle2,
-  RefreshCw,
-  Database,
+  Plus,
   Layers
 } from 'lucide-react';
 import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
+import { NewComplaintModal } from '@/components/reclamacoes/NewComplaintModal';
 import { ComplaintPhoto } from '@/types';
 
 export default function ReclamacoesPage() {
   const { complaints, customers, showToast } = useQuality();
   const [activePhoto, setActivePhoto] = useState<ComplaintPhoto | null>(null);
   const [photoTitle, setPhotoTitle] = useState('');
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [isNewComplaintModalOpen, setIsNewComplaintModalOpen] = useState(false);
 
   const [search, setSearch] = useState('');
   const [filterCustomer, setFilterCustomer] = useState('all');
@@ -41,14 +41,6 @@ export default function ReclamacoesPage() {
     return matchesSearch && matchesCustomer && matchesSeverity;
   });
 
-  const handleSyncErp = () => {
-    setIsSyncing(true);
-    setTimeout(() => {
-      setIsSyncing(false);
-      showToast('Base de reclamações sincronizada com sucesso com o banco ERP corporativo!', 'success');
-    }, 1000);
-  };
-
   return (
     <div className="space-y-6">
       
@@ -56,25 +48,24 @@ export default function ReclamacoesPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/25 text-rose-300 text-xs font-semibold mb-1.5">
-            <Database className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Alimentado Automaticamente via ERP Corporativo</span>
+            <AlertCircle className="w-3.5 h-3.5 text-rose-400" />
+            <span>Central de Reclamações & Gestão de SAC</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white font-heading">
             Reclamações & Não-Conformidades de Clientes
           </h1>
           <p className="text-xs sm:text-sm text-slate-400">
-            Registro de ocorrências, laudos e fotos de não-conformidades integradas diretamente do banco da empresa.
+            Histórico de ocorrências, laudos e cadastro manual de novas queixas com fotos e peso reclamado.
           </p>
         </div>
 
         <div className="flex items-center gap-2 self-start md:self-auto">
           <button
-            onClick={handleSyncErp}
-            disabled={isSyncing}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/25 transition-all cursor-pointer disabled:opacity-50"
+            onClick={() => setIsNewComplaintModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-rose-500 text-white hover:bg-rose-400 shadow-lg shadow-rose-500/25 transition-all cursor-pointer"
           >
-            <RefreshCw className={`w-4 h-4 text-cyan-400 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>{isSyncing ? 'Sincronizando...' : 'Sincronizar com ERP'}</span>
+            <Plus className="w-4 h-4" />
+            <span>+ Acrescentar Reclamação</span>
           </button>
         </div>
       </div>
@@ -245,6 +236,11 @@ export default function ReclamacoesPage() {
           onClose={() => setActivePhoto(null)}
         />
       )}
+
+      <NewComplaintModal
+        isOpen={isNewComplaintModalOpen}
+        onClose={() => setIsNewComplaintModalOpen(false)}
+      />
     </div>
   );
 }
