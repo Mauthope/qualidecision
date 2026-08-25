@@ -88,7 +88,7 @@ export default function DashboardPage() {
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-cyan-500 text-slate-950 hover:bg-cyan-400 shadow-md shadow-cyan-500/20 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>+ Novo Envio</span>
+            <span>Novo Envio</span>
           </button>
 
           <button
@@ -96,7 +96,7 @@ export default function DashboardPage() {
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-rose-500 text-white hover:bg-rose-400 shadow-md shadow-rose-500/20 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>+ Reclamação</span>
+            <span>Reclamação</span>
           </button>
 
           <button

@@ -133,14 +133,14 @@ export const Navbar: React.FC = () => {
                 <span>Assistente IA</span>
               </button>
 
-              {/* + Novo Envio com Desvio */}
+              {/* Novo Envio com Desvio */}
               <button
                 onClick={() => setIsConcessionModalOpen(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 hover:from-cyan-400 hover:to-teal-400 shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/35 transition-all active:scale-95"
               >
                 <PlusCircle className="w-4 h-4" />
-                <span className="hidden xl:inline">+ Novo Envio com Desvio</span>
-                <span className="xl:hidden">+ Envio</span>
+                <span className="hidden xl:inline">Novo Envio com Desvio</span>
+                <span className="xl:hidden">Novo Envio</span>
               </button>
 
               {/* Data & Backup */}

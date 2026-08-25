@@ -73,7 +73,7 @@ export default function ClientesPage() {
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-cyan-500 text-slate-950 hover:bg-cyan-400 shadow-lg shadow-cyan-500/20 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>+ Novo Cliente</span>
+            <span>Novo Cliente</span>
           </button>
         </div>
       </div>

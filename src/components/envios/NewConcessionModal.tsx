@@ -104,7 +104,7 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
                   className="text-[11px] font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors"
                 >
                   <UserPlus className="w-3 h-3" />
-                  <span>+ Novo Cliente</span>
+                  <span>Novo Cliente</span>
                 </button>
               </div>
               <SearchableCustomerSelect

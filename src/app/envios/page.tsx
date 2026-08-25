@@ -102,7 +102,7 @@ export default function EnviosPage() {
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 hover:from-cyan-400 hover:to-teal-400 shadow-lg shadow-cyan-500/20 transition-all active:scale-95"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>+ Novo Envio com Desvio</span>
+            <span>Novo Envio com Desvio</span>
           </button>
         </div>
       </div>
