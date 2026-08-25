@@ -166,22 +166,35 @@ export const qualityService = {
           };
         }
       } else {
-        // Non-claimed defect: adapt according to customer's overall rigor
-        if (overallToleranceScore < 30) {
-          // Extremely strict customer across the board (e.g. Trouw Nutrition)
+        // Non-claimed defect: check if user manually specified custom notes
+        const existingRating = customer.toleranceRatings?.[defect.id];
+        const isGenericNote = existingRating?.notes && (
+          existingRating.notes.includes('Cliente hiper-exigente') ||
+          existingRating.notes.includes('Tolerância moderada. Desvio leve') ||
+          existingRating.notes.includes('Alta flexibilidade histórica')
+        );
+
+        const customNotes = (existingRating?.notes && !isGenericNote) ? existingRating.notes : '';
+
+        if (existingRating && existingRating.level) {
+          toleranceRatings[defect.id] = {
+            level: existingRating.level,
+            notes: customNotes
+          };
+        } else if (overallToleranceScore < 30) {
           toleranceRatings[defect.id] = {
             level: 'baixa',
-            notes: `Cliente hiper-exigente (${complaintsCount} SACs registrados, média de ${avgKgPerComplaint.toFixed(1)} kg/queixa). Baixa tolerância geral.`
+            notes: customNotes
           };
         } else if (overallToleranceScore < 60) {
           toleranceRatings[defect.id] = {
             level: 'moderada',
-            notes: 'Tolerância moderada. Desvio leve aceitável sob monitoramento.'
+            notes: customNotes
           };
         } else {
           toleranceRatings[defect.id] = {
             level: 'alta',
-            notes: 'Alta flexibilidade histórica. Sem registros deste defeito no ERP.'
+            notes: customNotes
           };
         }
       }

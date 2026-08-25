@@ -13,7 +13,11 @@ import {
   Info,
   Filter,
   Layers,
-  Search
+  Search,
+  Calendar,
+  Ban,
+  FileText,
+  Plus
 } from 'lucide-react';
 
 interface Props {
@@ -22,6 +26,8 @@ interface Props {
   complaints: Complaint[];
 }
 
+type ViewMode = 'only_claimed' | 'avoid_shipping' | 'all';
+
 export const ToleranceMatrix: React.FC<Props> = ({ customer, defects, complaints }) => {
   const { updateCustomerTolerance } = useQuality();
   const [editingDefectId, setEditingDefectId] = useState<string | null>(null);
@@ -29,25 +35,42 @@ export const ToleranceMatrix: React.FC<Props> = ({ customer, defects, complaints
   const [tempNotes, setTempNotes] = useState<string>('');
 
   // Default to showing only claimed defects as requested
-  const [viewMode, setViewMode] = useState<'only_claimed' | 'all'>('only_claimed');
+  const [viewMode, setViewMode] = useState<ViewMode>('only_claimed');
   const [defectSearch, setDefectSearch] = useState('');
 
   // List of defects that this customer actually complained about in ERP
-  const claimedDefectIds = new Set(
-    complaints
-      .filter(c => c.customerId === customer.id)
-      .map(c => c.defectTypeId)
-  );
+  const clientComplaints = complaints.filter(c => c.customerId === customer.id);
+  const claimedDefectIds = new Set(clientComplaints.map(c => c.defectTypeId));
+
+  // "Evitar Enviar" includes:
+  // 1. Defects that were claimed in ERP, OR
+  // 2. Defects with user-specified custom notes/restrictions, OR
+  // 3. Defects with level set to 'intolerante'
+  const isAvoidShipping = (defectId: string) => {
+    const isClaimed = claimedDefectIds.has(defectId);
+    const rating = customer.toleranceRatings?.[defectId];
+    const hasCustomNotes = Boolean(rating?.notes && rating.notes.trim() !== '');
+    const isIntolerant = rating?.level === 'intolerante';
+    return isClaimed || hasCustomNotes || isIntolerant;
+  };
+
+  const avoidShippingCount = defects.filter(d => isAvoidShipping(d.id)).length;
 
   const displayedDefects = defects.filter(defect => {
     const isClaimed = claimedDefectIds.has(defect.id);
+    const avoid = isAvoidShipping(defect.id);
     const matchesSearch = defect.name.toLowerCase().includes(defectSearch.toLowerCase()) ||
       defect.category.toLowerCase().includes(defectSearch.toLowerCase());
 
+    if (!matchesSearch) return false;
+
     if (viewMode === 'only_claimed') {
-      return isClaimed && matchesSearch;
+      return isClaimed;
     }
-    return matchesSearch;
+    if (viewMode === 'avoid_shipping') {
+      return avoid;
+    }
+    return true;
   });
 
   const handleStartEdit = (defectId: string) => {
@@ -58,7 +81,7 @@ export const ToleranceMatrix: React.FC<Props> = ({ customer, defects, complaints
   };
 
   const handleSaveEdit = (defectId: string) => {
-    updateCustomerTolerance(customer.id, defectId, tempLevel, tempNotes);
+    updateCustomerTolerance(customer.id, defectId, tempLevel, tempNotes.trim());
     setEditingDefectId(null);
   };
 
@@ -66,7 +89,7 @@ export const ToleranceMatrix: React.FC<Props> = ({ customer, defects, complaints
     <div className="glow-card p-5 sm:p-6 rounded-2xl bg-slate-950/80 border border-slate-800/90 space-y-4">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/60 pb-3">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-800/60 pb-3">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
             <ShieldCheck className="w-5 h-5" />
@@ -81,18 +104,18 @@ export const ToleranceMatrix: React.FC<Props> = ({ customer, defects, complaints
               </span>
             </div>
             <p className="text-xs text-slate-400">
-              Diretrizes de tolerância e histórico de ocorrências registradas no ERP
+              Diretrizes de tolerância, datas de reclamações no ERP e restrições de envio
             </p>
           </div>
         </div>
 
         {/* View mode toggle tabs */}
-        <div className="flex items-center gap-1.5 p-1 bg-slate-900 rounded-xl border border-slate-800 self-start sm:self-auto text-xs">
+        <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-900 rounded-xl border border-slate-800 self-start lg:self-auto text-xs">
           <button
             onClick={() => setViewMode('only_claimed')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
               viewMode === 'only_claimed'
-                ? 'bg-cyan-500 text-slate-950 shadow-sm'
+                ? 'bg-rose-500 text-white shadow-sm shadow-rose-500/20'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -101,10 +124,22 @@ export const ToleranceMatrix: React.FC<Props> = ({ customer, defects, complaints
           </button>
 
           <button
+            onClick={() => setViewMode('avoid_shipping')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              viewMode === 'avoid_shipping'
+                ? 'bg-amber-500 text-slate-950 shadow-sm shadow-amber-500/20'
+                : 'text-slate-400 hover:text-amber-300'
+            }`}
+          >
+            <Ban className="w-3.5 h-3.5 text-amber-400" />
+            <span>Evitar Enviar ({avoidShippingCount})</span>
+          </button>
+
+          <button
             onClick={() => setViewMode('all')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
               viewMode === 'all'
-                ? 'bg-cyan-500 text-slate-950 shadow-sm'
+                ? 'bg-cyan-500 text-slate-950 shadow-sm shadow-cyan-500/20'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -114,8 +149,8 @@ export const ToleranceMatrix: React.FC<Props> = ({ customer, defects, complaints
         </div>
       </div>
 
-      {/* Search Bar when viewing all */}
-      {viewMode === 'all' && (
+      {/* Search Bar when viewing all or avoid_shipping */}
+      {(viewMode === 'all' || viewMode === 'avoid_shipping') && (
         <div className="relative">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
@@ -136,18 +171,22 @@ export const ToleranceMatrix: React.FC<Props> = ({ customer, defects, complaints
             <p className="text-sm font-bold text-white">
               {viewMode === 'only_claimed'
                 ? 'Nenhum defeito reclamado no histórico deste cliente!'
+                : viewMode === 'avoid_shipping'
+                ? 'Nenhum defeito marcado na lista de restrição "Evitar Enviar"!'
                 : 'Nenhum defeito encontrado para a busca.'}
             </p>
             <p className="text-xs text-slate-400 max-w-md mx-auto">
               {viewMode === 'only_claimed'
-                ? 'Este cliente não possui registros de não-conformidades no banco do ERP. Todas as regras de tolerância seguem a parametrização inicial padrão.'
+                ? 'Este cliente não possui registros de não-conformidades no banco do ERP.'
+                : viewMode === 'avoid_shipping'
+                ? 'Para adicionar um defeito aqui, basta clicar em "Editar Regra" em qualquer um dos 69 defeitos e preencher uma restrição/especificação.'
                 : 'Tente buscar por outro termo.'}
             </p>
           </div>
-          {viewMode === 'only_claimed' && (
+          {viewMode !== 'all' && (
             <button
               onClick={() => setViewMode('all')}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors cursor-pointer"
             >
               <Layers className="w-3.5 h-3.5 text-cyan-400" />
               <span>Ver Todos os 69 Defeitos do Catálogo</span>
@@ -159,10 +198,10 @@ export const ToleranceMatrix: React.FC<Props> = ({ customer, defects, complaints
           {displayedDefects.map(defect => {
             const rating = customer.toleranceRatings?.[defect.id];
             const level: ToleranceLevel = rating?.level || 'moderada';
-            const notes = rating?.notes || 'Sem observações técnicas específicas cadastradas.';
-            const defectComplaints = complaints.filter(
-              c => c.customerId === customer.id && c.defectTypeId === defect.id
-            );
+            const rawNotes = rating?.notes || '';
+            const defectComplaints = clientComplaints.filter(c => c.defectTypeId === defect.id);
+            const isClaimed = defectComplaints.length > 0;
+            const hasCustomNotes = Boolean(rawNotes && rawNotes.trim() !== '');
 
             const isEditing = editingDefectId === defect.id;
 
@@ -190,15 +229,26 @@ export const ToleranceMatrix: React.FC<Props> = ({ customer, defects, complaints
                 className={`p-4 rounded-xl border transition-all ${
                   isEditing
                     ? 'bg-slate-900 border-cyan-500/50 shadow-lg shadow-cyan-500/10'
+                    : isClaimed
+                    ? 'bg-rose-950/20 border-rose-500/40 hover:border-rose-500/60'
+                    : hasCustomNotes
+                    ? 'bg-amber-950/20 border-amber-500/40 hover:border-amber-500/60'
                     : 'bg-slate-900/50 border-slate-800/80 hover:border-slate-700'
                 } flex flex-col justify-between space-y-3`}
               >
-                {/* Top row */}
+                {/* Top row: Defect Name & Tolerance Badge */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: defect.color }} />
                     <div>
-                      <span className="font-bold text-slate-100 text-xs sm:text-sm">{defect.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-100 text-xs sm:text-sm">{defect.name}</span>
+                        {hasCustomNotes && !isClaimed && (
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            Restrição Manual
+                          </span>
+                        )}
+                      </div>
                       <div className="text-[10px] text-slate-400 uppercase tracking-wider">{defect.category}</div>
                     </div>
                   </div>
@@ -210,6 +260,33 @@ export const ToleranceMatrix: React.FC<Props> = ({ customer, defects, complaints
                     </span>
                   )}
                 </div>
+
+                {/* Complaint Dates Banner (If Claimed) */}
+                {isClaimed && (
+                  <div className="p-2.5 rounded-lg bg-rose-950/50 border border-rose-500/30 text-xs space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-rose-300 flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-rose-400" />
+                        <span>Datas das Reclamações ({defectComplaints.length}):</span>
+                      </span>
+                      <span className="text-[10px] font-mono font-bold text-rose-300">
+                        Total: {defectComplaints.reduce((acc, c) => acc + (c.quantityAffected || 0), 0).toLocaleString('pt-BR')} kg
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5">
+                      {defectComplaints.map(comp => (
+                        <span
+                          key={comp.id}
+                          className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/20 text-rose-100 border border-rose-500/40"
+                          title={`Chamado: ${comp.code} - Lote: ${comp.lotNumber} - "${comp.description}"`}
+                        >
+                          📅 {new Date(comp.date).toLocaleDateString('pt-BR')} {comp.quantityAffected ? `(${comp.quantityAffected.toLocaleString('pt-BR')} kg)` : ''}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Edit Mode vs Display Mode */}
                 {isEditing ? (
@@ -232,26 +309,27 @@ export const ToleranceMatrix: React.FC<Props> = ({ customer, defects, complaints
 
                     <div>
                       <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                        Parecer e Diretriz Técnica:
+                        Especificação / Parecer Técnico (Aparecerá em "Evitar Enviar"):
                       </label>
                       <textarea
                         rows={2}
+                        placeholder="Ex: Não enviar se desvio for acima de 2mm ou se houver variação de tonalidade."
                         value={tempNotes}
                         onChange={e => setTempNotes(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-500/50"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-500/50"
                       />
                     </div>
 
                     <div className="flex items-center justify-end gap-2 pt-1">
                       <button
                         onClick={() => setEditingDefectId(null)}
-                        className="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200"
+                        className="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 cursor-pointer"
                       >
                         Cancelar
                       </button>
                       <button
                         onClick={() => handleSaveEdit(defect.id)}
-                        className="px-3 py-1 rounded-lg text-xs font-bold bg-cyan-500 text-slate-950 hover:bg-cyan-400 flex items-center gap-1"
+                        className="px-3 py-1 rounded-lg text-xs font-bold bg-cyan-500 text-slate-950 hover:bg-cyan-400 flex items-center gap-1 cursor-pointer shadow-md shadow-cyan-500/20"
                       >
                         <Save className="w-3.5 h-3.5" />
                         Salvar
@@ -260,21 +338,35 @@ export const ToleranceMatrix: React.FC<Props> = ({ customer, defects, complaints
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <p className="text-xs text-slate-300 bg-slate-950/70 p-2.5 rounded-lg border border-slate-800/60 leading-relaxed">
-                      {notes}
-                    </p>
+                    {/* Notes Box */}
+                    {hasCustomNotes ? (
+                      <p className="text-xs text-slate-200 bg-slate-950/70 p-2.5 rounded-lg border border-slate-800/80 leading-relaxed">
+                        {rawNotes}
+                      </p>
+                    ) : isClaimed ? (
+                      <p className="text-xs text-rose-200 bg-rose-950/30 p-2.5 rounded-lg border border-rose-500/20 leading-relaxed italic">
+                        🚨 Defeito reclamado no SAC. Evitar liberação de lotes com este desvio.
+                      </p>
+                    ) : (
+                      <div className="text-[11px] text-slate-500 italic bg-slate-950/30 p-2.5 rounded-lg border border-slate-800/40 flex items-center justify-between">
+                        <span>Sem restrição específica cadastrada.</span>
+                        <button
+                          onClick={() => handleStartEdit(defect.id)}
+                          className="text-[10px] text-cyan-400 hover:text-cyan-300 font-semibold cursor-pointer flex items-center gap-0.5"
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>Especificar</span>
+                        </button>
+                      </div>
+                    )}
 
+                    {/* Footer Row */}
                     <div className="flex items-center justify-between text-[11px] pt-1">
-                      {(() => {
-                        const defectKg = defectComplaints.reduce((sum, c) => sum + (c.quantityAffected || 0), 0);
-                        return (
-                          <span className={`font-medium ${defectComplaints.length > 0 ? 'text-rose-400' : 'text-slate-500'}`}>
-                            {defectComplaints.length > 0
-                              ? `⚠️ ${defectComplaints.length} registro(s) no ERP (${defectKg > 0 ? `${defectKg.toLocaleString('pt-BR')} kg` : 'desvio pontual'})`
-                              : 'Nenhuma ocorrência registrada'}
-                          </span>
-                        );
-                      })()}
+                      <span className={`font-medium ${isClaimed ? 'text-rose-400' : 'text-slate-500'}`}>
+                        {isClaimed
+                          ? `⚠️ ${defectComplaints.length} reclamação(ões) no ERP`
+                          : 'Nenhuma reclamação no ERP'}
+                      </span>
 
                       <button
                         onClick={() => handleStartEdit(defect.id)}
