@@ -42,16 +42,12 @@ export const ToleranceMatrix: React.FC<Props> = ({ customer, defects, complaints
   const clientComplaints = complaints.filter(c => c.customerId === customer.id);
   const claimedDefectIds = new Set(clientComplaints.map(c => c.defectTypeId));
 
-  // "Evitar Enviar" includes:
-  // 1. Defects that were claimed in ERP, OR
-  // 2. Defects with user-specified custom notes/restrictions, OR
-  // 3. Defects with level set to 'intolerante'
+  // "Evitar Enviar": apenas defeitos que possuem alguma observação/especificação manual, MAS NÃO possuem reclamação no ERP
   const isAvoidShipping = (defectId: string) => {
     const isClaimed = claimedDefectIds.has(defectId);
     const rating = customer.toleranceRatings?.[defectId];
     const hasCustomNotes = Boolean(rating?.notes && rating.notes.trim() !== '');
-    const isIntolerant = rating?.level === 'intolerante';
-    return isClaimed || hasCustomNotes || isIntolerant;
+    return !isClaimed && hasCustomNotes;
   };
 
   const avoidShippingCount = defects.filter(d => isAvoidShipping(d.id)).length;
