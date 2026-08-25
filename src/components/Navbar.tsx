@@ -54,12 +54,6 @@ export const Navbar: React.FC = () => {
       badge: stats.activeComplaintsCount > 0 ? stats.activeComplaintsCount : undefined
     },
     {
-      label: 'Indicadores de Lucro',
-      shortLabel: 'Indicadores',
-      href: '/indicadores',
-      icon: <BarChart3 className="w-4 h-4" />
-    },
-    {
       label: 'Memorial de Cálculo',
       shortLabel: 'Memorial',
       href: '/memorial',
