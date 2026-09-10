@@ -99,12 +99,12 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Initial Load from Supabase (with fallback cache)
   const loadData = useCallback(async () => {
     try {
-      const [loadedCustomers, loadedDefects, loadedComplaints, loadedConcessions] = await Promise.all([
-        supabaseService.getCustomers(),
-        supabaseService.getDefects(),
-        supabaseService.getComplaints(),
-        supabaseService.getConcessions()
-      ]);
+      const {
+        customers: loadedCustomers,
+        defects: loadedDefects,
+        complaints: loadedComplaints,
+        concessions: loadedConcessions
+      } = await supabaseService.getAllQualityData();
       const loadedChat = storageService.getChatMessages();
 
       // Dynamically calibrate concessions scrap value with 77.73g * 1.5
