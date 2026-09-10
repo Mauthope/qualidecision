@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Customer, DefectType, Complaint, ConcessionShipment, QualityStats, AiChatMessage, RiskEvaluationResult, ToleranceLevel, DefectSeverity, DefectCategory } from '@/types';
 import { storageService } from '@/services/storageService';
+import { supabaseService } from '@/services/supabaseService';
 import { qualityService } from '@/services/qualityService';
 import { aiAssistantService } from '@/services/aiAssistantService';
 
@@ -95,55 +96,67 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }, 4000);
   }, []);
 
-  // Initial Load from Storage
-  const loadData = useCallback(() => {
-    const loadedCustomers = storageService.getCustomers();
-    const loadedDefects = storageService.getDefects();
-    const loadedComplaints = storageService.getComplaints();
-    const loadedConcessions = storageService.getConcessions();
-    const loadedChat = storageService.getChatMessages();
+  // Initial Load from Supabase (with fallback cache)
+  const loadData = useCallback(async () => {
+    try {
+      const [loadedCustomers, loadedDefects, loadedComplaints, loadedConcessions] = await Promise.all([
+        supabaseService.getCustomers(),
+        supabaseService.getDefects(),
+        supabaseService.getComplaints(),
+        supabaseService.getConcessions()
+      ]);
+      const loadedChat = storageService.getChatMessages();
 
-    // Dynamically calibrate concessions scrap value with 77.73g * 1.5
-    const calibratedConcessions = loadedConcessions.map(c => ({
-      ...c,
-      totalSavedValue: qualityService.calculateSavedProfit(c.quantity),
-      unitSavedValue: (77.73 / 1000) * 1.5
-    }));
+      // Dynamically calibrate concessions scrap value with 77.73g * 1.5
+      const calibratedConcessions = loadedConcessions.map(c => ({
+        ...c,
+        totalSavedValue: qualityService.calculateSavedProfit(c.quantity),
+        unitSavedValue: (77.73 / 1000) * 1.5
+      }));
 
-    // Dynamically calibrate all customers according to SAC complaints & kg sensitivity
-    const calibratedCustomers = loadedCustomers.map(customer => {
-      const { overallToleranceScore, toleranceRatings } = qualityService.calculateCustomerTolerance(
-        customer,
-        loadedComplaints,
-        calibratedConcessions,
-        loadedDefects
-      );
-      return {
-        ...customer,
-        overallToleranceScore,
-        toleranceRatings
-      };
-    });
+      // Dynamically calibrate all customers according to SAC complaints & kg sensitivity
+      const calibratedCustomers = loadedCustomers.map(customer => {
+        const { overallToleranceScore, toleranceRatings } = qualityService.calculateCustomerTolerance(
+          customer,
+          loadedComplaints,
+          calibratedConcessions,
+          loadedDefects
+        );
+        return {
+          ...customer,
+          overallToleranceScore,
+          toleranceRatings
+        };
+      });
 
-    setCustomers(calibratedCustomers);
-    setDefects(loadedDefects);
-    setComplaints(loadedComplaints);
-    setConcessions(calibratedConcessions);
+      setCustomers(calibratedCustomers);
+      setDefects(loadedDefects);
+      setComplaints(loadedComplaints);
+      setConcessions(calibratedConcessions);
 
-    if (loadedChat.length === 0) {
-      const welcomeMessage: AiChatMessage = {
-        id: 'msg-welcome',
-        sender: 'assistant',
-        text: 'Olá! Sou a **IA de Qualidade & Perfil de Clientes**.\n\nPergunte-me sobre reclamações de clientes (ex: *"Quais foram as reclamações do cliente Alisul?"*) ou simule um envio de lote com defeito (*"Posso mandar 5.000 sacos com vinco para a Alisul?"*).',
-        timestamp: 'Agora'
-      };
-      setChatMessages([welcomeMessage]);
-      storageService.saveChatMessages([welcomeMessage]);
-    } else {
-      setChatMessages(loadedChat);
+      // Save cache locally
+      storageService.saveCustomers(calibratedCustomers);
+      storageService.saveDefects(loadedDefects);
+      storageService.saveComplaints(loadedComplaints);
+      storageService.saveConcessions(calibratedConcessions);
+
+      if (loadedChat.length === 0) {
+        const welcomeMessage: AiChatMessage = {
+          id: 'msg-welcome',
+          sender: 'assistant',
+          text: 'Olá! Sou a **IA de Qualidade & Perfil de Clientes**.\n\nPergunte-me sobre reclamações de clientes (ex: *"Quais foram as reclamações do cliente Alisul?"*) ou simule um envio de lote com defeito (*"Posso mandar 5.000 sacos com vinco para a Alisul?"*).',
+          timestamp: 'Agora'
+        };
+        setChatMessages([welcomeMessage]);
+        storageService.saveChatMessages([welcomeMessage]);
+      } else {
+        setChatMessages(loadedChat);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar dados do Supabase:', err);
+    } finally {
+      setIsLoaded(true);
     }
-
-    setIsLoaded(true);
   }, []);
 
   useEffect(() => {
@@ -227,6 +240,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const updated = [newConcession, ...concessions];
     setConcessions(updated);
     storageService.saveConcessions(updated);
+    supabaseService.saveConcession(newConcession);
 
     const updatedCustomers = customers.map(c => {
       const { overallToleranceScore, toleranceRatings } = qualityService.calculateCustomerTolerance(
@@ -330,6 +344,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const updated = [newCustomer, ...customers];
     setCustomers(updated);
     storageService.saveCustomers(updated);
+    supabaseService.saveCustomer(newCustomer);
     showToast(`Cliente ${newCustomer.name} cadastrado com sucesso!`, 'success');
     return newCustomer;
   }, [customers, defects, showToast]);
@@ -363,6 +378,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const updated = [newDefect, ...defects];
     setDefects(updated);
     storageService.saveDefects(updated);
+    supabaseService.saveDefect(newDefect);
     showToast(`Defeito "${newDefect.name}" cadastrado com sucesso!`, 'success');
     return newDefect;
   }, [defects, showToast]);
@@ -400,19 +416,14 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       correctiveAction: data.correctiveAction || 'Investigação de processo aberta',
       status: 'aberta',
       origin: data.origin || 'sac_manual',
-      photos: data.photos || [
-        {
-          id: `photo-${Date.now()}`,
-          url: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&auto=format&fit=crop&q=80',
-          caption: 'Evidência fotográfica registrada no recebimento'
-        }
-      ],
+      photos: data.photos || [],
       costImpact: data.quantityAffected * (defect?.defaultUnitLoss || 18.00)
     };
 
     const updated = [newComplaint, ...complaints];
     setComplaints(updated);
     storageService.saveComplaints(updated);
+    supabaseService.saveComplaint(newComplaint);
 
     // Recalibrate customers with the new complaint
     const updatedCustomers = customers.map(c => {
@@ -441,6 +452,9 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     level: ToleranceLevel,
     notes?: string
   ) => {
+    let targetUpdatedRatings: Record<string, { level: ToleranceLevel; notes?: string }> = {};
+    let targetOverallScore = 70;
+
     const updated = customers.map(c => {
       if (c.id !== customerId) return c;
       const updatedRatings = {
@@ -461,6 +475,9 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }, 0);
       const overallScore = Math.round(points / Math.max(levels.length, 1));
 
+      targetUpdatedRatings = updatedRatings;
+      targetOverallScore = overallScore;
+
       return {
         ...c,
         toleranceRatings: updatedRatings,
@@ -470,6 +487,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     setCustomers(updated);
     storageService.saveCustomers(updated);
+    supabaseService.updateCustomerTolerance(customerId, targetUpdatedRatings, targetOverallScore);
     showToast('Perfil de tolerância do cliente atualizado!', 'success');
   }, [customers, showToast]);
 

@@ -33749,14 +33749,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 3,
-    "photos": [
-      {
-        "id": "ph-414-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.110.771/01.05 (Arte Descentralizada)",
-        "defectLocation": "ACABAMENTO BB PAULIBAG"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-492-braskem",
@@ -33774,14 +33767,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 150,
-    "photos": [
-      {
-        "id": "ph-492-1",
-        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80",
-        "caption": "Evidência laudo ERP - Lote OP 00.125.880/01.01 (Refilamento com rebarba)",
-        "defectLocation": "ACABAMENTO BIG BAG 1"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-415-1",
@@ -33799,14 +33785,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 7,
-    "photos": [
-      {
-        "id": "ph-415-1",
-        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.116.584/01.01 (Costura aberta)",
-        "defectLocation": "ACABAMENTO BIG BAG 1"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-416-2",
@@ -33824,14 +33803,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 140,
-    "photos": [
-      {
-        "id": "ph-416-1",
-        "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.098.175/01.04 (Divergencia de tamanho)",
-        "defectLocation": "ACABAMENTO BIG BAG 1"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-417-3",
@@ -33849,14 +33821,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 6,
-    "photos": [
-      {
-        "id": "ph-417-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.124.631/01.01 (Desencaixe)",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-418-4",
@@ -33874,14 +33839,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 5,
-    "photos": [
-      {
-        "id": "ph-418-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.663/01.01 (Sacaria rompendo na sanfona)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-419-5",
@@ -33899,14 +33857,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-419-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.519/02.03 (Palete quebrado)",
-        "defectLocation": "TRANSPORTES"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-420-6",
@@ -33924,14 +33875,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 67,
-    "photos": [
-      {
-        "id": "ph-420-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.123.711/01.02 (Raspado)",
-        "defectLocation": "LOGISTICA EXTERNA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-421-7",
@@ -33949,14 +33893,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-421-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.122.290/01.01 (Arte divergente)",
-        "defectLocation": "ACAB. ONE WAY SÃO GABRIEL"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-422-8",
@@ -33974,14 +33911,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-422-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.120.806/01.01 (Paletização)",
-        "defectLocation": "ACAB. ONE WAY SÃO GABRIEL"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-423-9",
@@ -33999,14 +33929,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 144,
-    "photos": [
-      {
-        "id": "ph-423-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.120.610/01.01 (Embalagens misturadas nos fardos/paletes)",
-        "defectLocation": "ACAB. ONE WAY SÃO GABRIEL"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-1-10",
@@ -34024,14 +33947,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-1-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.120.971/02.01 (Refilada)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-367-11",
@@ -34049,14 +33965,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 111,
-    "photos": [
-      {
-        "id": "ph-367-1",
-        "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.123.479/01.01 (Especificação Divergente)",
-        "defectLocation": "COMERCIAL"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-336-12",
@@ -34074,14 +33983,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-336-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.100.996/03.01 (Solda fraca na tarja)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-395-13",
@@ -34099,14 +34001,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-395-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.123.961/01.01 (Variação de cor)",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-397-14",
@@ -34124,14 +34019,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 43,
-    "photos": [
-      {
-        "id": "ph-397-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.124.495/03.01 (Bobina cortada/batida)",
-        "defectLocation": "EXPEDIÇÃO FÁBRICA II"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-398-15",
@@ -34149,14 +34037,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 150,
-    "photos": [
-      {
-        "id": "ph-398-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.429/01.02 (Solda fraca na tarja)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-3-16",
@@ -34174,14 +34055,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 837,
-    "photos": [
-      {
-        "id": "ph-3-1",
-        "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.126.054/03.01 (Divergencia de tamanho)",
-        "defectLocation": "GERAL"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-30-17",
@@ -34199,14 +34073,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 509,
-    "photos": [
-      {
-        "id": "ph-30-1",
-        "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.124.713/02.01 (Gramatura abaixo do especificado)",
-        "defectLocation": "TECELAGEM FAB 3"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-32-18",
@@ -34224,14 +34091,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 144,
-    "photos": [
-      {
-        "id": "ph-32-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.123.961/01.03 (Variação de cor)",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-33-19",
@@ -34249,14 +34109,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-33-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.112.969/07.01 (Solda fraca na tarja)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-34-20",
@@ -34274,14 +34127,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-34-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.127.937/01.01 (Etiqueta com duas informações)",
-        "defectLocation": "APONTAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-35-21",
@@ -34299,14 +34145,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-35-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.124.147/02.01 (Válvula colada)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-37-22",
@@ -34324,14 +34163,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-37-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.106.067/06.02 (Refilada)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-38-23",
@@ -34349,14 +34181,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 240,
-    "photos": [
-      {
-        "id": "ph-38-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.105.761/01.02 (Contaminantes fisicos)",
-        "defectLocation": "EXPEDIÇÃO FÁBRICA II"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-39-24",
@@ -34374,14 +34199,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-39-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.125.309/01.01 (Palete quebrado)",
-        "defectLocation": "PRENSA BB ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-40-25",
@@ -34399,14 +34217,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 8,
-    "photos": [
-      {
-        "id": "ph-40-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.842/05.01 (Refilada)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-279-26",
@@ -34424,14 +34235,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-279-1",
-        "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.118.132/04.01 (Variação de comprimento/largura)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-281-27",
@@ -34449,14 +34253,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 2,
-    "photos": [
-      {
-        "id": "ph-281-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.705/01.01 (Tecido queimado proximo a tarja)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-301-28",
@@ -34474,14 +34271,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 1000,
-    "photos": [
-      {
-        "id": "ph-301-1",
-        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.113.961/01.05 (Vazamento Costura)",
-        "defectLocation": "ACAB. ONE WAY SÃO GABRIEL"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-302-29",
@@ -34499,14 +34289,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-302-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.267/02.01 (Etiqueta misturada)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-303-30",
@@ -34524,14 +34307,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-303-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.199/01.01 (Soltando Lamina)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-304-31",
@@ -34549,14 +34325,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-304-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.120.183/01.01 (Mal Acondicionamento de Carga)",
-        "defectLocation": "EXPEDIÇÃO FÁBRICA II"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-305-32",
@@ -34574,14 +34343,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 2,
-    "photos": [
-      {
-        "id": "ph-305-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.116.760/03.01 (Falhas impressão)",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-306-33",
@@ -34599,14 +34361,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 3355,
-    "photos": [
-      {
-        "id": "ph-306-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.114.604/01.02 (Problemas de liberação de produto)",
-        "defectLocation": "LABORATÓRIO FCA 02"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-410-34",
@@ -34624,14 +34379,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 1715,
-    "photos": [
-      {
-        "id": "ph-410-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.118.347/01.02 (Raspado)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-283-35",
@@ -34649,14 +34397,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 493,
-    "photos": [
-      {
-        "id": "ph-283-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.120.825/01.01 (Erro no cadastro)",
-        "defectLocation": "COMERCIAL"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-284-36",
@@ -34674,14 +34415,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 10,
-    "photos": [
-      {
-        "id": "ph-284-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.114.963/01.01 (Linner Blocado)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-285-37",
@@ -34699,14 +34433,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 5,
-    "photos": [
-      {
-        "id": "ph-285-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.111.530/02.02 (Tecido queimado proximo a tarja)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-286-38",
@@ -34724,14 +34451,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 62,
-    "photos": [
-      {
-        "id": "ph-286-1",
-        "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.114.246/01.02 (Fora especificação)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-287-39",
@@ -34749,14 +34469,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-287-1",
-        "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.116.796/01.05 (Variação de comprimento/largura)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-289-40",
@@ -34774,14 +34487,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-289-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.115.363/04.01 (Falhas impressão)",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-290-41",
@@ -34799,14 +34505,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 7,
-    "photos": [
-      {
-        "id": "ph-290-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.116.796/01.03 (Falha impressão (largada de máquina))",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-310-42",
@@ -34824,14 +34523,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-310-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.118.601/01.01 (Tecido com manchas)",
-        "defectLocation": "DESENVOLVIMENTO DE PRODUTOS"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-311-43",
@@ -34849,14 +34541,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 4,
-    "photos": [
-      {
-        "id": "ph-311-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.113.576/01.02 (Falha revisão)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-312-44",
@@ -34874,14 +34559,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 3,
-    "photos": [
-      {
-        "id": "ph-312-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.111.411/03.01 (Soltando Lamina)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-313-45",
@@ -34899,14 +34577,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 7,
-    "photos": [
-      {
-        "id": "ph-313-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.112.687/01.02 (Desencaixe Filme Frente e Verso)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-314-46",
@@ -34924,14 +34595,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 456,
-    "photos": [
-      {
-        "id": "ph-314-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.113.256/02.01 (Falha na formatação da sacaria (Sold.))",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-315-47",
@@ -34949,14 +34613,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 162,
-    "photos": [
-      {
-        "id": "ph-315-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.398/01.01 (Corte no tecido)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-411-48",
@@ -34974,14 +34631,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 29,
-    "photos": [
-      {
-        "id": "ph-411-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.122.852/01.01 (Raspado)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-412-49",
@@ -34999,14 +34649,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 40,
-    "photos": [
-      {
-        "id": "ph-412-1",
-        "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.123.096/01.01 (Variação de comprimento/largura)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-19-50",
@@ -35024,14 +34667,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 7,
-    "photos": [
-      {
-        "id": "ph-19-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.663/01.01 (Sacaria rompendo na sanfona)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-20-51",
@@ -35049,14 +34685,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-20-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.117.982/01.01 (Falhas impressão)",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-21-52",
@@ -35074,14 +34703,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 75,
-    "photos": [
-      {
-        "id": "ph-21-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.127.506/01.01 (Falta de embalagem)",
-        "defectLocation": "EXPEDIÇÃO FÁBRICA II"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-23-53",
@@ -35099,14 +34721,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-23-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.123.527/01.01 (Válvula colada)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-24-54",
@@ -35124,14 +34739,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-24-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.124.520/01.01 (Corte torto/irregular)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-26-55",
@@ -35149,14 +34757,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-26-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.123.406/01.01 (Estria no tecido)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-27-56",
@@ -35174,14 +34775,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-27-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.735/02.01 (Válvula colada)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-28-57",
@@ -35199,14 +34793,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-28-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.124.349/01.01 (Pedido divergente)",
-        "defectLocation": "COMERCIAL"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-29-58",
@@ -35224,14 +34811,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-29-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.114.822/01.02 (Contaminantes fisicos)",
-        "defectLocation": "CORTE BIG BAG"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-297-59",
@@ -35249,14 +34829,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 2773,
-    "photos": [
-      {
-        "id": "ph-297-1",
-        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.118.569/01.01 (Costura estreita)",
-        "defectLocation": "ACABAMENTO BB ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-298-60",
@@ -35274,14 +34847,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-298-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.117.109/01.01 (Falhas impressão)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-299-61",
@@ -35299,14 +34865,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 18,
-    "photos": [
-      {
-        "id": "ph-299-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.402/01.01 (Linner rasgado e excesso de cola)",
-        "defectLocation": "ACAB. ONE WAY MEKA."
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-300-62",
@@ -35324,14 +34883,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-300-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.113.302/01.02 (Tecido queimado proximo a tarja)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-308-63",
@@ -35349,14 +34901,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 3,
-    "photos": [
-      {
-        "id": "ph-308-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.118.105/01.01 (Contaminantes fisicos)",
-        "defectLocation": "PRENSA BB ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-316-64",
@@ -35374,14 +34919,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 2,
-    "photos": [
-      {
-        "id": "ph-316-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.115.825/01.02 (Contaminantes fisicos)",
-        "defectLocation": "ACABAMENTO BB PAULIBAG"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-317-65",
@@ -35399,14 +34937,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-317-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.117.675/02.02 (Contaminantes fisicos)",
-        "defectLocation": "GERAL"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-309-66",
@@ -35424,14 +34955,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 23,
-    "photos": [
-      {
-        "id": "ph-309-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.115.528/01.01 (Lote misturado)",
-        "defectLocation": "ACAB. ONE WAY MEKA."
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-43-67",
@@ -35449,14 +34973,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 419,
-    "photos": [
-      {
-        "id": "ph-43-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.123.706/01.01 (Layout errado)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-44-68",
@@ -35474,14 +34991,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 72,
-    "photos": [
-      {
-        "id": "ph-44-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.125.460/01.01 (Amarração da valvula)",
-        "defectLocation": "ACABAMENTO BB ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-45-69",
@@ -35499,14 +35009,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 7,
-    "photos": [
-      {
-        "id": "ph-45-1",
-        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.122.086/04.02 (Costura desentralizada)",
-        "defectLocation": "ACABAMENTO BB ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-46-70",
@@ -35524,14 +35027,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 3,
-    "photos": [
-      {
-        "id": "ph-46-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.705/01.01 (Sacaria cortada/estourando)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-58-71",
@@ -35549,14 +35045,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 28,
-    "photos": [
-      {
-        "id": "ph-58-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.125.717/02.01 (Layout errado)",
-        "defectLocation": "CLICHERIA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-59-72",
@@ -35574,14 +35063,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 5,
-    "photos": [
-      {
-        "id": "ph-59-1",
-        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.120.610/01.01 (Costura estreita)",
-        "defectLocation": "ACAB. ONE WAY SÃO GABRIEL"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-61-73",
@@ -35599,14 +35081,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-61-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.111.949/02.01 (Variação de cor)",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-62-74",
@@ -35624,14 +35099,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 35,
-    "photos": [
-      {
-        "id": "ph-62-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.126.618/01.01 (Raspado)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-2-75",
@@ -35649,14 +35117,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 35,
-    "photos": [
-      {
-        "id": "ph-2-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.122.183/01.01 (Sacaria rompendo na lateral)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-318-76",
@@ -35674,14 +35135,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-318-1",
-        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.111.803/01.03 (Costura aberta)",
-        "defectLocation": "ACABAMENTO BB ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-319-77",
@@ -35699,14 +35153,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 5,
-    "photos": [
-      {
-        "id": "ph-319-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.331/01.01 (Tecido queimado)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-320-78",
@@ -35724,14 +35171,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 3601,
-    "photos": [
-      {
-        "id": "ph-320-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.109/01.01 (Tecido queimado)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-322-79",
@@ -35749,14 +35189,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-322-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.079/03.01 (Falhas impressão)",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-324-80",
@@ -35774,14 +35207,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-324-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.736/01.01 (Carga Tombada)",
-        "defectLocation": "TRANSPORTES"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-326-81",
@@ -35799,14 +35225,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 6,
-    "photos": [
-      {
-        "id": "ph-326-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.539/01.02 (Solda fraca na tarja)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-327-82",
@@ -35824,14 +35243,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-327-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.115.978/01.01 (Falha impressão (largada de máquina))",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-328-83",
@@ -35849,14 +35261,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-328-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.120.424/01.01 (Linner Blocado)",
-        "defectLocation": "EXTRUSÃO PE"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-329-84",
@@ -35874,14 +35279,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 9808,
-    "photos": [
-      {
-        "id": "ph-329-1",
-        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.115.569/02.04 (Tecido rasgando na costura)",
-        "defectLocation": "ACABAMENTO BB ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-331-85",
@@ -35899,14 +35297,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 34,
-    "photos": [
-      {
-        "id": "ph-331-1",
-        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.108.311/01.03 (Costura aberta)",
-        "defectLocation": "ACABAMENTO BB ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-332-86",
@@ -35924,14 +35315,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 5,
-    "photos": [
-      {
-        "id": "ph-332-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.116.133/01.01 (Rasgos)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-333-87",
@@ -35949,14 +35333,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-333-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.058/02.01 (Corte para tirar o ar)",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-356-88",
@@ -35974,14 +35351,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 23,
-    "photos": [
-      {
-        "id": "ph-356-1",
-        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.117.437/01.02 (Costura aberta)",
-        "defectLocation": "ACAB. ONE WAY AMBAR"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-357-89",
@@ -35999,14 +35369,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 308,
-    "photos": [
-      {
-        "id": "ph-357-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.117.835/01.01 (Linner mal colado)",
-        "defectLocation": "ACABAMENTO BIG BAG 1"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-358-90",
@@ -36024,14 +35387,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 567,
-    "photos": [
-      {
-        "id": "ph-358-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.075/02.01 (Tecido queimado)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-359-91",
@@ -36049,14 +35405,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 4,
-    "photos": [
-      {
-        "id": "ph-359-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.023/01.01 (Solda fraca na tarja)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-360-92",
@@ -36074,14 +35423,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 550,
-    "photos": [
-      {
-        "id": "ph-360-1",
-        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.108.332/01.04 (Costura estreita)",
-        "defectLocation": "ACABAMENTO BB ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-361-93",
@@ -36099,14 +35441,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 6,
-    "photos": [
-      {
-        "id": "ph-361-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.389/01.01 (Raspado)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-362-94",
@@ -36124,14 +35459,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 63,
-    "photos": [
-      {
-        "id": "ph-362-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.122.273/01.01 (Falta de embalagem)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-363-95",
@@ -36149,14 +35477,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 19,
-    "photos": [
-      {
-        "id": "ph-363-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.112.969/04.01 (Refilada)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-364-96",
@@ -36174,14 +35495,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 46,
-    "photos": [
-      {
-        "id": "ph-364-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.118.595/01.01 (Lote misturado)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-365-97",
@@ -36199,14 +35513,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 489,
-    "photos": [
-      {
-        "id": "ph-365-1",
-        "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.120.281/01.02 (Especificação Divergente)",
-        "defectLocation": "COMERCIAL"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-366-98",
@@ -36224,14 +35531,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 2,
-    "photos": [
-      {
-        "id": "ph-366-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.116.392/02.01 (Falha impressão (largada de máquina))",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-340-99",
@@ -36249,14 +35549,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 2,
-    "photos": [
-      {
-        "id": "ph-340-1",
-        "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.174/01.01 (Especificação não atende processo cliente)",
-        "defectLocation": "COMERCIAL"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-41-100",
@@ -36274,14 +35567,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 6,
-    "photos": [
-      {
-        "id": "ph-41-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.113.462/01.01 (Rasgado)",
-        "defectLocation": "EXPEDIÇÃO ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-42-101",
@@ -36299,14 +35585,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 2,
-    "photos": [
-      {
-        "id": "ph-42-1",
-        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.125.090/01.02 (Ponto Grande alça)",
-        "defectLocation": "ACABAMENTO BB ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-370-102",
@@ -36324,14 +35603,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-370-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.126/03.01 (Desencaixe Filme Frente e Verso)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-371-103",
@@ -36349,14 +35621,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 2,
-    "photos": [
-      {
-        "id": "ph-371-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.057/06.01 (Refilada)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-372-104",
@@ -36374,14 +35639,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 819,
-    "photos": [
-      {
-        "id": "ph-372-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.841/01.03 (Solda fraca na tarja)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-373-105",
@@ -36399,14 +35657,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 61,
-    "photos": [
-      {
-        "id": "ph-373-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.123.878/05.01 (Falta de embalagem)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-374-106",
@@ -36424,14 +35675,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 4,
-    "photos": [
-      {
-        "id": "ph-374-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.775/01.01 (Refilada)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-375-107",
@@ -36449,14 +35693,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-375-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.117.542/02.01 (Desencaixe Filme Frente e Verso)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-376-108",
@@ -36474,14 +35711,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 35,
-    "photos": [
-      {
-        "id": "ph-376-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.097.984/02.03 (Sacaria cortada/estourando)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-334-109",
@@ -36499,14 +35729,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 2,
-    "photos": [
-      {
-        "id": "ph-334-1",
-        "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.118.123/01.01 (Fora especificação)",
-        "defectLocation": "ACABAMENTO BB AREA LIMPA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-335-110",
@@ -36524,14 +35747,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 1587,
-    "photos": [
-      {
-        "id": "ph-335-1",
-        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.109.580/02.01 (Vazamento Costura)",
-        "defectLocation": "GERAL"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-337-111",
@@ -36549,14 +35765,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 5,
-    "photos": [
-      {
-        "id": "ph-337-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.116.115/01.01 (Soltando Lamina)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-338-112",
@@ -36574,14 +35783,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 43,
-    "photos": [
-      {
-        "id": "ph-338-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.120.571/01.02 (Amarração da valvula)",
-        "defectLocation": "ACABAMENTO BB ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-341-113",
@@ -36599,14 +35801,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 2,
-    "photos": [
-      {
-        "id": "ph-341-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.526/01.01 (Corte para tirar o ar)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-349-114",
@@ -36624,14 +35819,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 75,
-    "photos": [
-      {
-        "id": "ph-349-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.120.896/01.01 (Falta de embalagem)",
-        "defectLocation": "TRANSPORTES"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-351-115",
@@ -36649,14 +35837,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 5,
-    "photos": [
-      {
-        "id": "ph-351-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.965/01.01 (Problema de valvula)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-352-116",
@@ -36674,14 +35855,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 29,
-    "photos": [
-      {
-        "id": "ph-352-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.117.025/02.01 (Refilada)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-353-117",
@@ -36699,14 +35873,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 4,
-    "photos": [
-      {
-        "id": "ph-353-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.023/02.02 (Falhas impressão)",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-354-118",
@@ -36724,14 +35891,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-354-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.060/03.01 (Falha laminação)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-407-119",
@@ -36749,14 +35909,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 43,
-    "photos": [
-      {
-        "id": "ph-407-1",
-        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.118.174/01.01 (Costura aberta)",
-        "defectLocation": "ACABAMENTO BB ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-408-120",
@@ -36774,14 +35927,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 5068,
-    "photos": [
-      {
-        "id": "ph-408-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.108.311/01.01 (Raspado)",
-        "defectLocation": "ACABAMENTO BB ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-409-121",
@@ -36799,14 +35945,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 907,
-    "photos": [
-      {
-        "id": "ph-409-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.116.587/01.04 (Embalagens misturadas nos fardos/paletes)",
-        "defectLocation": "ACABAMENTO BIG BAG 1"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-282-122",
@@ -36824,14 +35963,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-282-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.120.221/01.01 (Raspado)",
-        "defectLocation": "TRANSPORTES"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-93-123",
@@ -36849,14 +35981,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-93-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.120.970/01.02 (Falha revisão)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-94-124",
@@ -36874,14 +35999,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 6,
-    "photos": [
-      {
-        "id": "ph-94-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.124.762/01.01 (Raspado)",
-        "defectLocation": "PRENSA BB ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-95-125",
@@ -36899,14 +36017,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 5,
-    "photos": [
-      {
-        "id": "ph-95-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.123.880/04.03 (Mercadoria Molhada / Suja / danificada)",
-        "defectLocation": "PRENSA BB ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-96-126",
@@ -36924,14 +36035,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 2,
-    "photos": [
-      {
-        "id": "ph-96-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.123.880/04.01 (Raspado)",
-        "defectLocation": "PRENSA BB ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-97-127",
@@ -36949,14 +36053,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 2,
-    "photos": [
-      {
-        "id": "ph-97-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.125.252/01.01 (Tecido queimado)",
-        "defectLocation": "ACABAMENTO BB ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-99-128",
@@ -36974,14 +36071,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 18,
-    "photos": [
-      {
-        "id": "ph-99-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.128.339/01.01 (Controle de estoque)",
-        "defectLocation": "ACABAMENTO BB ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-8-129",
@@ -36999,14 +36089,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 2,
-    "photos": [
-      {
-        "id": "ph-8-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.460/01.02 (Linner Rasgando)",
-        "defectLocation": "ACABAMENTO BB AREA LIMPA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-10-130",
@@ -37024,14 +36107,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-10-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.503/03.01 (Solda fraca na tarja)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-11-131",
@@ -37049,14 +36125,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 312,
-    "photos": [
-      {
-        "id": "ph-11-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.555/01.01 (Sacaria cortada/estourando)",
-        "defectLocation": "GERAL"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-12-132",
@@ -37074,14 +36143,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 2,
-    "photos": [
-      {
-        "id": "ph-12-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.800/01.01 (Falha laminação)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-13-133",
@@ -37099,14 +36161,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 3,
-    "photos": [
-      {
-        "id": "ph-13-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.118.172/02.03 (Embalagens misturadas nos fardos/paletes)",
-        "defectLocation": "ACABAMENTO BB ESPLANADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-14-134",
@@ -37124,14 +36179,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-14-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.344/01.02 (Falha revisão)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-321-135",
@@ -37149,14 +36197,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 12,
-    "photos": [
-      {
-        "id": "ph-321-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.118.044/01.01 (Paletização)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-330-136",
@@ -37174,14 +36215,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-330-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.665/01.01 (Falhas impressão)",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-368-137",
@@ -37199,14 +36233,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 23,
-    "photos": [
-      {
-        "id": "ph-368-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.123.089/01.01 (Desencaixe Filme Frente e Verso)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-369-138",
@@ -37224,14 +36251,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 10,
-    "photos": [
-      {
-        "id": "ph-369-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.116.796/01.07 (Soltando Lamina)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-15-139",
@@ -37249,14 +36269,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-15-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.122.888/01.01 (Refilada)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-16-140",
@@ -37274,14 +36287,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-16-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.123.599/01.02 (Solda fraca na tarja)",
-        "defectLocation": "DESENVOLVIMENTO DE PRODUTOS"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-17-141",
@@ -37299,14 +36305,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 95,
-    "photos": [
-      {
-        "id": "ph-17-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.401/01.01 (Falhas impressão)",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-18-142",
@@ -37324,14 +36323,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 2,
-    "photos": [
-      {
-        "id": "ph-18-1",
-        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.118.606/01.01 (Alça sem costurar)",
-        "defectLocation": "ACAB. ONE WAY AMBAR"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-47-143",
@@ -37349,14 +36341,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-47-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.122.996/05.01 (Tecido queimado proximo a tarja)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-377-144",
@@ -37374,14 +36359,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-377-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.118.657/01.04 (Corte para tirar o ar)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-71-145",
@@ -37399,14 +36377,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 3,
-    "photos": [
-      {
-        "id": "ph-71-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.126.618/01.01 (Tarja abre facil descolando)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-72-146",
@@ -37424,14 +36395,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-72-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.128.593/05.01 (Identificação incorreta)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-73-147",
@@ -37449,14 +36413,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-73-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.125.911/01.01 (Solda fraca na tarja)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-74-148",
@@ -37474,14 +36431,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-74-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.128.683/01.01 (Refilada)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-75-149",
@@ -37499,14 +36449,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-75-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.120.796/01.03 (Refilada)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-76-150",
@@ -37524,14 +36467,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-76-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.128.921/07.01 (Palete quebrado)",
-        "defectLocation": "TRANSPORTES"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-77-151",
@@ -37549,14 +36485,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-77-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.127.519/01.01 (Soltando Lamina)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-79-152",
@@ -37574,14 +36503,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-79-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.125.062/01.01 (Falhas impressão)",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-80-153",
@@ -37599,14 +36521,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-80-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.123.704/07.01 (Falhas impressão)",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-291-154",
@@ -37624,14 +36539,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-291-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.116.133/01.01 (Lote misturado)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-292-155",
@@ -37649,14 +36557,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 216,
-    "photos": [
-      {
-        "id": "ph-292-1",
-        "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.565/01.01 (Peso Divergente)",
-        "defectLocation": "APONTAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-294-156",
@@ -37674,14 +36575,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 3,
-    "photos": [
-      {
-        "id": "ph-294-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.114.153/01.05 (Etiqueta trocada (Etiqueta da OP Bigbag))",
-        "defectLocation": "ACABAMENTO BIG BAG 1"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-295-157",
@@ -37699,14 +36593,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-295-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.111.314/01.03 (Layout descentralizado)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-296-158",
@@ -37724,14 +36611,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 2,
-    "photos": [
-      {
-        "id": "ph-296-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.114.958/01.03 (Rasgos)",
-        "defectLocation": "ACABAMENTO BIG BAG 1"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-345-159",
@@ -37749,14 +36629,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 18,
-    "photos": [
-      {
-        "id": "ph-345-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.120.624/01.01 (Corte no tecido)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-346-160",
@@ -37774,14 +36647,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 2,
-    "photos": [
-      {
-        "id": "ph-346-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.117.114/04.01 (Refilada)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-347-161",
@@ -37799,14 +36665,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 188,
-    "photos": [
-      {
-        "id": "ph-347-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.106.693/03.01 (Refilada)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-348-162",
@@ -37824,14 +36683,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 586,
-    "photos": [
-      {
-        "id": "ph-348-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.467/02.01 (Layout errado)",
-        "defectLocation": "CLICHERIA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-381-163",
@@ -37849,14 +36701,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 6,
-    "photos": [
-      {
-        "id": "ph-381-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.118.804/01.01 (Sacaria cortada/estourando)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-382-164",
@@ -37874,14 +36719,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 12,
-    "photos": [
-      {
-        "id": "ph-382-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.633/01.01 (Decalque)",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-383-165",
@@ -37899,14 +36737,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 10,
-    "photos": [
-      {
-        "id": "ph-383-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.123.727/01.01 (Falta de embalagem)",
-        "defectLocation": "PRENSA BB FAB 03"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-384-166",
@@ -37924,14 +36755,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 49,
-    "photos": [
-      {
-        "id": "ph-384-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.122.165/01.02 (Falta de embalagem)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-385-167",
@@ -37949,14 +36773,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 14,
-    "photos": [
-      {
-        "id": "ph-385-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.122.434/01.01 (Corte no tecido)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-386-168",
@@ -37974,14 +36791,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-386-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.118.657/01.04 (Falhas impressão)",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-387-169",
@@ -37999,14 +36809,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-387-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.950/01.02 (Falha laminação)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-388-170",
@@ -38024,14 +36827,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 411,
-    "photos": [
-      {
-        "id": "ph-388-1",
-        "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.118.427/01.01 (Especificação Divergente)",
-        "defectLocation": "DESENVOLVIMENTO DE PRODUTOS"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-389-171",
@@ -38049,14 +36845,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 3,
-    "photos": [
-      {
-        "id": "ph-389-1",
-        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.119.816/01.01 (Ponto Grande alça)",
-        "defectLocation": "ACAB. ONE WAY SÃO GABRIEL"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-390-172",
@@ -38074,14 +36863,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 1645,
-    "photos": [
-      {
-        "id": "ph-390-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.954/01.01 (Solda fraca na tarja)",
-        "defectLocation": "CORTE/SOLDA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-391-173",
@@ -38099,14 +36881,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-391-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.344/01.01 (Falha revisão)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-392-174",
@@ -38124,14 +36899,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 143,
-    "photos": [
-      {
-        "id": "ph-392-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.368/01.02 (Amarração da valvula)",
-        "defectLocation": "ACAB. ONE WAY AMBAR"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-393-175",
@@ -38149,14 +36917,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 37050,
-    "photos": [
-      {
-        "id": "ph-393-1",
-        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.121.316/01.04 (Tecido rasgando na costura)",
-        "defectLocation": "GERAL"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-394-176",
@@ -38174,14 +36935,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "devolucao_total",
     "origin": "erp_sync",
     "quantityAffected": 7,
-    "photos": [
-      {
-        "id": "ph-394-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.124.549/01.01 (Falha laminação)",
-        "defectLocation": "LAMINAÇÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-48-177",
@@ -38199,14 +36953,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 19,
-    "photos": [
-      {
-        "id": "ph-48-1",
-        "url": "https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.122.888/01.01 (Válvula colada)",
-        "defectLocation": "ACABAMENTO SACARIA SOLDADA"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-49-178",
@@ -38224,14 +36971,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-49-1",
-        "url": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.127.045/01.01 (Layout descentralizado)",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "comp-erp-50-179",
@@ -38249,14 +36989,7 @@ export const DEFAULT_COMPLAINTS: Complaint[] = [
     "status": "resolvida",
     "origin": "erp_sync",
     "quantityAffected": 1,
-    "photos": [
-      {
-        "id": "ph-50-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&q=80",
-        "caption": "Evidência fotográfica laudo ERP - OP 00.124.203/02.01 (Desencaixe)",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   }
 ];
 
@@ -38279,14 +37012,7 @@ export const DEFAULT_CONCESSIONS: ConcessionShipment[] = [
     "riskScore": "moderado",
     "customerFeedbackStatus": "reclamado_posteriormente",
     "technicalNotes": "Lote expedido com aprovação de desvio de refilamento para atendimento de emergência.",
-    "photos": [
-      {
-        "id": "cp-001-1",
-        "url": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80",
-        "caption": "Amostra do lote OP 00.125.880/01.01 - Refilamento liberado sob concessão",
-        "defectLocation": "ACABAMENTO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "conc-002-braskem",
@@ -38306,14 +37032,7 @@ export const DEFAULT_CONCESSIONS: ConcessionShipment[] = [
     "riskScore": "baixo",
     "customerFeedbackStatus": "aceito_sem_ressalvas",
     "technicalNotes": "Desvio leve de tonalidade na faixa lateral. Lote faturado e absorvido normalmente sem queixas.",
-    "photos": [
-      {
-        "id": "cp-002-1",
-        "url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&auto=format&fit=crop&q=80",
-        "caption": "Amostra do lote OP 00.128.340/02.01 - Tonalidade da fita lateral liberada",
-        "defectLocation": "EXTRUSÃO"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "conc-003",
@@ -38333,14 +37052,7 @@ export const DEFAULT_CONCESSIONS: ConcessionShipment[] = [
     "riskScore": "baixo",
     "customerFeedbackStatus": "aceito_sem_ressalvas",
     "technicalNotes": "Recuperação de margem de matéria-prima. Big bags aceitos na esteira de envase.",
-    "photos": [
-      {
-        "id": "cp-003-1",
-        "url": "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&auto=format&fit=crop&q=80",
-        "caption": "Amostra do lote OP 00.129.450/02.01 - Linner com ligeiro bloqueio liberado para envase",
-        "defectLocation": "MONTAGEM LINNER"
-      }
-    ]
+    "photos": []
   },
   {
     "id": "conc-004",
@@ -38360,13 +37072,6 @@ export const DEFAULT_CONCESSIONS: ConcessionShipment[] = [
     "riskScore": "baixo",
     "customerFeedbackStatus": "aceito_sem_ressalvas",
     "technicalNotes": "Desencaixe leve na logomarca. Cliente liberou o recebimento sem penalidades.",
-    "photos": [
-      {
-        "id": "cp-004-1",
-        "url": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&auto=format&fit=crop&q=80",
-        "caption": "Amostra do lote OP 00.134.120/01.03 - Impressão com desencaixe leve aceito",
-        "defectLocation": "IMPRESSÃO"
-      }
-    ]
+    "photos": []
   }
 ];
