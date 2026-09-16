@@ -1,11 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { Customer, DefectType, Complaint, ConcessionShipment, QualityStats, AiChatMessage, RiskEvaluationResult, ToleranceLevel, DefectSeverity, DefectCategory } from '@/types';
 import { storageService } from '@/services/storageService';
 import { supabaseService } from '@/services/supabaseService';
 import { qualityService } from '@/services/qualityService';
 import { aiAssistantService } from '@/services/aiAssistantService';
+import { DEFAULT_CUSTOMERS, DEFAULT_DEFECTS, DEFAULT_COMPLAINTS, DEFAULT_CONCESSIONS } from '@/data/defaultQualityData';
 
 interface ToastState {
   id: string;
@@ -78,15 +79,77 @@ interface QualityContextType {
 const QualityContext = createContext<QualityContextType | undefined>(undefined);
 
 export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [defects, setDefects] = useState<DefectType[]>([]);
-  const [complaints, setComplaints] = useState<Complaint[]>([]);
-  const [concessions, setConcessions] = useState<ConcessionShipment[]>([]);
-  const [chatMessages, setChatMessages] = useState<AiChatMessage[]>([]);
+  // Inicialização síncrona com dados do cache/default para evitar tela branca ou travamento
+  const [customers, setCustomers] = useState<Customer[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = storageService.getCustomers();
+        if (cached && cached.length > 0) return cached;
+      } catch (e) {
+        console.warn('Erro ao ler cache inicial de clientes:', e);
+      }
+    }
+    return DEFAULT_CUSTOMERS;
+  });
+
+  const [defects, setDefects] = useState<DefectType[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = storageService.getDefects();
+        if (cached && cached.length > 0) return cached;
+      } catch (e) {
+        console.warn('Erro ao ler cache inicial de defeitos:', e);
+      }
+    }
+    return DEFAULT_DEFECTS;
+  });
+
+  const [complaints, setComplaints] = useState<Complaint[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = storageService.getComplaints();
+        if (cached && cached.length > 0) return cached;
+      } catch (e) {
+        console.warn('Erro ao ler cache inicial de reclamações:', e);
+      }
+    }
+    return DEFAULT_COMPLAINTS.map(c => ({ ...c, photos: [] }));
+  });
+
+  const [concessions, setConcessions] = useState<ConcessionShipment[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = storageService.getConcessions();
+        if (cached && cached.length > 0) return cached;
+      } catch (e) {
+        console.warn('Erro ao ler cache inicial de concessões:', e);
+      }
+    }
+    return DEFAULT_CONCESSIONS.map(c => ({ ...c, photos: [] }));
+  });
+
+  const [chatMessages, setChatMessages] = useState<AiChatMessage[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = storageService.getChatMessages();
+        if (cached && cached.length > 0) return cached;
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+    return [
+      {
+        id: 'msg-welcome',
+        sender: 'assistant',
+        text: 'Olá! Sou a **IA de Qualidade & Perfil de Clientes**.\n\nPergunte-me sobre reclamações de clientes (ex: *"Quais foram as reclamações do cliente Alisul?"*) ou simule um envio de lote com defeito (*"Posso mandar 5.000 sacos com vinco para a Alisul?"*).',
+        timestamp: 'Agora'
+      }
+    ];
+  });
+
   const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastState[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoaded, setIsLoaded] = useState(false);
 
   const showToast = useCallback((message: string, type: 'success' | 'info' | 'warning' | 'error' = 'info') => {
     const id = `toast-${Date.now()}-${Math.random()}`;
@@ -96,7 +159,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }, 4000);
   }, []);
 
-  // Initial Load from Supabase (with fallback cache)
+  // Carga e sincronização assíncrona com o Supabase
   const loadData = useCallback(async () => {
     try {
       const {
@@ -105,16 +168,15 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
         complaints: loadedComplaints,
         concessions: loadedConcessions
       } = await supabaseService.getAllQualityData();
-      const loadedChat = storageService.getChatMessages();
 
-      // Dynamically calibrate concessions scrap value with 77.73g * 1.5
+      // Calibração do valor do refugo industrial (77,73g * 1.5)
       const calibratedConcessions = loadedConcessions.map(c => ({
         ...c,
         totalSavedValue: qualityService.calculateSavedProfit(c.quantity),
         unitSavedValue: (77.73 / 1000) * 1.5
       }));
 
-      // Dynamically calibrate all customers according to SAC complaints & kg sensitivity
+      // Calibração dos perfis de tolerância de acordo com as queixas reais
       const calibratedCustomers = loadedCustomers.map(customer => {
         const { overallToleranceScore, toleranceRatings } = qualityService.calculateCustomerTolerance(
           customer,
@@ -134,46 +196,25 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setComplaints(loadedComplaints);
       setConcessions(calibratedConcessions);
 
-      // Save cache locally
+      // Salvar silenciosamente no cache local (sem disparar eventos circulares)
       storageService.saveCustomers(calibratedCustomers);
       storageService.saveDefects(loadedDefects);
       storageService.saveComplaints(loadedComplaints);
       storageService.saveConcessions(calibratedConcessions);
-
-      if (loadedChat.length === 0) {
-        const welcomeMessage: AiChatMessage = {
-          id: 'msg-welcome',
-          sender: 'assistant',
-          text: 'Olá! Sou a **IA de Qualidade & Perfil de Clientes**.\n\nPergunte-me sobre reclamações de clientes (ex: *"Quais foram as reclamações do cliente Alisul?"*) ou simule um envio de lote com defeito (*"Posso mandar 5.000 sacos com vinco para a Alisul?"*).',
-          timestamp: 'Agora'
-        };
-        setChatMessages([welcomeMessage]);
-        storageService.saveChatMessages([welcomeMessage]);
-      } else {
-        setChatMessages(loadedChat);
-      }
     } catch (err) {
-      console.error('Erro ao carregar dados do Supabase:', err);
-    } finally {
-      setIsLoaded(true);
+      console.error('Erro ao sincronizar com Supabase:', err);
     }
   }, []);
 
   useEffect(() => {
+    // Carrega dados do Supabase uma única vez na inicialização
     loadData();
-
-    const handleStorageUpdate = () => {
-      loadData();
-    };
-
-    window.addEventListener('qualitrack_storage_update', handleStorageUpdate);
-    return () => {
-      window.removeEventListener('qualitrack_storage_update', handleStorageUpdate);
-    };
   }, [loadData]);
 
-  // Derived KPIs
-  const stats = qualityService.calculateStats(customers, defects, complaints, concessions);
+  // Derived KPIs memoizados para evitar renderizações pesadas
+  const stats = useMemo(() => {
+    return qualityService.calculateStats(customers, defects, complaints, concessions);
+  }, [customers, defects, complaints, concessions]);
 
   const evaluateRisk = useCallback((
     customerId: string,
@@ -546,10 +587,6 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     showToast('Erro ao importar arquivo JSON.', 'error');
     return false;
   }, [loadData, showToast]);
-
-  if (!isLoaded) {
-    return null;
-  }
 
   return (
     <QualityContext.Provider

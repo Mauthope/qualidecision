@@ -6,12 +6,18 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const [custRes, defRes, compRes, concRes] = await Promise.all([
+    const fetchSupabaseData = Promise.all([
       supabaseServer.from('customers').select('*').order('name', { ascending: true }),
       supabaseServer.from('defects').select('*').order('name', { ascending: true }),
       supabaseServer.from('complaints').select('*').order('date', { ascending: false }),
       supabaseServer.from('concessions').select('*').order('date', { ascending: false })
     ]);
+
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Supabase request timeout')), 6000)
+    );
+
+    const [custRes, defRes, compRes, concRes] = await Promise.race([fetchSupabaseData, timeoutPromise]);
 
     const customers = (custRes.data && custRes.data.length > 0)
       ? custRes.data.map(c => ({

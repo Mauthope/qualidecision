@@ -28,8 +28,11 @@ export const storageService = {
 
   saveCustomers(customers: Customer[]): void {
     if (!isBrowser) return;
-    localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
-    window.dispatchEvent(new Event('qualitrack_storage_update'));
+    try {
+      localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
+    } catch (e) {
+      console.warn('Erro ao salvar clientes no cache local:', e);
+    }
   },
 
   getDefects(): DefectType[] {
@@ -48,8 +51,11 @@ export const storageService = {
 
   saveDefects(defects: DefectType[]): void {
     if (!isBrowser) return;
-    localStorage.setItem(STORAGE_KEYS.DEFECTS, JSON.stringify(defects));
-    window.dispatchEvent(new Event('qualitrack_storage_update'));
+    try {
+      localStorage.setItem(STORAGE_KEYS.DEFECTS, JSON.stringify(defects));
+    } catch (e) {
+      console.warn('Erro ao salvar defeitos no cache local:', e);
+    }
   },
 
   getComplaints(): Complaint[] {
@@ -68,8 +74,11 @@ export const storageService = {
 
   saveComplaints(complaints: Complaint[]): void {
     if (!isBrowser) return;
-    localStorage.setItem(STORAGE_KEYS.COMPLAINTS, JSON.stringify(complaints));
-    window.dispatchEvent(new Event('qualitrack_storage_update'));
+    try {
+      localStorage.setItem(STORAGE_KEYS.COMPLAINTS, JSON.stringify(complaints));
+    } catch (e) {
+      console.warn('Erro ao salvar reclamações no cache local:', e);
+    }
   },
 
   getConcessions(): ConcessionShipment[] {
@@ -88,8 +97,11 @@ export const storageService = {
 
   saveConcessions(concessions: ConcessionShipment[]): void {
     if (!isBrowser) return;
-    localStorage.setItem(STORAGE_KEYS.CONCESSIONS, JSON.stringify(concessions));
-    window.dispatchEvent(new Event('qualitrack_storage_update'));
+    try {
+      localStorage.setItem(STORAGE_KEYS.CONCESSIONS, JSON.stringify(concessions));
+    } catch (e) {
+      console.warn('Erro ao salvar concessões no cache local:', e);
+    }
   },
 
   getChatMessages(): AiChatMessage[] {

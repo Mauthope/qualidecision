@@ -1,37 +1,22 @@
 import { Customer, DefectType, Complaint, ConcessionShipment, ToleranceLevel } from '@/types';
 import { DEFAULT_CUSTOMERS, DEFAULT_DEFECTS, DEFAULT_COMPLAINTS, DEFAULT_CONCESSIONS } from '@/data/defaultQualityData';
 
+let inFlightQualityRequest: Promise<{
+  customers: Customer[];
+  defects: DefectType[];
+  complaints: Complaint[];
+  concessions: ConcessionShipment[];
+}> | null = null;
+
 export const supabaseService = {
-  // --- CARREGAMENTO UNIFICADO (1 ÚNICA REQUISIÇÃO AO SERVIDOR) ---
+  // --- CARREGAMENTO UNIFICADO (1 ÚNICA REQUISIÇÃO AO SERVIDOR COM DEDUPLICAÇÃO) ---
   async getAllQualityData(): Promise<{
     customers: Customer[];
     defects: DefectType[];
     complaints: Complaint[];
     concessions: ConcessionShipment[];
   }> {
-    try {
-      const response = await fetch('/api/quality', {
-        method: 'GET',
-        cache: 'no-store'
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
-      }
-
-      const json = await response.json();
-      if (json.success && json.data) {
-        return json.data;
-      }
-
-      return {
-        customers: DEFAULT_CUSTOMERS,
-        defects: DEFAULT_DEFECTS,
-        complaints: DEFAULT_COMPLAINTS.map(c => ({ ...c, photos: [] })),
-        concessions: DEFAULT_CONCESSIONS.map(c => ({ ...c, photos: [] }))
-      };
-    } catch (err) {
-      console.warn('Fallback para dados padrão ou cache local:', err);
+    if (typeof window === 'undefined') {
       return {
         customers: DEFAULT_CUSTOMERS,
         defects: DEFAULT_DEFECTS,
@@ -39,6 +24,47 @@ export const supabaseService = {
         concessions: DEFAULT_CONCESSIONS.map(c => ({ ...c, photos: [] }))
       };
     }
+
+    if (inFlightQualityRequest) {
+      return inFlightQualityRequest;
+    }
+
+    inFlightQualityRequest = (async () => {
+      try {
+        const response = await fetch('/api/quality', {
+          method: 'GET',
+          cache: 'no-store'
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error ${response.status}`);
+        }
+
+        const json = await response.json();
+        if (json.success && json.data) {
+          return json.data;
+        }
+
+        return {
+          customers: DEFAULT_CUSTOMERS,
+          defects: DEFAULT_DEFECTS,
+          complaints: DEFAULT_COMPLAINTS.map(c => ({ ...c, photos: [] })),
+          concessions: DEFAULT_CONCESSIONS.map(c => ({ ...c, photos: [] }))
+        };
+      } catch (err) {
+        console.warn('Fallback para dados padrão:', err);
+        return {
+          customers: DEFAULT_CUSTOMERS,
+          defects: DEFAULT_DEFECTS,
+          complaints: DEFAULT_COMPLAINTS.map(c => ({ ...c, photos: [] })),
+          concessions: DEFAULT_CONCESSIONS.map(c => ({ ...c, photos: [] }))
+        };
+      } finally {
+        inFlightQualityRequest = null;
+      }
+    })();
+
+    return inFlightQualityRequest;
   },
 
   async getDefects(): Promise<DefectType[]> {
