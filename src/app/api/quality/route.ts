@@ -68,7 +68,9 @@ export async function GET() {
       : DEFAULT_COMPLAINTS.map(c => ({ ...c, photos: [] }));
 
     const concessions = (concRes.data && concRes.data.length > 0)
-      ? concRes.data.map(c => ({
+      ? concRes.data
+          .filter(c => !['conc-001', 'conc-002-braskem', 'conc-003', 'conc-004'].includes(c.id))
+          .map(c => ({
           id: c.id,
           code: c.code,
           customerId: c.customer_id,

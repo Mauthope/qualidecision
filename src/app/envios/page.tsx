@@ -197,22 +197,61 @@ export default function EnviosPage() {
 
       {/* Concessions Table */}
       <div className="glow-card p-5 rounded-2xl bg-slate-950/80 border border-slate-800 overflow-hidden">
-        <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-slate-800 text-slate-400 uppercase text-[11px] font-semibold">
-                <th className="pb-3 pr-4">Código / Data</th>
-                <th className="pb-3 px-4">Cliente Destino</th>
-                <th className="pb-3 px-4">Produto & Lote</th>
-                <th className="pb-3 px-4">Defeito Concedido</th>
-                <th className="pb-3 px-4">Evidência Fotográfica</th>
-                <th className="pb-3 px-4 text-right">Volume</th>
-                <th className="pb-3 px-4 text-right">Scrap Salvo</th>
-                <th className="pb-3 px-4">Parecer Técnico</th>
-                <th className="pb-3 pl-4 text-center">Status / Aceite</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60">
+        {/* Table / Empty state */}
+        {filteredConcessions.length === 0 ? (
+          <div className="py-16 px-4 text-center flex flex-col items-center justify-center space-y-3 bg-slate-900/30 rounded-xl border border-slate-800/80">
+            <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+              <Send className="w-7 h-7" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-white font-heading">
+                Nenhum lote com concessão encontrado
+              </h3>
+              <p className="text-xs text-slate-400 max-w-md mx-auto">
+                {concessions.length === 0
+                  ? 'Nenhum envio com desvio registrado ainda. O sistema está pronto para registrar dados reais de operação.'
+                  : 'Nenhum lote corresponde aos filtros ou pesquisa selecionados.'}
+              </p>
+            </div>
+            {concessions.length === 0 ? (
+              <button
+                onClick={() => setIsNewConcessionOpen(true)}
+                className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 hover:from-cyan-400 hover:to-teal-400 shadow-md shadow-cyan-500/20 transition-all cursor-pointer"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Registrar Primeiro Envio</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setSearch('');
+                  setFilterCustomer('all');
+                  setFilterDefect('all');
+                  setFilterStatus('all');
+                }}
+                className="mt-2 text-xs text-cyan-400 hover:underline cursor-pointer"
+              >
+                Limpar filtros de busca
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-800 text-slate-400 uppercase text-[11px] font-semibold">
+                  <th className="pb-3 pr-4">Código / Data</th>
+                  <th className="pb-3 px-4">Cliente Destino</th>
+                  <th className="pb-3 px-4">Produto & Lote</th>
+                  <th className="pb-3 px-4">Defeito Concedido</th>
+                  <th className="pb-3 px-4">Evidência Fotográfica</th>
+                  <th className="pb-3 px-4 text-right">Volume</th>
+                  <th className="pb-3 px-4 text-right">Scrap Salvo</th>
+                  <th className="pb-3 px-4">Parecer Técnico</th>
+                  <th className="pb-3 pl-4 text-center">Status / Aceite</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60">
               {filteredConcessions.map(c => {
                 const isReclaimed = complaints.some(
                   comp => comp.customerId === c.customerId && (
@@ -323,6 +362,7 @@ export default function EnviosPage() {
             </tbody>
           </table>
         </div>
+      )}
       </div>
 
       {isNewConcessionOpen && (

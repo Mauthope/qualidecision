@@ -146,43 +146,45 @@ export const DefectDistributionChart: React.FC = () => {
         )}
       </div>
 
-      {/* Breakdown List Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2 border-t border-slate-800/60">
-        {data.map((item, idx) => {
-          const percent = totalVolume > 0 ? (item.quantity / totalVolume) * 100 : 0;
-          return (
-            <div
-              key={idx}
-              className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1.5"
-            >
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-200 truncate pr-2 flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                  {item.fullName}
-                </span>
-                <span className="font-mono text-cyan-400 font-bold shrink-0">
-                  {item.quantity.toLocaleString('pt-BR')} un
-                </span>
-              </div>
+      {/* Defect Cards Summary */}
+      {data.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2 border-t border-slate-800/60">
+          {data.map((item, idx) => {
+            const percent = totalVolume > 0 ? (item.quantity / totalVolume) * 100 : 0;
+            return (
+              <div
+                key={idx}
+                className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1.5"
+              >
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-200 truncate pr-2 flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                    {item.fullName}
+                  </span>
+                  <span className="font-mono text-cyan-400 font-bold shrink-0">
+                    {item.quantity.toLocaleString('pt-BR')} un
+                  </span>
+                </div>
 
-              {/* Progress bar */}
-              <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{ width: `${percent}%`, backgroundColor: item.color }}
-                />
-              </div>
+                {/* Progress bar */}
+                <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${percent}%`, backgroundColor: item.color }}
+                  />
+                </div>
 
-              <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
-                <span>{percent.toFixed(1)}% do mix</span>
-                <span className="text-emerald-400 font-semibold">
-                  R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
-                </span>
+                <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                  <span>{percent.toFixed(1)}% do mix</span>
+                  <span className="text-emerald-400 font-semibold">
+                    R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
+                  </span>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

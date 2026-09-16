@@ -19,11 +19,13 @@ export const KpiCards: React.FC = () => {
     {
       title: 'Sacarias / Bags Salvos no Mês',
       value: `${stats.totalUnitsSaved.toLocaleString('pt-BR')} un`,
-      subtitle: `${stats.totalConcessionsCount} lotes expedidos com concessão`,
+      subtitle: stats.totalConcessionsCount > 0
+        ? `${stats.totalConcessionsCount} lotes expedidos com concessão`
+        : 'Pronto para novos registros de envio',
       icon: <PackageCheck className="w-5 h-5 text-cyan-400" />,
       gradient: 'from-cyan-500/10 via-cyan-500/5 to-transparent',
       borderColor: 'border-cyan-500/30',
-      tag: '+18% vs mês anterior',
+      tag: stats.totalConcessionsCount > 0 ? '+18% vs mês anterior' : 'Pronto para operação',
       tagColor: 'text-emerald-400 bg-emerald-500/10'
     },
     {
@@ -33,7 +35,7 @@ export const KpiCards: React.FC = () => {
       icon: <DollarSign className="w-5 h-5 text-emerald-400" />,
       gradient: 'from-emerald-500/10 via-emerald-500/5 to-transparent',
       borderColor: 'border-emerald-500/30',
-      tag: 'Alta Rentabilidade',
+      tag: stats.totalSavedAmount > 0 ? 'Alta Rentabilidade' : 'Meta Zero Refugo',
       tagColor: 'text-emerald-400 bg-emerald-500/10'
     },
     {
@@ -43,7 +45,7 @@ export const KpiCards: React.FC = () => {
       icon: <ShieldCheck className="w-5 h-5 text-teal-400" />,
       gradient: 'from-teal-500/10 via-teal-500/5 to-transparent',
       borderColor: 'border-teal-500/30',
-      tag: 'Meta: >95%',
+      tag: stats.totalConcessionsCount > 0 ? 'Meta: >95%' : 'Histórico Íntegro',
       tagColor: 'text-cyan-400 bg-cyan-500/10'
     },
     {

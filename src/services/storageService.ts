@@ -5,7 +5,7 @@ const STORAGE_KEYS = {
   CUSTOMERS: 'qualitrack_customers_v4_concession_feedback',
   DEFECTS: 'qualitrack_defects_v4_concession_feedback',
   COMPLAINTS: 'qualitrack_complaints_v4_concession_feedback',
-  CONCESSIONS: 'qualitrack_concessions_v4_concession_feedback',
+  CONCESSIONS: 'qualitrack_concessions_v5_clean',
   CHAT_MESSAGES: 'qualitrack_chat_v4_concession_feedback'
 };
 
@@ -84,12 +84,22 @@ export const storageService = {
   getConcessions(): ConcessionShipment[] {
     if (!isBrowser) return DEFAULT_CONCESSIONS;
     try {
+      // Limpa chave antiga se existir
+      if (localStorage.getItem('qualitrack_concessions_v4_concession_feedback')) {
+        localStorage.removeItem('qualitrack_concessions_v4_concession_feedback');
+      }
       const data = localStorage.getItem(STORAGE_KEYS.CONCESSIONS);
       if (!data) {
         this.saveConcessions(DEFAULT_CONCESSIONS);
         return DEFAULT_CONCESSIONS;
       }
-      return JSON.parse(data);
+      const parsed: ConcessionShipment[] = JSON.parse(data);
+      // Remove concessões sintéticas de teste caso tenham sido migradas
+      const filtered = parsed.filter(c => !['conc-001', 'conc-002-braskem', 'conc-003', 'conc-004'].includes(c.id));
+      if (filtered.length !== parsed.length) {
+        this.saveConcessions(filtered);
+      }
+      return filtered;
     } catch {
       return DEFAULT_CONCESSIONS;
     }
