@@ -19,37 +19,57 @@ interface Props {
 export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCustomerId }) => {
   const { customers, defects, addConcession, evaluateRisk } = useQuality();
 
-  const [customerId, setCustomerId] = useState(defaultCustomerId || (customers[0]?.id || ''));
+  const [customerId, setCustomerId] = useState(defaultCustomerId || '');
   const [customerNumber, setCustomerNumber] = useState('');
-  const [opNumber, setOpNumber] = useState(`OP 00.${Math.floor(100 + Math.random() * 899)}.${Math.floor(100 + Math.random() * 899)}/01.01`);
-  const [defectTypeId, setDefectTypeId] = useState(defects[0]?.id || '');
-  const [lotNumber, setLotNumber] = useState(`LT-2026-${Math.floor(800 + Math.random() * 199)}`);
-  const [productName, setProductName] = useState('Sacaria');
-  const [quantity, setQuantity] = useState<number>(5000);
-  const [severity, setSeverity] = useState<DefectSeverity>('leve');
+  const [opNumber, setOpNumber] = useState('');
+  const [defectTypeId, setDefectTypeId] = useState('');
+  const [lotNumber, setLotNumber] = useState('');
+  const [productName, setProductName] = useState('');
+  const [quantity, setQuantity] = useState<number | ''>('');
+  const [severity, setSeverity] = useState<DefectSeverity | ''>('');
   const [technicalNotes, setTechnicalNotes] = useState('');
   const [approvedBy, setApprovedBy] = useState('Mauricio Grigol (Qualidade)');
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [photos, setPhotos] = useState<ComplaintPhoto[]>([]);
 
+  // Limpa todos os campos ao abrir o modal para evitar dados pré-preenchidos ou erros operacionais
+  React.useEffect(() => {
+    if (isOpen) {
+      setCustomerId(defaultCustomerId || '');
+      setCustomerNumber('');
+      setOpNumber('');
+      setDefectTypeId('');
+      setLotNumber('');
+      setProductName('');
+      setQuantity('');
+      setSeverity('');
+      setTechnicalNotes('');
+      setPhotos([]);
+    }
+  }, [isOpen, defaultCustomerId]);
+
   // Selected entities
   const selectedCustomer = customers.find(c => c.id === customerId);
   const selectedDefect = defects.find(d => d.id === defectTypeId);
 
+  const numQuantity = typeof quantity === 'number' ? quantity : 0;
+
   // Live Risk Assessment
   const riskResult = useMemo(() => {
-    if (!customerId || !defectTypeId) return null;
-    return evaluateRisk(customerId, defectTypeId, quantity, severity);
-  }, [customerId, defectTypeId, quantity, severity, evaluateRisk]);
+    if (!customerId || !defectTypeId || !severity || numQuantity <= 0) return null;
+    return evaluateRisk(customerId, defectTypeId, numQuantity, severity);
+  }, [customerId, defectTypeId, numQuantity, severity, evaluateRisk]);
 
-  const weightKg = (quantity * 77.73) / 1000;
+  const weightKg = (numQuantity * 77.73) / 1000;
   const estimatedSavedValue = weightKg * 1.5;
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerId || !defectTypeId || quantity <= 0) return;
+    if (!customerId || !defectTypeId || !opNumber.trim() || !lotNumber.trim() || !productName || !severity || numQuantity <= 0) {
+      return;
+    }
 
     addConcession({
       customerId,
@@ -58,7 +78,7 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
       lotNumber: lotNumber.trim(),
       productName: productName.trim(),
       defectTypeId,
-      quantity,
+      quantity: numQuantity,
       severity,
       unitSavedValue: (77.73 / 1000) * 1.5,
       technicalNotes: technicalNotes.trim() || `Envio autorizado com desvio de ${selectedDefect?.name}.`,
@@ -129,7 +149,7 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
                 defects={defects}
                 selectedDefectId={defectTypeId}
                 onSelectDefect={setDefectTypeId}
-                placeholder="Pesquisar defeito..."
+                placeholder="Selecione o defeito / desvio..."
                 required
               />
             </div>
@@ -144,9 +164,9 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
               </label>
               <input
                 type="text"
-                value={customerNumber || selectedCustomer?.code || ''}
+                value={customerNumber}
                 onChange={e => setCustomerNumber(e.target.value)}
-                placeholder="ex: CLI-001..."
+                placeholder={selectedCustomer?.code ? `Ex: ${selectedCustomer.code}` : "Informe o código..."}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-cyan-500/50 font-mono"
               />
             </div>
@@ -161,7 +181,7 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
                 required
                 value={opNumber}
                 onChange={e => setOpNumber(e.target.value)}
-                placeholder="ex: OP 00.125.880/01.01..."
+                placeholder="Informe o número da OP..."
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-cyan-500/50 font-mono"
               />
             </div>
@@ -175,6 +195,7 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
                 type="text"
                 value={lotNumber}
                 onChange={e => setLotNumber(e.target.value)}
+                placeholder="Informe o número do lote..."
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-cyan-500/50 font-mono"
                 required
               />
@@ -194,6 +215,7 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-cyan-500/50 font-medium"
                 required
               >
+                <option value="">Selecione (Sacaria, Big Bag)...</option>
                 <option value="Sacaria">Sacaria</option>
                 <option value="Big Bag">Big Bag</option>
               </select>
@@ -207,9 +229,10 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
               <input
                 type="number"
                 min={1}
-                step={100}
+                step={1}
                 value={quantity}
-                onChange={e => setQuantity(Math.max(1, parseInt(e.target.value) || 0))}
+                onChange={e => setQuantity(e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value) || 0))}
+                placeholder="Informe a quantidade..."
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-cyan-500/50 font-mono"
                 required
               />
@@ -224,7 +247,9 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
                 value={severity}
                 onChange={e => setSeverity(e.target.value as DefectSeverity)}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-cyan-500/50"
+                required
               >
+                <option value="">Selecione a gravidade...</option>
                 <option value="leve">Leve (Apenas estético superficial)</option>
                 <option value="moderada">Moderada (Perceptível)</option>
                 <option value="severa">Severa (Risco dimensional/funcional)</option>
@@ -283,13 +308,13 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
                   Refugo Evitado (Lucro Estimado Salvo):
                 </div>
                 <div className="text-[11px] text-slate-400">
-                  {quantity.toLocaleString('pt-BR')} un × 77,73g = <strong className="text-cyan-300 font-mono">{weightKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</strong> (Fator 1,5×)
+                  {numQuantity > 0 ? numQuantity.toLocaleString('pt-BR') : 0} un × 77,73g = <strong className="text-cyan-300 font-mono">{weightKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</strong> (Fator 1,5×)
                 </div>
               </div>
             </div>
             <div className="text-right">
               <span className="font-mono font-extrabold text-base text-cyan-300">
-                R$ {estimatedSavedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                {numQuantity > 0 ? `R$ ${estimatedSavedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'R$ 0,00'}
               </span>
             </div>
           </div>
@@ -340,7 +365,8 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 hover:from-cyan-400 hover:to-teal-400 shadow-md shadow-cyan-500/20 transition-all flex items-center gap-1.5"
+              disabled={!customerId || !defectTypeId || !opNumber.trim() || !lotNumber.trim() || !productName || !severity || numQuantity <= 0}
+              className="px-5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 hover:from-cyan-400 hover:to-teal-400 shadow-md shadow-cyan-500/20 transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <Send className="w-3.5 h-3.5" />
               Confirmar Envio com Concessão
