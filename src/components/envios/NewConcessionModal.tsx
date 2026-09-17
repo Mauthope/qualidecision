@@ -15,43 +15,49 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   defaultCustomerId?: string;
+  initialData?: {
+    customerId?: string;
+    defectTypeId?: string;
+    quantity?: number;
+    severity?: DefectSeverity;
+  } | null;
 }
 
-export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCustomerId }) => {
+export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCustomerId, initialData }) => {
   const { customers, defects, addConcession, evaluateRisk } = useQuality();
 
-  const [customerId, setCustomerId] = useState(defaultCustomerId || '');
+  const [customerId, setCustomerId] = useState(initialData?.customerId || defaultCustomerId || '');
   const [customerNumber, setCustomerNumber] = useState('');
   const [date, setDate] = useState('');
   const [opNumber, setOpNumber] = useState('');
-  const [defectTypeId, setDefectTypeId] = useState('');
+  const [defectTypeId, setDefectTypeId] = useState(initialData?.defectTypeId || '');
   const [lotNumber, setLotNumber] = useState('');
   const [bales, setBales] = useState<string[]>([]);
   const [productName, setProductName] = useState('');
-  const [quantity, setQuantity] = useState<number | ''>('');
-  const [severity, setSeverity] = useState<DefectSeverity | ''>('');
+  const [quantity, setQuantity] = useState<number | ''>(initialData?.quantity !== undefined ? initialData.quantity : '');
+  const [severity, setSeverity] = useState<DefectSeverity | ''>(initialData?.severity || '');
   const [technicalNotes, setTechnicalNotes] = useState('');
   const [approvedBy, setApprovedBy] = useState('Mauricio Grigol (Qualidade)');
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [photos, setPhotos] = useState<ComplaintPhoto[]>([]);
 
-  // Limpa todos os campos ao abrir o modal para evitar dados pré-preenchidos ou erros operacionais
+  // Limpa os campos ao abrir o modal ou aplica initialData se fornecido pela simulação da IA
   React.useEffect(() => {
     if (isOpen) {
-      setCustomerId(defaultCustomerId || '');
+      setCustomerId(initialData?.customerId || defaultCustomerId || '');
       setCustomerNumber('');
       setDate('');
       setOpNumber('');
-      setDefectTypeId('');
+      setDefectTypeId(initialData?.defectTypeId || '');
       setLotNumber('');
       setBales([]);
       setProductName('');
-      setQuantity('');
-      setSeverity('');
+      setQuantity(initialData?.quantity !== undefined ? initialData.quantity : '');
+      setSeverity(initialData?.severity || '');
       setTechnicalNotes('');
       setPhotos([]);
     }
-  }, [isOpen, defaultCustomerId]);
+  }, [isOpen, defaultCustomerId, initialData]);
 
   // Selected entities
   const selectedCustomer = customers.find(c => c.id === customerId);

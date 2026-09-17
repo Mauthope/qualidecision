@@ -73,6 +73,15 @@ interface QualityContextType {
   }) => Complaint;
   updateCustomerTolerance: (customerId: string, defectId: string, level: ToleranceLevel, notes?: string) => void;
   sendAiMessage: (prompt: string) => void;
+  isAiTyping: boolean;
+  prefillConcessionData: {
+    customerId?: string;
+    defectTypeId?: string;
+    quantity?: number;
+    severity?: DefectSeverity;
+  } | null;
+  setPrefillConcessionData: (data: { customerId?: string; defectTypeId?: string; quantity?: number; severity?: DefectSeverity } | null) => void;
+  clearChatHistory: () => void;
   evaluateRisk: (customerId: string, defectTypeId: string, quantity: number, severity: DefectSeverity) => RiskEvaluationResult | null;
   resetData: () => void;
   exportData: () => string;
@@ -152,6 +161,13 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
   });
 
   const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false);
+  const [isAiTyping, setIsAiTyping] = useState(false);
+  const [prefillConcessionData, setPrefillConcessionData] = useState<{
+    customerId?: string;
+    defectTypeId?: string;
+    quantity?: number;
+    severity?: DefectSeverity;
+  } | null>(null);
   const [toasts, setToasts] = useState<ToastState[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -564,15 +580,42 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const newHistory = [...chatMessages, userMessage];
     setChatMessages(newHistory);
+    setIsAiTyping(true);
 
     // Process with AI Service
     setTimeout(() => {
-      const aiResponse = aiAssistantService.processQuery(prompt, customers, defects, complaints, concessions);
+      const aiResponse = aiAssistantService.processQuery(
+        prompt,
+        newHistory,
+        customers,
+        defects,
+        complaints,
+        concessions
+      );
       const updatedHistory = [...newHistory, aiResponse];
       setChatMessages(updatedHistory);
+      setIsAiTyping(false);
       storageService.saveChatMessages(updatedHistory);
-    }, 450);
+    }, 400);
   }, [chatMessages, customers, defects, complaints, concessions]);
+
+  const clearChatHistory = useCallback(() => {
+    const welcomeMsg: AiChatMessage = {
+      id: `msg-${Date.now()}`,
+      sender: 'assistant',
+      text: 'Olá! Conversa reiniciada. Sou o **Especialista em Inteligência de Qualidade e Decisão**.\n\nComo posso te ajudar hoje?',
+      timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      suggestedPrompts: [
+        'Posso enviar 10.000 sacos com vinco para a Copacol?',
+        'Qual o perfil de tolerância da Alisul?',
+        'Quais clientes aceitam borrão de impressão?',
+        'Quanto de refugo foi evitado este mês?'
+      ]
+    };
+    setChatMessages([welcomeMsg]);
+    storageService.saveChatMessages([welcomeMsg]);
+    showToast('Histórico de conversa reiniciado!', 'info');
+  }, [showToast]);
 
   const openAiDrawer = useCallback((initialPrompt?: string) => {
     setIsAiDrawerOpen(true);
@@ -618,6 +661,10 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
         stats,
         chatMessages,
         isAiDrawerOpen,
+        isAiTyping,
+        prefillConcessionData,
+        setPrefillConcessionData,
+        clearChatHistory,
         toasts,
         searchQuery,
         setSearchQuery,

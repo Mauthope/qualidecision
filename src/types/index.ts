@@ -103,6 +103,17 @@ export interface RiskEvaluationResult {
   customerTolerance: ToleranceLevel;
 }
 
+export interface AiChatAction {
+  label: string;
+  type: 'open_concession' | 'search_defect' | 'switch_customer';
+  payload?: {
+    customerId?: string;
+    defectTypeId?: string;
+    quantity?: number;
+    severity?: DefectSeverity;
+  };
+}
+
 export interface AiChatMessage {
   id: string;
   sender: 'user' | 'assistant';
@@ -112,4 +123,6 @@ export interface AiChatMessage {
   concessionCards?: ConcessionShipment[];
   customerCard?: Customer;
   riskRecommendation?: RiskEvaluationResult;
+  suggestedPrompts?: string[];
+  actionButton?: AiChatAction;
 }

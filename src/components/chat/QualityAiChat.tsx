@@ -2,8 +2,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuality } from '@/context/QualityContext';
-import { ComplaintPhoto, Complaint, ConcessionShipment } from '@/types';
+import { ComplaintPhoto, DefectSeverity } from '@/types';
 import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
+import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
 import {
   Send,
   Bot,
@@ -14,9 +15,11 @@ import {
   XCircle,
   Eye,
   Camera,
-  MapPin,
   TrendingUp,
-  RotateCcw
+  RotateCcw,
+  Layers,
+  ArrowRight,
+  ShieldCheck
 } from 'lucide-react';
 
 interface Props {
@@ -24,19 +27,33 @@ interface Props {
 }
 
 const QUICK_PROMPTS = [
-  'Quais foram as reclamações do cliente Alisul?',
-  'Posso enviar 10.000 sacos com vinco para a Alisul?',
-  'Qual o perfil de tolerância da Copacol?',
+  'Posso enviar 10.000 sacos com vinco para a Copacol?',
+  'Qual o perfil de tolerância da Alisul?',
   'Podemos mandar Big Bag com borrão para a Bunge?',
+  'Quais clientes aceitam falha de solda?',
   'Quanto de scrap/refugo foi evitado este mês?',
   'JBS aceita sacaria com mancha de óleo?'
 ];
 
 export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
-  const { chatMessages, sendAiMessage } = useQuality();
+  const {
+    chatMessages,
+    sendAiMessage,
+    isAiTyping,
+    clearChatHistory
+  } = useQuality();
+
   const [inputPrompt, setInputPrompt] = useState('');
   const [activePhoto, setActivePhoto] = useState<ComplaintPhoto | null>(null);
   const [activePhotoTitle, setActivePhotoTitle] = useState<string>('');
+  const [isConcessionModalOpen, setIsConcessionModalOpen] = useState(false);
+  const [concessionInitialData, setConcessionInitialData] = useState<{
+    customerId?: string;
+    defectTypeId?: string;
+    quantity?: number;
+    severity?: DefectSeverity;
+  } | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -45,37 +62,59 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [chatMessages]);
+  }, [chatMessages, isAiTyping]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputPrompt.trim()) return;
+    if (!inputPrompt.trim() || isAiTyping) return;
     sendAiMessage(inputPrompt.trim());
     setInputPrompt('');
   };
 
   const handleQuickPrompt = (prompt: string) => {
+    if (isAiTyping) return;
     sendAiMessage(prompt);
+  };
+
+  const handleActionButton = (action: any) => {
+    if (action.type === 'open_concession') {
+      setConcessionInitialData(action.payload || null);
+      setIsConcessionModalOpen(true);
+    }
   };
 
   return (
     <div className="flex flex-col h-full bg-slate-950 flex-1 overflow-hidden">
       
-      {/* Quick Prompt Chips */}
-      <div className="px-4 sm:px-6 py-3 border-b border-slate-800/80 bg-slate-900/50 overflow-x-auto custom-scrollbar flex items-center gap-2 shrink-0">
-        <span className="text-xs font-semibold text-cyan-400 flex items-center gap-1.5 shrink-0 mr-1">
-          <Sparkles className="w-3.5 h-3.5" />
-          Sugestões rápidas:
-        </span>
-        {QUICK_PROMPTS.map((prompt, idx) => (
-          <button
-            key={idx}
-            onClick={() => handleQuickPrompt(prompt)}
-            className="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-900 border border-slate-800 hover:border-cyan-500/50 hover:bg-slate-850 text-slate-300 hover:text-cyan-300 transition-all shrink-0 whitespace-nowrap cursor-pointer shadow-sm"
-          >
-            {prompt}
-          </button>
-        ))}
+      {/* Top Controls: Quick Prompts & Reset Conversation */}
+      <div className="px-4 sm:px-6 py-2.5 border-b border-slate-800/80 bg-slate-900/50 flex items-center justify-between gap-3 shrink-0">
+        <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar flex-1 py-1">
+          <span className="text-[11px] font-semibold text-cyan-400 flex items-center gap-1 shrink-0 mr-1">
+            <Sparkles className="w-3 h-3" />
+            Sugestões:
+          </span>
+          {QUICK_PROMPTS.map((prompt, idx) => (
+            <button
+              key={idx}
+              onClick={() => handleQuickPrompt(prompt)}
+              disabled={isAiTyping}
+              className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-900 border border-slate-800 hover:border-cyan-500/40 hover:bg-slate-850 text-slate-300 hover:text-cyan-300 transition-all shrink-0 whitespace-nowrap cursor-pointer shadow-sm disabled:opacity-50"
+            >
+              {prompt}
+            </button>
+          ))}
+        </div>
+
+        {/* Clear Chat History */}
+        <button
+          type="button"
+          onClick={clearChatHistory}
+          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors shrink-0 flex items-center gap-1 text-[11px] font-medium cursor-pointer"
+          title="Reiniciar conversa e limpar histórico"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Reiniciar</span>
+        </button>
       </div>
 
       {/* Messages List */}
@@ -85,19 +124,19 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
           return (
             <div
               key={msg.id}
-              className={`flex items-start gap-3.5 ${isUser ? 'flex-row-reverse' : 'flex-row'} max-w-5xl mx-auto`}
+              className={`flex items-start gap-3 sm:gap-3.5 ${isUser ? 'flex-row-reverse' : 'flex-row'} max-w-5xl mx-auto`}
             >
               {/* Avatar */}
-              <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center shrink-0 ${
+              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center shrink-0 ${
                 isUser
                   ? 'bg-slate-800 text-cyan-300 border border-slate-700'
                   : 'bg-gradient-to-tr from-cyan-500 via-teal-500 to-emerald-500 text-slate-950 shadow-md shadow-cyan-500/20'
               }`}>
-                {isUser ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
+                {isUser ? <User className="w-4 h-4 sm:w-5 sm:h-5" /> : <Bot className="w-4 h-4 sm:w-5 sm:h-5" />}
               </div>
 
-              {/* Message Bubble */}
-              <div className={`flex-1 max-w-[92%] space-y-3 ${isUser ? 'items-end' : 'items-start'}`}>
+              {/* Message Bubble & Cards */}
+              <div className={`flex-1 max-w-[92%] sm:max-w-[85%] space-y-3 ${isUser ? 'items-end' : 'items-start'}`}>
                 <div
                   className={`p-4 sm:p-5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-lg ${
                     isUser
@@ -105,11 +144,14 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                       : 'bg-slate-900/90 border border-slate-800 text-slate-100 rounded-tl-none'
                   }`}
                 >
-                  <div className="whitespace-pre-line">
+                  <div className="whitespace-pre-line space-y-1">
                     {msg.text.split('\n').map((line, lIdx) => {
                       const parts = line.split(/(\*\*.*?\*\*)/g);
+                      const isBullet = line.trim().startsWith('•') || line.trim().startsWith('-');
+                      const isNumbered = /^\d+\.\s/.test(line.trim());
+                      
                       return (
-                        <p key={lIdx} className={line.startsWith('•') ? 'ml-3 my-1' : 'my-1.5'}>
+                        <p key={lIdx} className={`${isBullet ? 'ml-3 my-0.5' : isNumbered ? 'ml-1 my-1' : 'my-1'}`}>
                           {parts.map((part, pIdx) => {
                             if (part.startsWith('**') && part.endsWith('**')) {
                               return <strong key={pIdx} className="font-bold text-cyan-200">{part.slice(2, -2)}</strong>;
@@ -120,12 +162,46 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                       );
                     })}
                   </div>
-                  <div className={`text-[11px] mt-2 text-right font-mono ${isUser ? 'text-cyan-100/70' : 'text-slate-500'}`}>
+
+                  <div className={`text-[10px] mt-2 text-right font-mono ${isUser ? 'text-cyan-100/70' : 'text-slate-500'}`}>
                     {msg.timestamp}
                   </div>
                 </div>
 
-                {/* Attached Complaint Cards with Photos (Tela Cheia Grid) */}
+                {/* Primary Action Button (Direct Creation of Concession) */}
+                {msg.actionButton && (
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleActionButton(msg.actionButton)}
+                      className="px-4 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 hover:from-cyan-400 hover:to-teal-400 shadow-md shadow-cyan-500/20 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>{msg.actionButton.label}</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Interactive Contextual Follow-up Chips */}
+                {msg.suggestedPrompts && msg.suggestedPrompts.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="text-[11px] text-slate-500 font-medium mr-1">Continuar:</span>
+                    {msg.suggestedPrompts.map((sp, spIdx) => (
+                      <button
+                        key={spIdx}
+                        type="button"
+                        onClick={() => handleQuickPrompt(sp)}
+                        disabled={isAiTyping}
+                        className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-900 border border-slate-700/80 hover:border-cyan-500/50 hover:bg-slate-850 text-cyan-300 hover:text-cyan-200 transition-all cursor-pointer shadow-sm active:scale-95 disabled:opacity-50"
+                      >
+                        {sp}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Attached Complaint Cards with Photos */}
                 {msg.complaintCards && msg.complaintCards.length > 0 && (
                   <div className="space-y-3 pt-1">
                     <div className="text-xs font-bold text-slate-400 flex items-center gap-2">
@@ -221,6 +297,11 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                             <div className="text-[11px] text-slate-400 mt-0.5">
                               Lote {c.lotNumber} • {c.defectTypeName} ({c.quantity.toLocaleString('pt-BR')} un)
                             </div>
+                            {c.bales && c.bales.length > 0 && (
+                              <div className="text-[10px] text-cyan-300 font-mono mt-1">
+                                📦 Fardos: {c.bales.join(', ')}
+                              </div>
+                            )}
                           </div>
                           <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
                             <span className="text-[10px] text-emerald-400 font-semibold">Refugo Evitado:</span>
@@ -237,6 +318,24 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
             </div>
           );
         })}
+
+        {/* Typing Indicator */}
+        {isAiTyping && (
+          <div className="flex items-start gap-3.5 max-w-5xl mx-auto animate-in fade-in duration-200">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center shrink-0 bg-gradient-to-tr from-cyan-500 via-teal-500 to-emerald-500 text-slate-950 shadow-md shadow-cyan-500/20">
+              <Bot className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs text-slate-300 rounded-tl-none flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-2 h-2 rounded-full bg-teal-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+              <span className="font-medium text-slate-400">Analisando histórico, tolerância do cliente e simulando decisão...</span>
+            </div>
+          </div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -246,12 +345,13 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
           type="text"
           value={inputPrompt}
           onChange={e => setInputPrompt(e.target.value)}
-          placeholder="Digite sua dúvida (ex: Quais foram as reclamações da Alisul? / Posso enviar 5 mil sacos com vinco?)..."
-          className="flex-1 bg-slate-900 border border-slate-700/80 rounded-2xl px-5 py-3.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/70 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
+          disabled={isAiTyping}
+          placeholder="Digite sua dúvida ou simulação (ex: Posso enviar 5 mil sacos com vinco para a Copacol?)..."
+          className="flex-1 bg-slate-900 border border-slate-700/80 rounded-2xl px-5 py-3.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/70 focus:ring-2 focus:ring-cyan-500/20 shadow-inner disabled:opacity-50"
         />
         <button
           type="submit"
-          disabled={!inputPrompt.trim()}
+          disabled={!inputPrompt.trim() || isAiTyping}
           className="px-5 sm:px-7 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 font-bold hover:from-cyan-400 hover:to-teal-400 disabled:opacity-40 transition-all shadow-lg shadow-cyan-500/25 shrink-0 flex items-center gap-2 cursor-pointer"
         >
           <Send className="w-4 h-4" />
@@ -265,6 +365,18 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
           photo={activePhoto}
           title={activePhotoTitle}
           onClose={() => setActivePhoto(null)}
+        />
+      )}
+
+      {/* Pre-filled Concession Modal triggered from AI Action Button */}
+      {isConcessionModalOpen && (
+        <NewConcessionModal
+          isOpen={isConcessionModalOpen}
+          onClose={() => {
+            setIsConcessionModalOpen(false);
+            setConcessionInitialData(null);
+          }}
+          initialData={concessionInitialData}
         />
       )}
     </div>
