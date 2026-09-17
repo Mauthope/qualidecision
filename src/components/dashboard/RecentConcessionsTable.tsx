@@ -3,12 +3,15 @@
 import React, { useState } from 'react';
 import { useQuality } from '@/context/QualityContext';
 import Link from 'next/link';
-import { Send, CheckCircle2, Clock, AlertTriangle, ArrowRight, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Send, CheckCircle2, Clock, AlertTriangle, ArrowRight, ExternalLink, ShieldCheck, Trash2 } from 'lucide-react';
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
+import { ConcessionShipment } from '@/types';
 
 export const RecentConcessionsTable: React.FC = () => {
-  const { concessions, complaints } = useQuality();
+  const { concessions, complaints, deleteConcession } = useQuality();
   const [isNewConcessionOpen, setIsNewConcessionOpen] = useState(false);
+  const [concessionToDelete, setConcessionToDelete] = useState<ConcessionShipment | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   return (
     <>
@@ -72,7 +75,8 @@ export const RecentConcessionsTable: React.FC = () => {
                   <th className="pb-3 px-4">Defeito & Severidade</th>
                   <th className="pb-3 px-4 text-right">Volume Concedido</th>
                   <th className="pb-3 px-4 text-right">Scrap Salvo (R$)</th>
-                  <th className="pb-3 pl-4 text-center">Status / Feedback</th>
+                  <th className="pb-3 px-4 text-center">Status / Feedback</th>
+                  <th className="pb-3 pl-2 pr-4 text-center">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
@@ -171,8 +175,19 @@ export const RecentConcessionsTable: React.FC = () => {
                         R$ {item.totalSavedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </td>
 
-                      <td className="py-3.5 pl-4 text-center">
+                      <td className="py-3.5 px-4 text-center">
                         {statusBadge}
+                      </td>
+
+                      <td className="py-3.5 pl-2 pr-4 text-center">
+                        <button
+                          type="button"
+                          onClick={() => setConcessionToDelete(item)}
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all cursor-pointer"
+                          title={`Excluir envio ${item.code}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </td>
                     </tr>
                   );
@@ -185,6 +200,88 @@ export const RecentConcessionsTable: React.FC = () => {
 
       {isNewConcessionOpen && (
         <NewConcessionModal isOpen={isNewConcessionOpen} onClose={() => setIsNewConcessionOpen(false)} />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {concessionToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="w-full max-w-md bg-slate-950 border border-slate-800 rounded-2xl shadow-2xl p-6 space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white font-heading">
+                  Excluir Envio com Concessão
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Esta ação removerá o registro e atualizará os indicadores.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs space-y-2">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Código do Envio:</span>
+                <span className="font-mono font-bold text-cyan-400">{concessionToDelete.code}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Cliente:</span>
+                <span className="font-semibold text-slate-200">{concessionToDelete.customerName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Produto:</span>
+                <span className="text-slate-300">{concessionToDelete.productName}</span>
+              </div>
+              {concessionToDelete.bales && concessionToDelete.bales.length > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Fardo(s):</span>
+                  <span className="font-mono text-cyan-300">{concessionToDelete.bales.join(', ')}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-slate-400">Volume:</span>
+                <span className="font-mono text-slate-200">{concessionToDelete.quantity.toLocaleString('pt-BR')} un</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Data do Envio:</span>
+                <span className="text-slate-300">{new Date(concessionToDelete.date).toLocaleDateString('pt-BR')}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-rose-300/90 bg-rose-950/30 p-2.5 rounded-xl border border-rose-900/40">
+              ⚠️ <strong>Atenção:</strong> A exclusão é definitiva no sistema e no banco de dados.
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-800">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setConcessionToDelete(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={async () => {
+                  setIsDeleting(true);
+                  try {
+                    await deleteConcession(concessionToDelete.id);
+                    setConcessionToDelete(null);
+                  } finally {
+                    setIsDeleting(false);
+                  }
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-950/50 flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                {isDeleting ? 'Excluindo...' : 'Confirmar Exclusão'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

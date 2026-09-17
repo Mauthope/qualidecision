@@ -174,6 +174,34 @@ export const supabaseService = {
     } catch (err) {
       console.error('Erro ao salvar configurações no Supabase via API:', err);
     }
+  },
+
+  async deleteConcession(id: string): Promise<boolean> {
+    try {
+      const res = await fetch('/api/quality', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'deleteConcession', payload: { id } })
+      });
+      return res.ok;
+    } catch (err) {
+      console.error('Erro ao excluir concessão via API:', err);
+      return false;
+    }
+  },
+
+  async deleteComplaint(id: string): Promise<boolean> {
+    try {
+      const res = await fetch('/api/quality', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'deleteComplaint', payload: { id } })
+      });
+      return res.ok;
+    } catch (err) {
+      console.error('Erro ao excluir reclamação via API:', err);
+      return false;
+    }
   }
 };
 

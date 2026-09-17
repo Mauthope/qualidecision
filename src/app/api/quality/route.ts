@@ -255,6 +255,26 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true });
       }
 
+      case 'deleteConcession': {
+        const { id } = payload;
+        if (!id) {
+          return NextResponse.json({ success: false, error: 'ID da concessão não informado' }, { status: 400 });
+        }
+        const { error } = await supabaseServer.from('concessions').delete().eq('id', id);
+        if (error) throw error;
+        return NextResponse.json({ success: true, id });
+      }
+
+      case 'deleteComplaint': {
+        const { id } = payload;
+        if (!id) {
+          return NextResponse.json({ success: false, error: 'ID da reclamação não informado' }, { status: 400 });
+        }
+        const { error } = await supabaseServer.from('complaints').delete().eq('id', id);
+        if (error) throw error;
+        return NextResponse.json({ success: true, id });
+      }
+
       default:
         return NextResponse.json({ success: false, error: 'Ação desconhecida' }, { status: 400 });
     }

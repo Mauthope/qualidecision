@@ -45,6 +45,8 @@ interface QualityContextType {
     approvedBy?: string;
     photos?: Array<{ id: string; url: string; caption: string; defectLocation?: string }>;
   }) => ConcessionShipment;
+  deleteConcession: (id: string) => Promise<boolean>;
+  deleteComplaint: (id: string) => Promise<boolean>;
   addCustomer: (data: {
     name: string;
     code?: string;
@@ -352,6 +354,39 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return newConcession;
   }, [customers, defects, complaints, concessions, settings, showToast]);
 
+  const deleteConcession = useCallback(async (id: string): Promise<boolean> => {
+    const target = concessions.find(c => c.id === id);
+    const updated = concessions.filter(c => c.id !== id);
+    setConcessions(updated);
+    storageService.saveConcessions(updated);
+
+    try {
+      await supabaseService.deleteConcession(id);
+    } catch (e) {
+      console.error('Erro ao excluir no Supabase:', e);
+    }
+
+    // Recalcula a matriz de tolerância dos clientes
+    const updatedCustomers = customers.map(c => {
+      const { overallToleranceScore, toleranceRatings } = qualityService.calculateCustomerTolerance(
+        c,
+        complaints,
+        updated,
+        defects
+      );
+      return {
+        ...c,
+        overallToleranceScore,
+        toleranceRatings
+      };
+    });
+    setCustomers(updatedCustomers);
+    storageService.saveCustomers(updatedCustomers);
+
+    showToast(`Envio com concessão ${target?.code || ''} excluído com sucesso!`, 'info');
+    return true;
+  }, [concessions, customers, complaints, defects, showToast]);
+
   const updateSettings = useCallback((newSettings: Partial<QualitySettings>) => {
     setSettings(prev => {
       const updated: QualitySettings = {
@@ -561,6 +596,38 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return newComplaint;
   }, [customers, defects, complaints, concessions, showToast]);
 
+  const deleteComplaint = useCallback(async (id: string): Promise<boolean> => {
+    const target = complaints.find(c => c.id === id);
+    const updated = complaints.filter(c => c.id !== id);
+    setComplaints(updated);
+    storageService.saveComplaints(updated);
+
+    try {
+      await supabaseService.deleteComplaint(id);
+    } catch (e) {
+      console.error('Erro ao excluir reclamação no Supabase:', e);
+    }
+
+    const updatedCustomers = customers.map(c => {
+      const { overallToleranceScore, toleranceRatings } = qualityService.calculateCustomerTolerance(
+        c,
+        updated,
+        concessions,
+        defects
+      );
+      return {
+        ...c,
+        overallToleranceScore,
+        toleranceRatings
+      };
+    });
+    setCustomers(updatedCustomers);
+    storageService.saveCustomers(updatedCustomers);
+
+    showToast(`Reclamação ${target?.code || ''} excluída com sucesso!`, 'info');
+    return true;
+  }, [complaints, customers, concessions, defects, showToast]);
+
   const updateCustomerTolerance = useCallback((
     customerId: string,
     defectId: string,
@@ -734,9 +801,11 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
         openAiDrawer,
         closeAiDrawer,
         addConcession,
+        deleteConcession,
         addCustomer,
         addDefect,
         addComplaint,
+        deleteComplaint,
         updateCustomerTolerance,
         sendAiMessage,
         evaluateRisk,
