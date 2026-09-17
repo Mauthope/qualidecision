@@ -31,7 +31,6 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
   const [date, setDate] = useState('');
   const [opNumber, setOpNumber] = useState('');
   const [defectTypeId, setDefectTypeId] = useState(initialData?.defectTypeId || '');
-  const [lotNumber, setLotNumber] = useState('');
   const [bales, setBales] = useState<string[]>([]);
   const [productName, setProductName] = useState('');
   const [quantity, setQuantity] = useState<number | ''>(initialData?.quantity !== undefined ? initialData.quantity : '');
@@ -49,7 +48,6 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
       setDate('');
       setOpNumber('');
       setDefectTypeId(initialData?.defectTypeId || '');
-      setLotNumber('');
       setBales([]);
       setProductName('');
       setQuantity(initialData?.quantity !== undefined ? initialData.quantity : '');
@@ -78,7 +76,7 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerId || !defectTypeId || !opNumber.trim() || !lotNumber.trim() || !productName || !severity || !date || numQuantity <= 0) {
+    if (!customerId || !defectTypeId || !opNumber.trim() || bales.length === 0 || !productName || !severity || !date || numQuantity <= 0) {
       return;
     }
 
@@ -87,7 +85,6 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
       customerNumber: customerNumber.trim() || selectedCustomer?.code,
       opNumber: opNumber.trim(),
       date,
-      lotNumber: lotNumber.trim(),
       bales,
       productName: productName.trim(),
       defectTypeId,
@@ -168,8 +165,8 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
             </div>
           </div>
 
-          {/* Identificadores: Data do Envio, Número Cliente, Número OP, Lote */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Identificadores: Data do Envio, Número Cliente, Número OP */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Data do Envio */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
@@ -221,21 +218,6 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-500/50 font-mono"
               />
             </div>
-
-            {/* Lot Number */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Número do Lote *
-              </label>
-              <input
-                type="text"
-                value={lotNumber}
-                onChange={e => setLotNumber(e.target.value)}
-                placeholder="Informe o lote..."
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-500/50 font-mono"
-                required
-              />
-            </div>
           </div>
 
           {/* Fardos Individuais (Adição dinâmica por botão) */}
@@ -243,8 +225,9 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
             bales={bales}
             onChange={setBales}
             variant="cyan"
-            label="Identificação dos Fardos com Desvio"
-            helperText="Adicione cada número de fardo com o botão 'Add Fardo' (ou intervalos como 101-105). Deixe vazio se abranger todo o lote."
+            required={true}
+            label="Número do(s) Fardo(s) com Desvio *"
+            helperText="Adicione cada número de fardo com o botão '+ Add Fardo' (ou intervalos como 101-105 / cole do Excel)."
           />
 
           {/* Produto, Quantidade e Gravidade */}
@@ -410,7 +393,7 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
             </button>
             <button
               type="submit"
-              disabled={!customerId || !defectTypeId || !opNumber.trim() || !lotNumber.trim() || !productName || !severity || !date || numQuantity <= 0}
+              disabled={!customerId || !defectTypeId || !opNumber.trim() || bales.length === 0 || !productName || !severity || !date || numQuantity <= 0}
               className="px-5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 hover:from-cyan-400 hover:to-teal-400 shadow-md shadow-cyan-500/20 transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <Send className="w-3.5 h-3.5" />

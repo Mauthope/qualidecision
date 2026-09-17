@@ -43,7 +43,7 @@ export interface Complaint {
   customerId: string;
   customerName: string;
   date: string;
-  lotNumber: string;
+  lotNumber?: string;
   bales?: string[]; // Identificadores individuais dos fardos
   defectTypeId: string;
   defectTypeName: string;
@@ -66,7 +66,7 @@ export interface ConcessionShipment {
   customerNumber?: string; // Número / Código do Cliente
   opNumber?: string; // Número da Ordem de Produção (OP)
   date: string;
-  lotNumber: string;
+  lotNumber?: string;
   bales?: string[]; // Identificadores individuais dos fardos
   productName: string; // ex: 'Sacaria', 'Big Bag'
   defectTypeId: string;

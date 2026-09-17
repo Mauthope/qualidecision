@@ -21,7 +21,6 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
   const [customerId, setCustomerId] = useState(defaultCustomerId || '');
   const [date, setDate] = useState('');
   const [defectTypeId, setDefectTypeId] = useState('');
-  const [lotNumber, setLotNumber] = useState('');
   const [bales, setBales] = useState<string[]>([]);
   const [quantityAffected, setQuantityAffected] = useState<number | ''>('');
   const [severity, setSeverity] = useState<DefectSeverity>('severa');
@@ -37,7 +36,6 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
       setCustomerId(defaultCustomerId || '');
       setDate('');
       setDefectTypeId('');
-      setLotNumber('');
       setBales([]);
       setQuantityAffected('');
       setSeverity('severa');
@@ -54,12 +52,11 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerId || !defectTypeId || !description.trim() || !lotNumber.trim() || !date || numQuantity <= 0) return;
+    if (!customerId || !defectTypeId || !description.trim() || bales.length === 0 || !date || numQuantity <= 0) return;
 
     addComplaint({
       customerId,
       date,
-      lotNumber: lotNumber.trim(),
       bales,
       defectTypeId,
       quantityAffected: numQuantity,
@@ -130,7 +127,7 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Data da Reclamação */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
@@ -151,21 +148,6 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
                 value={date}
                 onChange={e => setDate(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-rose-500/50 [color-scheme:dark]"
-              />
-            </div>
-
-            {/* Lot */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Lote Reclamado *
-              </label>
-              <input
-                type="text"
-                value={lotNumber}
-                onChange={e => setLotNumber(e.target.value)}
-                placeholder="Informe o lote reclamado..."
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-rose-500/50 font-mono"
-                required
               />
             </div>
 
@@ -208,8 +190,9 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
             bales={bales}
             onChange={setBales}
             variant="rose"
-            label="Identificação dos Fardos Reclamados"
-            helperText="Adicione o número de cada fardo reclamado com o botão 'Add Fardo' (ou intervalos como 101-105). Deixe vazio se a reclamação abranger o lote inteiro."
+            required={true}
+            label="Número do(s) Fardo(s) Reclamado(s) *"
+            helperText="Adicione o número de cada fardo reclamado com o botão '+ Add Fardo' (ou intervalos como 101-105 / cole do Excel)."
           />
 
           {/* Description */}
@@ -275,7 +258,7 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
             </button>
             <button
               type="submit"
-              disabled={!customerId || !defectTypeId || !description.trim() || !lotNumber.trim() || !date || numQuantity <= 0}
+              disabled={!customerId || !defectTypeId || !description.trim() || bales.length === 0 || !date || numQuantity <= 0}
               className="px-5 py-2 rounded-xl text-xs font-bold bg-rose-500 hover:bg-rose-400 text-white shadow-md shadow-rose-500/20 transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <AlertCircle className="w-3.5 h-3.5" />

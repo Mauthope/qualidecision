@@ -31,13 +31,15 @@ export const ConcessionVsComplaintComparison: React.FC<Props> = ({
 }) => {
   // Analyze each concession and cross-reference with complaints
   const analyzedConcessions = concessions.map(concession => {
-    // 1. Exact lot match
+    // 1. Exact lot or bale match
     const exactLotComplaint = complaints.find(
-      c => c.customerId === customer.id &&
-        c.lotNumber &&
-        concession.lotNumber &&
-        (c.lotNumber.toLowerCase().includes(concession.lotNumber.toLowerCase()) ||
-         concession.lotNumber.toLowerCase().includes(c.lotNumber.toLowerCase()))
+      c => c.customerId === customer.id && (
+        (c.lotNumber && concession.lotNumber && (
+          c.lotNumber.toLowerCase().includes(concession.lotNumber.toLowerCase()) ||
+          concession.lotNumber.toLowerCase().includes(c.lotNumber.toLowerCase())
+        )) ||
+        (c.bales && concession.bales && c.bales.some(b => concession.bales?.includes(b)))
+      )
     );
 
     // 2. Same defect type claimed on or after the concession shipment date
@@ -167,9 +169,15 @@ export const ConcessionVsComplaintComparison: React.FC<Props> = ({
                   <span className="text-xs font-semibold text-white">
                     {item.productName}
                   </span>
-                  <span className="text-xs text-slate-400 font-mono">
-                    (Lote: {item.lotNumber})
-                  </span>
+                  {item.bales && item.bales.length > 0 ? (
+                    <span className="px-2 py-0.5 rounded text-xs font-mono font-medium text-cyan-300 bg-cyan-950/60 border border-cyan-800/50" title={`Fardos: ${item.bales.join(', ')}`}>
+                      📦 {item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 3).join(', ')}{item.bales.length > 3 ? '...' : ''}
+                    </span>
+                  ) : item.lotNumber ? (
+                    <span className="text-xs text-slate-400 font-mono">
+                      ({item.lotNumber.startsWith('Fardo') ? item.lotNumber : `Lote: ${item.lotNumber}`})
+                    </span>
+                  ) : null}
                 </div>
 
                 <div className="flex items-center gap-2 text-xs">

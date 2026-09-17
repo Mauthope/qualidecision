@@ -34,7 +34,7 @@ export default function ReclamacoesPage() {
     const s = search.toLowerCase();
     const matchesSearch = c.code.toLowerCase().includes(s) ||
       c.customerName.toLowerCase().includes(s) ||
-      c.lotNumber.toLowerCase().includes(s) ||
+      (c.lotNumber && c.lotNumber.toLowerCase().includes(s)) ||
       (c.bales && c.bales.some(b => b.toLowerCase().includes(s))) ||
       c.defectTypeName.toLowerCase().includes(s) ||
       c.description.toLowerCase().includes(s);
@@ -146,14 +146,15 @@ export default function ReclamacoesPage() {
                   >
                     {item.customerName}
                   </Link>
-                  <span className="text-xs text-slate-400">
-                    (Lote <strong className="font-mono text-cyan-300">{item.lotNumber}</strong>)
-                  </span>
-                  {item.bales && item.bales.length > 0 && (
+                  {item.bales && item.bales.length > 0 ? (
                     <span className="px-2 py-0.5 rounded text-xs font-mono font-medium bg-rose-500/10 text-rose-300 border border-rose-500/25" title={`Fardos reclamados: ${item.bales.join(', ')}`}>
-                      📦 {item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 3).join(', ')}{item.bales.length > 3 ? '...' : ''}
+                      📦 {item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 4).join(', ')}{item.bales.length > 4 ? ` (+${item.bales.length - 4})` : ''}
                     </span>
-                  )}
+                  ) : item.lotNumber ? (
+                    <span className="text-xs text-slate-400 font-mono">
+                      {item.lotNumber.startsWith('Fardo') ? item.lotNumber : `Fardo/Lote: ${item.lotNumber}`}
+                    </span>
+                  ) : null}
                   <span className="px-2 py-0.5 rounded text-xs font-mono font-bold bg-amber-500/10 text-amber-300 border border-amber-500/25">
                     ⚖️ {item.quantityAffected?.toLocaleString('pt-BR')} kg
                   </span>
@@ -216,7 +217,7 @@ export default function ReclamacoesPage() {
                 <div className="space-y-2 pt-2 border-t border-slate-800/60">
                   <div className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
                     <Camera className="w-4 h-4 text-cyan-400" />
-                    Fotos Anexadas do Lote ({item.photos.length}):
+                    Fotos Anexadas ({item.photos.length}):
                   </div>
 
                   <div className="flex flex-wrap gap-3">
@@ -225,7 +226,7 @@ export default function ReclamacoesPage() {
                         key={photo.id}
                         onClick={() => {
                           setActivePhoto(photo);
-                          setPhotoTitle(`${item.customerName} - [${item.code}] Lote ${item.lotNumber}`);
+                          setPhotoTitle(`${item.customerName} - [${item.code}] ${item.bales?.length ? `Fardos ${item.bales.join(', ')}` : item.lotNumber || ''}`);
                         }}
                         className="relative group cursor-pointer w-32 h-24 rounded-xl overflow-hidden border border-slate-700 hover:border-cyan-400 transition-all bg-black shadow-md"
                       >

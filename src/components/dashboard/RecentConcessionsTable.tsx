@@ -68,7 +68,7 @@ export const RecentConcessionsTable: React.FC = () => {
                 <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
                   <th className="pb-3 pr-4">Código / Data</th>
                   <th className="pb-3 px-4">Cliente Destino</th>
-                  <th className="pb-3 px-4">Produto & Lote</th>
+                  <th className="pb-3 px-4">Produto & Fardos</th>
                   <th className="pb-3 px-4">Defeito & Severidade</th>
                   <th className="pb-3 px-4 text-right">Volume Concedido</th>
                   <th className="pb-3 px-4 text-right">Scrap Salvo (R$)</th>
@@ -144,12 +144,13 @@ export const RecentConcessionsTable: React.FC = () => {
                           )}
                         </div>
                         <div className="font-mono text-[11px] text-slate-400 flex flex-wrap items-center gap-1.5 mt-0.5">
-                          <span>Lote: {item.lotNumber}</span>
-                          {item.bales && item.bales.length > 0 && (
-                            <span className="text-[10px] font-mono text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/50" title={`Fardos: ${item.bales.join(', ')}`}>
-                              📦 {item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 3).join(', ')}{item.bales.length > 3 ? '...' : ''}
+                          {item.bales && item.bales.length > 0 ? (
+                            <span className="text-[10px] font-mono font-medium text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/50" title={`Fardos: ${item.bales.join(', ')}`}>
+                              📦 {item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 4).join(', ')}{item.bales.length > 4 ? ` (+${item.bales.length - 4})` : ''}
                             </span>
-                          )}
+                          ) : item.lotNumber ? (
+                            <span>{item.lotNumber.startsWith('Fardo') ? item.lotNumber : `Fardo/Lote: ${item.lotNumber}`}</span>
+                          ) : null}
                         </div>
                       </td>
 

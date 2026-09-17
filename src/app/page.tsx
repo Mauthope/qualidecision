@@ -372,7 +372,7 @@ export default function DashboardPage() {
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-800 text-slate-400 uppercase text-[11px]">
-                  <th className="pb-2.5 pr-3">Lote / Data</th>
+                  <th className="pb-2.5 pr-3">Fardo(s) / Data</th>
                   <th className="pb-2.5 px-3">Cliente</th>
                   <th className="pb-2.5 px-3">Desvio</th>
                   <th className="pb-2.5 px-3 text-right">Volume</th>
@@ -384,7 +384,8 @@ export default function DashboardPage() {
                   const isReclaimed = complaints.some(
                     comp =>
                       comp.customerId === item.customerId &&
-                      ((comp.lotNumber && item.lotNumber && comp.lotNumber.toLowerCase().includes(item.lotNumber.toLowerCase())) ||
+                      (((comp.lotNumber && item.lotNumber && comp.lotNumber.toLowerCase().includes(item.lotNumber.toLowerCase())) ||
+                        (comp.bales && item.bales && comp.bales.some(b => item.bales?.includes(b)))) ||
                         (comp.defectTypeId === item.defectTypeId && new Date(comp.date) >= new Date(item.date)))
                   ) || item.customerFeedbackStatus === 'reclamado_posteriormente';
 
@@ -398,7 +399,7 @@ export default function DashboardPage() {
                   if (isReclaimed) {
                     statusBadge = (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
-                        <AlertTriangle className="w-3 h-3 text-rose-400" />
+                        <AlertTriangle className="w-3 h-3" />
                         Reclamado
                       </span>
                     );
@@ -414,7 +415,11 @@ export default function DashboardPage() {
                   return (
                     <tr key={item.id} className="hover:bg-slate-900/50">
                       <td className="py-3 pr-3">
-                        <div className="font-mono font-bold text-cyan-400">{item.lotNumber}</div>
+                        <div className="font-mono font-bold text-cyan-400">
+                          {item.bales && item.bales.length > 0
+                            ? `Fardo${item.bales.length > 1 ? 's' : ''} ${item.bales.slice(0, 2).join(', ')}${item.bales.length > 2 ? '...' : ''}`
+                            : (item.lotNumber || item.code)}
+                        </div>
                         <div className="text-[10px] text-slate-500">{new Date(item.date).toLocaleDateString('pt-BR')}</div>
                       </td>
 

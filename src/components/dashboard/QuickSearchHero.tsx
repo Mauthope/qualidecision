@@ -28,7 +28,7 @@ export const QuickSearchHero: React.FC = () => {
   const matchingComplaints = searchLower
     ? complaints.filter(c => 
         c.customerName.toLowerCase().includes(searchLower) || 
-        c.lotNumber.toLowerCase().includes(searchLower) || 
+        (c.lotNumber && c.lotNumber.toLowerCase().includes(searchLower)) || 
         (c.bales && c.bales.some(b => b.toLowerCase().includes(searchLower))) ||
         c.defectTypeName.toLowerCase().includes(searchLower)
       )
@@ -37,7 +37,7 @@ export const QuickSearchHero: React.FC = () => {
   const matchingConcessions = searchLower
     ? concessions.filter(c => 
         c.customerName.toLowerCase().includes(searchLower) || 
-        c.lotNumber.toLowerCase().includes(searchLower) || 
+        (c.lotNumber && c.lotNumber.toLowerCase().includes(searchLower)) || 
         (c.opNumber && c.opNumber.toLowerCase().includes(searchLower)) ||
         (c.bales && c.bales.some(b => b.toLowerCase().includes(searchLower))) ||
         c.defectTypeName.toLowerCase().includes(searchLower)
@@ -88,7 +88,7 @@ export const QuickSearchHero: React.FC = () => {
               <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Pesquise por cliente (ex: Alisul, Bunge, Copacol), número de lote (LT-2026-884) ou tipo de defeito (vinco, borrão)..."
+                placeholder="Pesquise por cliente (ex: Alisul, Bunge), número de fardo (104, 105), OP ou tipo de defeito..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="w-full bg-slate-900/90 border border-slate-700/80 rounded-2xl pl-12 pr-4 py-3.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/70 focus:ring-2 focus:ring-cyan-500/20 shadow-inner"
@@ -154,12 +154,9 @@ export const QuickSearchHero: React.FC = () => {
                         <div key={complaint.id} className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs flex items-center justify-between">
                           <div>
                             <span className="font-semibold text-rose-300 mr-2">[{complaint.code}]</span>
-                            <span className="text-slate-200">{complaint.customerName} - Lote {complaint.lotNumber}</span>
-                            {complaint.bales && complaint.bales.length > 0 && (
-                              <span className="ml-2 text-[10px] text-rose-300 font-mono bg-rose-950/40 px-1 rounded">
-                                Fardos: {complaint.bales.join(', ')}
-                              </span>
-                            )}
+                            <span className="text-slate-200">
+                              {complaint.customerName} {complaint.bales?.length ? `- Fardo${complaint.bales.length > 1 ? 's' : ''} ${complaint.bales.slice(0, 3).join(', ')}` : complaint.lotNumber ? `- Lote ${complaint.lotNumber}` : ''}
+                            </span>
                             <div className="text-[11px] text-slate-400">{complaint.defectTypeName}: "{complaint.description.slice(0, 70)}..."</div>
                           </div>
                           <span className="text-[10px] text-slate-500 shrink-0">{new Date(complaint.date).toLocaleDateString('pt-BR')}</span>
@@ -181,12 +178,9 @@ export const QuickSearchHero: React.FC = () => {
                         <div key={concession.id} className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs flex items-center justify-between">
                           <div>
                             <span className="font-semibold text-cyan-300 mr-2">[{concession.code}]</span>
-                            <span className="text-slate-200">{concession.customerName} - Lote {concession.lotNumber}</span>
-                            {concession.bales && concession.bales.length > 0 && (
-                              <span className="ml-2 text-[10px] text-cyan-300 font-mono bg-cyan-950/40 px-1 rounded">
-                                Fardos: {concession.bales.join(', ')}
-                              </span>
-                            )}
+                            <span className="text-slate-200">
+                              {concession.customerName} {concession.bales?.length ? `- Fardo${concession.bales.length > 1 ? 's' : ''} ${concession.bales.slice(0, 3).join(', ')}` : concession.lotNumber ? `- Lote ${concession.lotNumber}` : ''}
+                            </span>
                             <div className="text-[11px] text-slate-400">
                               {concession.productName} • {concession.defectTypeName} • {concession.quantity.toLocaleString('pt-BR')} un
                             </div>

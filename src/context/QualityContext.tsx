@@ -34,7 +34,7 @@ interface QualityContextType {
     customerNumber?: string;
     opNumber?: string;
     date?: string;
-    lotNumber: string;
+    lotNumber?: string;
     bales?: string[];
     productName: string;
     defectTypeId: string;
@@ -62,7 +62,7 @@ interface QualityContextType {
   addComplaint: (data: {
     customerId: string;
     date?: string;
-    lotNumber: string;
+    lotNumber?: string;
     bales?: string[];
     defectTypeId: string;
     quantityAffected: number;
@@ -272,7 +272,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     customerNumber?: string;
     opNumber?: string;
     date?: string;
-    lotNumber: string;
+    lotNumber?: string;
     bales?: string[];
     productName: string;
     defectTypeId: string;
@@ -298,6 +298,9 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const entryDate = data.date?.trim() || new Date().toISOString().split('T')[0];
     const year = entryDate.slice(0, 4);
 
+    const baleList = data.bales || [];
+    const resolvedLotOrBale = data.lotNumber?.trim() || (baleList.length > 0 ? (baleList.length === 1 ? `Fardo #${baleList[0]}` : `Fardos ${baleList.join(', ')}`) : 'Fardo N/I');
+
     const newConcession: ConcessionShipment = {
       id: `env-${Date.now()}`,
       code: `ENV-${year}-${Math.floor(100 + Math.random() * 900)}`,
@@ -306,8 +309,8 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       customerNumber: data.customerNumber?.trim() || customer?.code,
       opNumber: data.opNumber?.trim() || `OP-${Date.now().toString().slice(-6)}`,
       date: entryDate,
-      lotNumber: data.lotNumber,
-      bales: data.bales || [],
+      lotNumber: resolvedLotOrBale,
+      bales: baleList,
       productName: data.productName,
       defectTypeId: data.defectTypeId,
       defectTypeName,
@@ -487,7 +490,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const addComplaint = useCallback((data: {
     customerId: string;
     date?: string;
-    lotNumber: string;
+    lotNumber?: string;
     bales?: string[];
     defectTypeId: string;
     quantityAffected: number;
@@ -506,14 +509,17 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const entryDate = data.date?.trim() || new Date().toISOString().split('T')[0];
     const year = entryDate.slice(0, 4);
 
+    const baleList = data.bales || [];
+    const resolvedLotOrBale = data.lotNumber?.trim() || (baleList.length > 0 ? (baleList.length === 1 ? `Fardo #${baleList[0]}` : `Fardos ${baleList.join(', ')}`) : 'Fardo N/I');
+
     const newComplaint: Complaint = {
       id: `rec-${Date.now()}`,
       code: `REC-${year}-${Math.floor(100 + Math.random() * 900)}`,
       customerId: data.customerId,
       customerName,
       date: entryDate,
-      lotNumber: data.lotNumber,
-      bales: data.bales || [],
+      lotNumber: resolvedLotOrBale,
+      bales: baleList,
       defectTypeId: data.defectTypeId,
       defectTypeName,
       quantityAffected: data.quantityAffected,

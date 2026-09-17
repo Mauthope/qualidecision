@@ -235,9 +235,15 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                               <span className="px-2.5 py-0.5 rounded-lg text-[11px] font-mono font-bold bg-rose-500/15 text-rose-300 border border-rose-500/25">
                                 {complaint.code}
                               </span>
-                              <span className="text-xs font-semibold text-white">
-                                Lote: <strong className="font-mono text-cyan-300">{complaint.lotNumber}</strong>
-                              </span>
+                              {complaint.bales && complaint.bales.length > 0 ? (
+                                <span className="text-xs font-semibold text-rose-300 font-mono">
+                                  📦 Fardo{complaint.bales.length > 1 ? 's' : ''}: {complaint.bales.slice(0, 3).join(', ')}{complaint.bales.length > 3 ? '...' : ''}
+                                </span>
+                              ) : complaint.lotNumber ? (
+                                <span className="text-xs font-semibold text-white">
+                                  {complaint.lotNumber.startsWith('Fardo') ? complaint.lotNumber : `Lote: ${complaint.lotNumber}`}
+                                </span>
+                              ) : null}
                             </div>
                             <span className="text-xs text-slate-400">
                               {new Date(complaint.date).toLocaleDateString('pt-BR')}
@@ -269,7 +275,7 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                                     key={photo.id}
                                     onClick={() => {
                                       setActivePhoto(photo);
-                                      setActivePhotoTitle(`${complaint.customerName} - [${complaint.code}] Lote ${complaint.lotNumber}`);
+                                      setActivePhotoTitle(`${complaint.customerName} - [${complaint.code}] ${complaint.bales?.length ? `Fardos ${complaint.bales.join(', ')}` : complaint.lotNumber || ''}`);
                                     }}
                                     className="relative group cursor-pointer w-32 sm:w-40 h-24 sm:h-28 rounded-xl overflow-hidden border border-slate-700 bg-black hover:border-cyan-400 transition-all shadow-md"
                                   >
@@ -302,7 +308,7 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                   <div className="space-y-2 pt-1">
                     <div className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
                       <TrendingUp className="w-4 h-4 text-cyan-400" />
-                      Lotes Expedidos com Concessão Registrada:
+                      Envios Expedidos com Concessão Registrada:
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                       {msg.concessionCards.map(c => (
@@ -310,13 +316,12 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                           <div>
                             <div className="font-bold text-slate-200">{c.customerName}</div>
                             <div className="text-[11px] text-slate-400 mt-0.5">
-                              Lote {c.lotNumber} • {c.defectTypeName} ({c.quantity.toLocaleString('pt-BR')} un)
+                              {c.bales && c.bales.length > 0 ? (
+                                <span className="text-cyan-300 font-mono">📦 Fardo{c.bales.length > 1 ? 's' : ''}: {c.bales.slice(0, 3).join(', ')}{c.bales.length > 3 ? '...' : ''}</span>
+                              ) : (
+                                <span>{c.lotNumber}</span>
+                              )} • {c.defectTypeName} ({c.quantity.toLocaleString('pt-BR')} un)
                             </div>
-                            {c.bales && c.bales.length > 0 && (
-                              <div className="text-[10px] text-cyan-300 font-mono mt-1">
-                                📦 Fardos: {c.bales.join(', ')}
-                              </div>
-                            )}
                           </div>
                           <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
                             <span className="text-[10px] text-emerald-400 font-semibold">Refugo Evitado:</span>

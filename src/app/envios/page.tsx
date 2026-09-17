@@ -35,7 +35,7 @@ export default function EnviosPage() {
     const s = search.toLowerCase();
     const matchesSearch = c.code.toLowerCase().includes(s) ||
       c.customerName.toLowerCase().includes(s) ||
-      c.lotNumber.toLowerCase().includes(s) ||
+      (c.lotNumber && c.lotNumber.toLowerCase().includes(s)) ||
       (c.opNumber && c.opNumber.toLowerCase().includes(s)) ||
       (c.bales && c.bales.some(b => b.toLowerCase().includes(s))) ||
       c.defectTypeName.toLowerCase().includes(s);
@@ -245,7 +245,7 @@ export default function EnviosPage() {
                 <tr className="border-b border-slate-800 text-slate-400 uppercase text-[11px] font-semibold">
                   <th className="pb-3 pr-4">Código / Data</th>
                   <th className="pb-3 px-4">Cliente Destino</th>
-                  <th className="pb-3 px-4">Produto & Lote</th>
+                  <th className="pb-3 px-4">Produto & Fardos</th>
                   <th className="pb-3 px-4">Defeito Concedido</th>
                   <th className="pb-3 px-4">Evidência Fotográfica</th>
                   <th className="pb-3 px-4 text-right">Volume</th>
@@ -293,12 +293,13 @@ export default function EnviosPage() {
                         )}
                       </div>
                       <div className="font-mono text-[11px] text-slate-400 flex flex-wrap items-center gap-1.5 mt-0.5">
-                        <span>Lote: {c.lotNumber}</span>
-                        {c.bales && c.bales.length > 0 && (
-                          <span className="text-[10px] font-mono text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/50" title={`Fardos: ${c.bales.join(', ')}`}>
-                            📦 {c.bales.length} fardo{c.bales.length > 1 ? 's' : ''}: {c.bales.slice(0, 3).join(', ')}{c.bales.length > 3 ? '...' : ''}
+                        {c.bales && c.bales.length > 0 ? (
+                          <span className="text-[10px] font-mono font-medium text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/50" title={`Fardos: ${c.bales.join(', ')}`}>
+                            📦 {c.bales.length} fardo{c.bales.length > 1 ? 's' : ''}: {c.bales.slice(0, 4).join(', ')}{c.bales.length > 4 ? ` (+${c.bales.length - 4})` : ''}
                           </span>
-                        )}
+                        ) : c.lotNumber ? (
+                          <span>{c.lotNumber.startsWith('Fardo') ? c.lotNumber : `Fardo/Lote: ${c.lotNumber}`}</span>
+                        ) : null}
                       </div>
                     </td>
 
@@ -316,7 +317,7 @@ export default function EnviosPage() {
                               type="button"
                               onClick={() => {
                                 setActivePhoto(p);
-                                setPhotoTitle(`Concessão ${c.code} - ${c.defectTypeName} (Lote ${c.lotNumber})`);
+                                setPhotoTitle(`Concessão ${c.code} - ${c.defectTypeName} (${c.bales?.length ? `Fardos ${c.bales.join(', ')}` : c.lotNumber || ''})`);
                               }}
                               className="relative group w-10 h-10 rounded-lg overflow-hidden border border-slate-700 hover:border-cyan-400 shrink-0 transition-all cursor-pointer bg-black"
                             >

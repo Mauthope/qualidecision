@@ -60,14 +60,15 @@ export const CustomerComplaintHistory: React.FC<Props> = ({ customer, complaints
                     <span className="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
                       {item.code}
                     </span>
-                    <span className="text-xs font-semibold text-white">
-                      Lote: <strong className="font-mono text-cyan-300">{item.lotNumber}</strong>
-                    </span>
-                    {item.bales && item.bales.length > 0 && (
+                    {item.bales && item.bales.length > 0 ? (
                       <span className="px-2 py-0.5 rounded text-xs font-mono font-medium bg-rose-500/10 text-rose-300 border border-rose-500/25" title={`Fardos: ${item.bales.join(', ')}`}>
-                        📦 {item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 3).join(', ')}{item.bales.length > 3 ? '...' : ''}
+                        📦 {item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 4).join(', ')}{item.bales.length > 4 ? ` (+${item.bales.length - 4})` : ''}
                       </span>
-                    )}
+                    ) : item.lotNumber ? (
+                      <span className="text-xs font-semibold text-white">
+                        {item.lotNumber.startsWith('Fardo') ? item.lotNumber : `Lote: ${item.lotNumber}`}
+                      </span>
+                    ) : null}
                     <span className="text-xs font-mono font-bold text-amber-300 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
                       ⚖️ {item.quantityAffected?.toLocaleString('pt-BR')} kg
                     </span>
@@ -136,7 +137,7 @@ export const CustomerComplaintHistory: React.FC<Props> = ({ customer, complaints
                           key={photo.id}
                           onClick={() => {
                             setActivePhoto(photo);
-                            setPhotoTitle(`${customer.name} - ${item.code} (Lote ${item.lotNumber})`);
+                            setPhotoTitle(`${customer.name} - ${item.code} (${item.bales?.length ? `Fardos ${item.bales.join(', ')}` : item.lotNumber || ''})`);
                           }}
                           className="relative group cursor-pointer w-28 h-20 rounded-xl overflow-hidden border border-slate-700 hover:border-cyan-400 transition-all bg-black shadow-md"
                         >

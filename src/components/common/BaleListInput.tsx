@@ -9,6 +9,7 @@ interface Props {
   variant?: 'cyan' | 'rose';
   label?: string;
   helperText?: string;
+  required?: boolean;
 }
 
 export const BaleListInput: React.FC<Props> = ({
@@ -16,7 +17,8 @@ export const BaleListInput: React.FC<Props> = ({
   onChange,
   variant = 'cyan',
   label = 'Fardo(s) Envolvido(s)',
-  helperText = 'Adicione cada número de fardo individualmente ou em lote'
+  helperText = 'Adicione cada número de fardo individualmente ou em lote',
+  required = false
 }) => {
   const [inputValue, setInputValue] = useState('');
 
@@ -93,8 +95,10 @@ export const BaleListInput: React.FC<Props> = ({
         <span className="text-[11px] text-slate-500 font-medium">
           {bales.length > 0 ? (
             <span className={`font-semibold ${isCyan ? 'text-cyan-400' : 'text-rose-400'}`}>
-              {bales.length} fardo{bales.length > 1 ? 's' : ''} registrado{bales.length > 1 ? 's' : ''}
+              {bales.length} fardo{bales.length > 1 ? 's' : ''} adicionado{bales.length > 1 ? 's' : ''}
             </span>
+          ) : required ? (
+            <span className="text-amber-400 font-semibold">* Adicione ao menos 1 fardo</span>
           ) : (
             'Opcional'
           )}

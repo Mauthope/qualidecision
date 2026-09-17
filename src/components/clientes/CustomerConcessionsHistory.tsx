@@ -44,13 +44,21 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
       return comp.defectTypeId === c.defectTypeId && compDate >= shipmentDate;
     });
 
-    // Or exact lot match
+    // Or exact lot match or bale match
     const lotMatchComplaint = complaints.find(comp => {
-      if (comp.customerId !== customer.id || !comp.lotNumber || !c.lotNumber) return false;
-      return (
-        comp.lotNumber.toLowerCase().includes(c.lotNumber.toLowerCase()) ||
-        c.lotNumber.toLowerCase().includes(comp.lotNumber.toLowerCase())
+      if (comp.customerId !== customer.id) return false;
+      const lotMatches = Boolean(
+        comp.lotNumber &&
+        c.lotNumber &&
+        (comp.lotNumber.toLowerCase().includes(c.lotNumber.toLowerCase()) ||
+         c.lotNumber.toLowerCase().includes(comp.lotNumber.toLowerCase()))
       );
+      const baleMatches = Boolean(
+        comp.bales &&
+        c.bales &&
+        comp.bales.some(b => c.bales?.includes(b))
+      );
+      return lotMatches || baleMatches;
     });
 
     const subsequentComplaint = sameDefectLaterComplaint || lotMatchComplaint || (
@@ -156,15 +164,15 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
                       </span>
                     )}
 
-                    <span className="text-xs text-slate-400 font-mono">
-                      (Lote: {item.lotNumber})
-                    </span>
-
-                    {item.bales && item.bales.length > 0 && (
+                    {item.bales && item.bales.length > 0 ? (
                       <span className="px-2 py-0.5 rounded-md text-[11px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-800/50" title={`Fardos: ${item.bales.join(', ')}`}>
-                        📦 {item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 4).join(', ')}{item.bales.length > 4 ? '...' : ''}
+                        📦 {item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 4).join(', ')}{item.bales.length > 4 ? ` (+${item.bales.length - 4})` : ''}
                       </span>
-                    )}
+                    ) : item.lotNumber ? (
+                      <span className="text-xs text-slate-400 font-mono">
+                        ({item.lotNumber.startsWith('Fardo') ? item.lotNumber : `Lote: ${item.lotNumber}`})
+                      </span>
+                    ) : null}
                   </div>
 
                   <div className="flex items-center gap-2.5 text-xs">
@@ -229,7 +237,7 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
                           key={photo.id}
                           onClick={() => {
                             setActivePhoto(photo);
-                            setPhotoTitle(`Concessão ${item.code} - ${item.defectTypeName} (Lote ${item.lotNumber})`);
+                            setPhotoTitle(`Concessão ${item.code} - ${item.defectTypeName} (${item.bales?.length ? `Fardos ${item.bales.join(', ')}` : item.lotNumber || ''})`);
                           }}
                           className="relative group cursor-pointer w-28 h-20 rounded-xl overflow-hidden border border-slate-700 hover:border-cyan-400 transition-all bg-black shadow-md"
                         >
