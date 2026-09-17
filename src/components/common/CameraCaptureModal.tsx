@@ -38,8 +38,8 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
-  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string>(DEFECT_LOCATIONS[0]);
@@ -51,74 +51,110 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
 
   // Stop camera tracks cleanly
   const stopTracks = useCallback(() => {
-    if (mediaStream) {
-      mediaStream.getTracks().forEach(track => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
         try {
           track.stop();
         } catch {}
       });
-      setMediaStream(null);
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
     }
     setIsTorchOn(false);
     setTorchAvailable(false);
-  }, [mediaStream]);
+  }, []);
 
-  // Start camera stream
+  // Start camera stream with stable references and progressive constraints
   const startCamera = useCallback(async (mode: 'environment' | 'user') => {
     setIsStarting(true);
     setCameraError(null);
 
-    // Stop current stream if any
-    if (mediaStream) {
-      mediaStream.getTracks().forEach(t => t.stop());
+    // Stop previous stream if any
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => {
+        try { t.stop(); } catch {}
+      });
+      streamRef.current = null;
     }
 
     try {
-      // Modern constraints: prioritize high resolution without forcing fixed aspect ratio
-      const constraints: MediaStreamConstraints = {
-        video: {
-          facingMode: { ideal: mode },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
-        },
-        audio: false
-      };
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      setMediaStream(stream);
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play().catch(() => {});
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Navegador não suporta acesso à câmera nesta conexão.');
       }
 
-      // Check for torch / flashlight capability on mobile
+      let stream: MediaStream;
+
+      // Tentativa 1: Alta resolução ideal com modo de câmera especificado
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: mode },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          },
+          audio: false
+        });
+      } catch (err1) {
+        console.warn('Tentativa ideal falhou, tentando fallback simples com facingMode:', err1);
+        // Tentativa 2: facingMode básico
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: mode },
+            audio: false
+          });
+        } catch (err2) {
+          console.warn('Tentativa com facingMode falhou, tentando qualquer câmera de vídeo:', err2);
+          // Tentativa 3: qualquer câmera disponível
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false
+          });
+        }
+      }
+
+      streamRef.current = stream;
+
+      const video = videoRef.current;
+      if (video) {
+        video.srcObject = stream;
+        video.setAttribute('playsinline', 'true');
+        video.setAttribute('webkit-playsinline', 'true');
+        video.muted = true;
+
+        video.onloadedmetadata = () => {
+          video.play().catch(e => console.warn('Erro ao reproduzir stream de vídeo:', e));
+        };
+        video.play().catch(() => {});
+      }
+
+      // Detecta suporte a lanterna (torch)
       const track = stream.getVideoTracks()[0];
       if (track && typeof track.getCapabilities === 'function') {
         const capabilities = track.getCapabilities() as any;
-        if (capabilities && capabilities.torch) {
-          setTorchAvailable(true);
-        }
+        setTorchAvailable(Boolean(capabilities && capabilities.torch));
+      } else {
+        setTorchAvailable(false);
       }
     } catch (err: any) {
-      console.warn('Falha ao iniciar getUserMedia:', err);
-      // Fallback: try basic video constraint
-      try {
-        const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        setMediaStream(fallbackStream);
-        if (videoRef.current) {
-          videoRef.current.srcObject = fallbackStream;
-          await videoRef.current.play().catch(() => {});
-        }
-      } catch (fallbackErr) {
-        setCameraError('Não foi possível acessar a câmera. Verifique as permissões de vídeo no navegador.');
+      console.error('Falha ao iniciar câmera:', err);
+      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      if (!isHttps && typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+        setCameraError('O acesso à câmera ao vivo requer conexão segura HTTPS no dispositivo.');
+      } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setCameraError('Permissão da câmera não concedida. Permita o uso da câmera nas configurações do navegador.');
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        setCameraError('Nenhuma câmera encontrada neste dispositivo.');
+      } else {
+        setCameraError('Não foi possível iniciar a câmera ao vivo. Você também pode usar a opção "Câmera do Celular" para capturar diretamente.');
       }
     } finally {
       setIsStarting(false);
     }
-  }, [mediaStream]);
+  }, []);
 
-  // Start camera when modal opens, stop when closed
+  // Inicia ao abrir e para ao fechar (executa SOMENTE quando isOpen ou facingMode mudam)
   useEffect(() => {
     if (isOpen) {
       setCapturedImage(null);
@@ -126,6 +162,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
     } else {
       stopTracks();
     }
+
     return () => {
       stopTracks();
     };
@@ -139,8 +176,8 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
 
   // Toggle torch / flash
   const handleToggleTorch = async () => {
-    if (!mediaStream) return;
-    const track = mediaStream.getVideoTracks()[0];
+    if (!streamRef.current) return;
+    const track = streamRef.current.getVideoTracks()[0];
     if (!track) return;
 
     try {
@@ -217,7 +254,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
   // Retake photo
   const handleRetake = () => {
     setCapturedImage(null);
-    if (videoRef.current && mediaStream) {
+    if (videoRef.current && streamRef.current) {
       videoRef.current.play().catch(() => {});
     }
   };
@@ -324,7 +361,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
               autoPlay
               playsInline
               muted
-              className={`w-full h-full object-cover transition-opacity duration-200 ${
+              className={`w-full h-full object-cover ${
                 capturedImage ? 'hidden' : 'block'
               }`}
             />
