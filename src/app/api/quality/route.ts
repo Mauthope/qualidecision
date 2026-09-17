@@ -10,14 +10,15 @@ export async function GET() {
       supabaseServer.from('customers').select('*').order('name', { ascending: true }),
       supabaseServer.from('defects').select('*').order('name', { ascending: true }),
       supabaseServer.from('complaints').select('*').order('date', { ascending: false }),
-      supabaseServer.from('concessions').select('*').order('date', { ascending: false })
+      supabaseServer.from('concessions').select('*').order('date', { ascending: false }),
+      supabaseServer.from('quality_settings').select('*').eq('id', 'default').maybeSingle()
     ]);
 
     const timeoutPromise = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error('Supabase request timeout')), 6000)
     );
 
-    const [custRes, defRes, compRes, concRes] = await Promise.race([fetchSupabaseData, timeoutPromise]);
+    const [custRes, defRes, compRes, concRes, settingsRes] = await Promise.race([fetchSupabaseData, timeoutPromise]);
 
     const customers = (custRes.data && custRes.data.length > 0)
       ? custRes.data.map(c => ({
@@ -96,13 +97,25 @@ export async function GET() {
         }))
       : DEFAULT_CONCESSIONS.map(c => ({ ...c, photos: [] }));
 
+    const settings = (settingsRes && settingsRes.data)
+      ? {
+          sackWeightGrams: Number(settingsRes.data.sack_weight_grams) || 77.73,
+          costPerKg: Number(settingsRes.data.cost_per_kg) || 1.50,
+          updatedAt: settingsRes.data.updated_at
+        }
+      : {
+          sackWeightGrams: 77.73,
+          costPerKg: 1.50
+        };
+
     return NextResponse.json({
       success: true,
       data: {
         customers,
         defects,
         complaints,
-        concessions
+        concessions,
+        settings
       }
     });
   } catch (error: unknown) {
@@ -114,7 +127,11 @@ export async function GET() {
         customers: DEFAULT_CUSTOMERS,
         defects: DEFAULT_DEFECTS,
         complaints: DEFAULT_COMPLAINTS.map(c => ({ ...c, photos: [] })),
-        concessions: DEFAULT_CONCESSIONS.map(c => ({ ...c, photos: [] }))
+        concessions: DEFAULT_CONCESSIONS.map(c => ({ ...c, photos: [] })),
+        settings: {
+          sackWeightGrams: 77.73,
+          costPerKg: 1.50
+        }
       }
     });
   }
@@ -220,6 +237,19 @@ export async function POST(request: Request) {
           overall_tolerance_score: overallToleranceScore,
           updated_at: new Date().toISOString()
         }).eq('id', customerId);
+
+        if (error) throw error;
+        return NextResponse.json({ success: true });
+      }
+
+      case 'saveSettings': {
+        const { sackWeightGrams, costPerKg } = payload;
+        const { error } = await supabaseServer.from('quality_settings').upsert({
+          id: 'default',
+          sack_weight_grams: Number(sackWeightGrams) || 77.73,
+          cost_per_kg: Number(costPerKg) || 1.50,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' });
 
         if (error) throw error;
         return NextResponse.json({ success: true });

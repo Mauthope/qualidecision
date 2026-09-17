@@ -24,7 +24,7 @@ interface Props {
 }
 
 export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCustomerId, initialData }) => {
-  const { customers, defects, addConcession, evaluateRisk } = useQuality();
+  const { customers, defects, addConcession, evaluateRisk, settings } = useQuality();
 
   const [customerId, setCustomerId] = useState(initialData?.customerId || defaultCustomerId || '');
   const [customerNumber, setCustomerNumber] = useState('');
@@ -71,8 +71,8 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
     return evaluateRisk(customerId, defectTypeId, numQuantity, severity);
   }, [customerId, defectTypeId, numQuantity, severity, evaluateRisk]);
 
-  const weightKg = (numQuantity * 77.73) / 1000;
-  const estimatedSavedValue = weightKg * 1.5;
+  const weightKg = (numQuantity * settings.sackWeightGrams) / 1000;
+  const estimatedSavedValue = weightKg * settings.costPerKg;
 
   if (!isOpen) return null;
 
@@ -93,7 +93,7 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
       defectTypeId,
       quantity: numQuantity,
       severity,
-      unitSavedValue: (77.73 / 1000) * 1.5,
+      unitSavedValue: (settings.sackWeightGrams / 1000) * settings.costPerKg,
       technicalNotes: technicalNotes.trim() || `Envio autorizado com desvio de ${selectedDefect?.name}.`,
       approvedBy,
       photos
@@ -353,7 +353,7 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
                   Refugo Evitado (Lucro Estimado Salvo):
                 </div>
                 <div className="text-[11px] text-slate-400">
-                  {numQuantity > 0 ? numQuantity.toLocaleString('pt-BR') : 0} un × 77,73g = <strong className="text-cyan-300 font-mono">{weightKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</strong> (Fator 1,5×)
+                  {numQuantity > 0 ? numQuantity.toLocaleString('pt-BR') : 0} un × {settings.sackWeightGrams.toLocaleString('pt-BR')}g = <strong className="text-cyan-300 font-mono">{weightKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</strong> (R$ {settings.costPerKg.toFixed(2)}/kg)
                 </div>
               </div>
             </div>

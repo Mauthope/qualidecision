@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { Customer, DefectType, Complaint, ConcessionShipment, QualityStats, AiChatMessage, RiskEvaluationResult, ToleranceLevel, DefectSeverity, DefectCategory } from '@/types';
-import { storageService } from '@/services/storageService';
+import { Customer, DefectType, Complaint, ConcessionShipment, QualityStats, AiChatMessage, RiskEvaluationResult, ToleranceLevel, DefectSeverity, DefectCategory, QualitySettings } from '@/types';
+import { storageService, DEFAULT_QUALITY_SETTINGS } from '@/services/storageService';
 import { supabaseService } from '@/services/supabaseService';
 import { qualityService } from '@/services/qualityService';
 import { aiAssistantService } from '@/services/aiAssistantService';
@@ -19,6 +19,8 @@ interface QualityContextType {
   defects: DefectType[];
   complaints: Complaint[];
   concessions: ConcessionShipment[];
+  settings: QualitySettings;
+  updateSettings: (newSettings: Partial<QualitySettings>) => void;
   stats: QualityStats;
   chatMessages: AiChatMessage[];
   isAiDrawerOpen: boolean;
@@ -160,6 +162,17 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     ];
   });
 
+  const [settings, setSettings] = useState<QualitySettings>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return storageService.getSettings();
+      } catch (e) {
+        console.warn('Erro ao ler cache inicial de configurações:', e);
+      }
+    }
+    return DEFAULT_QUALITY_SETTINGS;
+  });
+
   const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false);
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [prefillConcessionData, setPrefillConcessionData] = useState<{
@@ -186,14 +199,19 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
         customers: loadedCustomers,
         defects: loadedDefects,
         complaints: loadedComplaints,
-        concessions: loadedConcessions
+        concessions: loadedConcessions,
+        settings: loadedSettings
       } = await supabaseService.getAllQualityData();
 
-      // Calibração do valor do refugo industrial (77,73g * 1.5)
+      const activeSettings = loadedSettings || storageService.getSettings();
+      setSettings(activeSettings);
+      storageService.saveSettings(activeSettings);
+
+      // Calibração do valor do refugo industrial
       const calibratedConcessions = loadedConcessions.map(c => ({
         ...c,
-        totalSavedValue: qualityService.calculateSavedProfit(c.quantity),
-        unitSavedValue: (77.73 / 1000) * 1.5
+        totalSavedValue: c.totalSavedValue || qualityService.calculateSavedProfit(c.quantity, activeSettings.sackWeightGrams, activeSettings.costPerKg),
+        unitSavedValue: c.unitSavedValue || qualityService.calculateUnitSavedValue(activeSettings.sackWeightGrams, activeSettings.costPerKg)
       }));
 
       // Calibração dos perfis de tolerância de acordo com as queixas reais
@@ -269,8 +287,8 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const defect = defects.find(d => d.id === data.defectTypeId);
     const customerName = customer?.name || 'Cliente';
     const defectTypeName = defect?.name || 'Defeito';
-    const unitSavedValue = (77.73 / 1000) * 1.5;
-    const totalSavedValue = qualityService.calculateSavedProfit(data.quantity);
+    const unitSavedValue = data.unitSavedValue ?? qualityService.calculateUnitSavedValue(settings.sackWeightGrams, settings.costPerKg);
+    const totalSavedValue = qualityService.calculateSavedProfit(data.quantity, settings.sackWeightGrams, settings.costPerKg);
 
     // Calculate risk
     const riskResult = customer && defect
@@ -329,7 +347,21 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     showToast(`Concessão ${newConcession.code} registrada com sucesso!`, 'success');
     return newConcession;
-  }, [customers, defects, complaints, concessions, showToast]);
+  }, [customers, defects, complaints, concessions, settings, showToast]);
+
+  const updateSettings = useCallback((newSettings: Partial<QualitySettings>) => {
+    setSettings(prev => {
+      const updated: QualitySettings = {
+        ...prev,
+        ...newSettings,
+        updatedAt: new Date().toISOString()
+      };
+      storageService.saveSettings(updated);
+      supabaseService.saveSettings(updated);
+      showToast('Parâmetros industriais (custo/peso) atualizados com sucesso!', 'success');
+      return updated;
+    });
+  }, [showToast]);
 
   const addCustomer = useCallback((data: {
     name: string;
@@ -681,6 +713,8 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
         defects,
         complaints,
         concessions,
+        settings,
+        updateSettings,
         stats,
         chatMessages,
         isAiDrawerOpen,

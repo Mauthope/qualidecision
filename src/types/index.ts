@@ -127,3 +127,9 @@ export interface AiChatMessage {
   actionButton?: AiChatAction;
   source?: 'gemini' | 'local_engine';
 }
+
+export interface QualitySettings {
+  sackWeightGrams: number;
+  costPerKg: number;
+  updatedAt?: string;
+}

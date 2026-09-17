@@ -1,11 +1,13 @@
-import { Customer, DefectType, Complaint, ConcessionShipment, ToleranceLevel } from '@/types';
+import { Customer, DefectType, Complaint, ConcessionShipment, ToleranceLevel, QualitySettings } from '@/types';
 import { DEFAULT_CUSTOMERS, DEFAULT_DEFECTS, DEFAULT_COMPLAINTS, DEFAULT_CONCESSIONS } from '@/data/defaultQualityData';
+import { DEFAULT_QUALITY_SETTINGS } from './storageService';
 
 let inFlightQualityRequest: Promise<{
   customers: Customer[];
   defects: DefectType[];
   complaints: Complaint[];
   concessions: ConcessionShipment[];
+  settings: QualitySettings;
 }> | null = null;
 
 export const supabaseService = {
@@ -15,13 +17,15 @@ export const supabaseService = {
     defects: DefectType[];
     complaints: Complaint[];
     concessions: ConcessionShipment[];
+    settings: QualitySettings;
   }> {
     if (typeof window === 'undefined') {
       return {
         customers: DEFAULT_CUSTOMERS,
         defects: DEFAULT_DEFECTS,
         complaints: DEFAULT_COMPLAINTS.map(c => ({ ...c, photos: [] })),
-        concessions: DEFAULT_CONCESSIONS.map(c => ({ ...c, photos: [] }))
+        concessions: DEFAULT_CONCESSIONS.map(c => ({ ...c, photos: [] })),
+        settings: DEFAULT_QUALITY_SETTINGS
       };
     }
 
@@ -49,7 +53,8 @@ export const supabaseService = {
           customers: DEFAULT_CUSTOMERS,
           defects: DEFAULT_DEFECTS,
           complaints: DEFAULT_COMPLAINTS.map(c => ({ ...c, photos: [] })),
-          concessions: DEFAULT_CONCESSIONS.map(c => ({ ...c, photos: [] }))
+          concessions: DEFAULT_CONCESSIONS.map(c => ({ ...c, photos: [] })),
+          settings: DEFAULT_QUALITY_SETTINGS
         };
       } catch (err) {
         console.warn('Fallback para dados padrão:', err);
@@ -57,7 +62,8 @@ export const supabaseService = {
           customers: DEFAULT_CUSTOMERS,
           defects: DEFAULT_DEFECTS,
           complaints: DEFAULT_COMPLAINTS.map(c => ({ ...c, photos: [] })),
-          concessions: DEFAULT_CONCESSIONS.map(c => ({ ...c, photos: [] }))
+          concessions: DEFAULT_CONCESSIONS.map(c => ({ ...c, photos: [] })),
+          settings: DEFAULT_QUALITY_SETTINGS
         };
       } finally {
         inFlightQualityRequest = null;
@@ -156,6 +162,18 @@ export const supabaseService = {
       console.error('Erro ao salvar concessão via API:', err);
     }
     return concession;
+  },
+
+  async saveSettings(settings: QualitySettings): Promise<void> {
+    try {
+      await fetch('/api/quality', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'saveSettings', payload: settings })
+      });
+    } catch (err) {
+      console.error('Erro ao salvar configurações no Supabase via API:', err);
+    }
   }
 };
 

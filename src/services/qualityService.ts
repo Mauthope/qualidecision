@@ -1,17 +1,21 @@
 import { Customer, DefectType, Complaint, ConcessionShipment, QualityStats, RiskEvaluationResult, ToleranceLevel, DefectSeverity } from '@/types';
 
 export const qualityService = {
-  // Constantes industriais parametrizadas
+  // Constantes industriais padrão (podem ser customizadas pelo usuário no Memorial)
   AVERAGE_SACK_WEIGHT_GRAMS: 77.73, // Média de peso por saco: 77,73g
-  PROFIT_FACTOR: 1.5, // Fator multiplicador de lucro: 1,5
+  PROFIT_FACTOR: 1.5, // Fator de custo/lucro por kg: R$ 1,50/kg
 
-  calculateSackWeightKg(quantityUnits: number): number {
-    return (quantityUnits * 77.73) / 1000;
+  calculateSackWeightKg(quantityUnits: number, weightGrams: number = 77.73): number {
+    return (quantityUnits * (weightGrams || 77.73)) / 1000;
   },
 
-  calculateSavedProfit(quantityUnits: number): number {
-    const weightKg = (quantityUnits * 77.73) / 1000;
-    return weightKg * 1.5;
+  calculateSavedProfit(quantityUnits: number, weightGrams: number = 77.73, costPerKg: number = 1.5): number {
+    const weightKg = (quantityUnits * (weightGrams || 77.73)) / 1000;
+    return weightKg * (costPerKg !== undefined && costPerKg !== null ? costPerKg : 1.5);
+  },
+
+  calculateUnitSavedValue(weightGrams: number = 77.73, costPerKg: number = 1.5): number {
+    return ((weightGrams || 77.73) / 1000) * (costPerKg !== undefined && costPerKg !== null ? costPerKg : 1.5);
   },
 
   calculateStats(

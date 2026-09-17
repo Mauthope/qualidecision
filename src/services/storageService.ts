@@ -1,12 +1,18 @@
-import { Customer, DefectType, Complaint, ConcessionShipment, AiChatMessage } from '@/types';
+import { Customer, DefectType, Complaint, ConcessionShipment, AiChatMessage, QualitySettings } from '@/types';
 import { DEFAULT_CUSTOMERS, DEFAULT_DEFECTS, DEFAULT_COMPLAINTS, DEFAULT_CONCESSIONS } from '@/data/defaultQualityData';
+
+export const DEFAULT_QUALITY_SETTINGS: QualitySettings = {
+  sackWeightGrams: 77.73,
+  costPerKg: 1.50
+};
 
 const STORAGE_KEYS = {
   CUSTOMERS: 'qualitrack_customers_v4_concession_feedback',
   DEFECTS: 'qualitrack_defects_v4_concession_feedback',
   COMPLAINTS: 'qualitrack_complaints_v4_concession_feedback',
   CONCESSIONS: 'qualitrack_concessions_v5_clean',
-  CHAT_MESSAGES: 'qualitrack_chat_v4_concession_feedback'
+  CHAT_MESSAGES: 'qualitrack_chat_v4_concession_feedback',
+  SETTINGS: 'qualitrack_settings_v1'
 };
 
 const isBrowser = typeof window !== 'undefined';
@@ -169,6 +175,34 @@ export const storageService = {
     } catch (e) {
       console.error('Falha ao importar backup:', e);
       return false;
+    }
+  },
+
+  getSettings(): QualitySettings {
+    if (!isBrowser) return DEFAULT_QUALITY_SETTINGS;
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+      if (!data) {
+        this.saveSettings(DEFAULT_QUALITY_SETTINGS);
+        return DEFAULT_QUALITY_SETTINGS;
+      }
+      const parsed = JSON.parse(data);
+      return {
+        sackWeightGrams: typeof parsed.sackWeightGrams === 'number' ? parsed.sackWeightGrams : 77.73,
+        costPerKg: typeof parsed.costPerKg === 'number' ? parsed.costPerKg : 1.50,
+        updatedAt: parsed.updatedAt
+      };
+    } catch {
+      return DEFAULT_QUALITY_SETTINGS;
+    }
+  },
+
+  saveSettings(settings: QualitySettings): void {
+    if (!isBrowser) return;
+    try {
+      localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    } catch (e) {
+      console.warn('Erro ao salvar configurações no cache local:', e);
     }
   }
 };

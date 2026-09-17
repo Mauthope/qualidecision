@@ -23,12 +23,41 @@ import {
   Clock,
   Info,
   Check,
-  ArrowDown
+  ArrowDown,
+  RotateCcw
 } from 'lucide-react';
 import { DefectSeverity, ToleranceLevel } from '@/types';
 
 export default function MemorialPage() {
-  const { customers, defects, complaints, concessions } = useQuality();
+  const { customers, defects, complaints, concessions, settings, updateSettings } = useQuality();
+
+  // Settings form local state
+  const [sackWeightInput, setSackWeightInput] = useState(String(settings.sackWeightGrams));
+  const [costPerKgInput, setCostPerKgInput] = useState(String(settings.costPerKg));
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  // Sync inputs with active settings
+  React.useEffect(() => {
+    setSackWeightInput(String(settings.sackWeightGrams));
+    setCostPerKgInput(String(settings.costPerKg));
+  }, [settings.sackWeightGrams, settings.costPerKg]);
+
+  const handleSaveSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    const weight = parseFloat(sackWeightInput);
+    const cost = parseFloat(costPerKgInput);
+    if (isNaN(weight) || weight <= 0 || isNaN(cost) || cost <= 0) return;
+
+    setIsSavingSettings(true);
+    updateSettings({ sackWeightGrams: weight, costPerKg: cost });
+    setTimeout(() => setIsSavingSettings(false), 500);
+  };
+
+  const handleResetSettings = () => {
+    setSackWeightInput('77.73');
+    setCostPerKgInput('1.50');
+    updateSettings({ sackWeightGrams: 77.73, costPerKg: 1.50 });
+  };
 
   // Interactive Simulator state
   const [selectedCustomerId, setSelectedCustomerId] = useState(customers[0]?.id || '');
@@ -80,9 +109,9 @@ export default function MemorialPage() {
   const isClampedMin = rawScore < 5;
   const isClampedMax = rawScore > 98;
 
-  const weightKg = (selectedQuantity * 77.73) / 1000;
-  const totalSavedValue = weightKg * 1.5;
-  const unitSaved = (77.73 / 1000) * 1.5;
+  const weightKg = (selectedQuantity * settings.sackWeightGrams) / 1000;
+  const totalSavedValue = weightKg * settings.costPerKg;
+  const unitSaved = (settings.sackWeightGrams / 1000) * settings.costPerKg;
 
   return (
     <div className="space-y-8 pb-12">
@@ -101,6 +130,134 @@ export default function MemorialPage() {
             Catálogo didático e transparente de cada fórmula, pontuação e número apresentado pelo sistema, com a especificação exata de <strong>onde vêm os dados e o que significam</strong>.
           </p>
         </div>
+      </div>
+
+      {/* SECTION: CONFIGURAÇÃO DE PARÂMETROS INDUSTRIAIS (PESO E CUSTO) */}
+      <div className="glow-card p-6 sm:p-7 rounded-3xl bg-slate-900/95 border border-cyan-500/30 space-y-5 shadow-2xl shadow-cyan-500/5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-emerald-500/20 border border-cyan-500/40 text-cyan-300 shadow-md shadow-cyan-500/10">
+              <Sliders className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold text-white font-heading flex items-center gap-2">
+                <span>Parâmetros Industriais Dinâmicos</span>
+                <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold tracking-wider uppercase">
+                  Ativo no Sistema
+                </span>
+              </h2>
+              <p className="text-xs text-slate-400">
+                Altere o peso médio da embalagem e o custo do kg. Todas as <strong>novas inserções de envios e cálculos</strong> utilizarão imediatamente estes valores.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleResetSettings}
+              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-700"
+              title="Restaurar padrão inicial de fábrica (77,73g e R$ 1,50/kg)"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Restaurar Padrão</span>
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={handleSaveSettings} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            {/* Campo 1: Peso Médio por Saco (g) */}
+            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                  <Scale className="w-4 h-4 text-cyan-400" />
+                  <span>Peso Médio por Saco / Embalagem (gramas)</span>
+                </label>
+                <span className="text-[11px] font-mono text-cyan-300 bg-cyan-950/40 px-2 py-0.5 rounded border border-cyan-500/30">
+                  Salvo: {settings.sackWeightGrams.toLocaleString('pt-BR')} g
+                </span>
+              </div>
+              <div className="relative">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="1"
+                  max="50000"
+                  value={sackWeightInput}
+                  onChange={e => setSackWeightInput(e.target.value)}
+                  placeholder="Ex: 77.73"
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-cyan-500 font-bold"
+                  required
+                />
+                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400 font-semibold">
+                  gramas (g)
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Gramatura calibrada para conversão de contagem de sacos em massa equivalente de polipropileno (<strong className="text-slate-200 font-mono">{((parseFloat(sackWeightInput) || 0) / 1000).toFixed(5)} kg/un</strong>).
+              </p>
+            </div>
+
+            {/* Campo 2: Custo da Matéria-Prima / Refugo por Kg (R$/kg) */}
+            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                  <DollarSign className="w-4 h-4 text-emerald-400" />
+                  <span>Custo / Valor Salvo por Kg (R$)</span>
+                </label>
+                <span className="text-[11px] font-mono text-emerald-300 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/30">
+                  Salvo: R$ {settings.costPerKg.toFixed(2)}/kg
+                </span>
+              </div>
+              <div className="relative">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  max="1000"
+                  value={costPerKgInput}
+                  onChange={e => setCostPerKgInput(e.target.value)}
+                  placeholder="Ex: 1.50"
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-emerald-500 font-bold"
+                  required
+                />
+                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400 font-semibold">
+                  R$ / kg
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Custo de matéria-prima e extrusão utilizado para quantificar o valor monetário de refugo/scrap evitado nas concessões aprovadas.
+              </p>
+            </div>
+
+          </div>
+
+          {/* Live Preview Bar & Save Button */}
+          <div className="p-4 rounded-2xl bg-slate-950/90 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="text-xs font-semibold text-slate-200 flex items-center gap-2">
+                <span>Impacto por unidade com estes valores:</span>
+                <span className="font-mono text-cyan-300 font-bold text-sm">
+                  R$ {(((parseFloat(sackWeightInput) || 0) / 1000) * (parseFloat(costPerKgInput) || 0)).toFixed(4)} / saco
+                </span>
+              </div>
+              <div className="text-[11px] text-slate-400">
+                Simulação: um lote de <strong>10.000 sacos</strong> equivalerá a <strong className="text-slate-200 font-mono">{((10000 * (parseFloat(sackWeightInput) || 0)) / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} kg</strong> e salvará <strong className="text-emerald-400 font-mono">R$ {(((10000 * (parseFloat(sackWeightInput) || 0)) / 1000) * (parseFloat(costPerKgInput) || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> de refugo.
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSavingSettings || !sackWeightInput || !costPerKgInput}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-slate-950 font-bold text-xs shadow-md shadow-cyan-500/20 transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer disabled:opacity-50"
+            >
+              <Check className="w-4 h-4" />
+              <span>{isSavingSettings ? 'Salvando...' : 'Salvar Novos Parâmetros'}</span>
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* SIMULADOR INTERATIVO COM DECOMPOSIÇÃO PASSO A PASSO (DESTAQUE NO TOPO) */}
@@ -445,10 +602,10 @@ export default function MemorialPage() {
                 </span>
               </div>
               <p className="text-slate-300 leading-relaxed">
-                <strong>De onde vem o valor:</strong> Conversão da quantidade (<strong>{selectedQuantity.toLocaleString('pt-BR')} un</strong>) pelo peso médio padrão de <strong>77,73g por saco</strong> (<strong className="text-cyan-300 font-mono">{weightKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</strong>) multiplicado pelo fator de lucratividade de <strong>1,5×</strong>.
+                <strong>De onde vem o valor:</strong> Conversão da quantidade (<strong>{selectedQuantity.toLocaleString('pt-BR')} un</strong>) pelo peso médio ativo de <strong>{settings.sackWeightGrams.toLocaleString('pt-BR')}g por saco</strong> (<strong className="text-cyan-300 font-mono">{weightKg.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</strong>) multiplicado pelo custo de <strong>R$ {settings.costPerKg.toFixed(2)}/kg</strong>.
               </p>
               <div className="text-[11px] text-emerald-400/90 pt-1 border-t border-emerald-500/30 font-semibold font-mono">
-                Fórmula: {selectedQuantity.toLocaleString('pt-BR')} un × 0,07773 kg × 1,5 = R$ {totalSavedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                Fórmula: {selectedQuantity.toLocaleString('pt-BR')} un × {(settings.sackWeightGrams / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 5 })} kg × R$ {settings.costPerKg.toFixed(2)} = R$ {totalSavedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
             </div>
 
@@ -561,7 +718,7 @@ export default function MemorialPage() {
           </div>
           <div>
             <h2 className="text-lg sm:text-xl font-bold text-white font-heading">
-              2. Modelo de Lucro Estimado & Conversão de Peso (77,73g / Saco × 1,5)
+              2. Modelo de Lucro Estimado & Conversão de Peso ({settings.sackWeightGrams.toLocaleString('pt-BR')}g / Saco × R$ {settings.costPerKg.toFixed(2)}/kg)
             </h2>
             <p className="text-xs text-slate-400">
               Metodologia de conversão ponderada de unidades para quilos e apuração do valor financeiro de scrap evitado
@@ -572,26 +729,26 @@ export default function MemorialPage() {
         {/* Formula Explanation Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
           <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2">
-            <span className="text-[11px] font-bold text-cyan-400 uppercase tracking-wider block">Passo 1 • Média de Peso Padrão</span>
-            <div className="text-base font-extrabold font-mono text-white">77,73 g / saco</div>
+            <span className="text-[11px] font-bold text-cyan-400 uppercase tracking-wider block">Passo 1 • Média de Peso Ativa</span>
+            <div className="text-base font-extrabold font-mono text-white">{settings.sackWeightGrams.toLocaleString('pt-BR')} g / saco</div>
             <p className="text-slate-400 leading-relaxed">
-              Cada sacaria possui peso médio calibrado de <strong>77,73 gramas</strong> (ou <strong>0,07773 kg</strong> por unidade).
+              Cada sacaria possui peso médio ativo configurado de <strong>{settings.sackWeightGrams.toLocaleString('pt-BR')} gramas</strong> (ou <strong>{(settings.sackWeightGrams / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 5 })} kg</strong> por unidade).
             </p>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2">
             <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block">Passo 2 • Conversão de Volume para Kg</span>
-            <div className="text-base font-extrabold font-mono text-emerald-300">Kg = Qtd × 0,07773</div>
+            <div className="text-base font-extrabold font-mono text-emerald-300">Kg = Qtd × {(settings.sackWeightGrams / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 5 })}</div>
             <p className="text-slate-400 leading-relaxed">
               O volume concedido em unidades é transformado na massa total equivalente de resina e polipropileno preservados.
             </p>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2">
-            <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider block">Passo 3 • Fator de Lucro Salvo</span>
-            <div className="text-base font-extrabold font-mono text-purple-300">Lucro (R$) = Kg × 1,5</div>
+            <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider block">Passo 3 • Fator de Custo Salvo</span>
+            <div className="text-base font-extrabold font-mono text-purple-300">Lucro (R$) = Kg × R$ {settings.costPerKg.toFixed(2)}</div>
             <p className="text-slate-400 leading-relaxed">
-              Aplica-se o fator multiplicador de <strong>1,5×</strong> sobre o peso em kg para apurar o lucro aproximado de scrap evitado.
+              Aplica-se o valor de <strong>R$ {settings.costPerKg.toFixed(2)}/kg</strong> sobre a massa preservada para apurar o lucro aproximado de scrap evitado.
             </p>
           </div>
         </div>
