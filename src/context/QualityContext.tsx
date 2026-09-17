@@ -568,7 +568,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     showToast('Perfil de tolerância do cliente atualizado!', 'success');
   }, [customers, showToast]);
 
-  const sendAiMessage = useCallback((prompt: string) => {
+  const sendAiMessage = useCallback(async (prompt: string) => {
     if (!prompt.trim()) return;
 
     const userMessage: AiChatMessage = {
@@ -582,8 +582,30 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setChatMessages(newHistory);
     setIsAiTyping(true);
 
-    // Process with AI Service
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          history: newHistory,
+          customers,
+          defects,
+          complaints,
+          concessions
+        })
+      });
+
+      if (response.ok) {
+        const aiResponse: AiChatMessage = await response.json();
+        const updatedHistory = [...newHistory, aiResponse];
+        setChatMessages(updatedHistory);
+        storageService.saveChatMessages(updatedHistory);
+      } else {
+        throw new Error(`API returned status ${response.status}`);
+      }
+    } catch (err) {
+      console.warn('Fallback to local engine:', err);
       const aiResponse = aiAssistantService.processQuery(
         prompt,
         newHistory,
@@ -594,9 +616,10 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       );
       const updatedHistory = [...newHistory, aiResponse];
       setChatMessages(updatedHistory);
-      setIsAiTyping(false);
       storageService.saveChatMessages(updatedHistory);
-    }, 400);
+    } finally {
+      setIsAiTyping(false);
+    }
   }, [chatMessages, customers, defects, complaints, concessions]);
 
   const clearChatHistory = useCallback(() => {

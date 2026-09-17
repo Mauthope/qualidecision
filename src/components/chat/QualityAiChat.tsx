@@ -163,8 +163,23 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                     })}
                   </div>
 
-                  <div className={`text-[10px] mt-2 text-right font-mono ${isUser ? 'text-cyan-100/70' : 'text-slate-500'}`}>
-                    {msg.timestamp}
+                  <div className={`text-[10px] mt-2 flex items-center justify-between font-mono ${isUser ? 'text-cyan-100/70 justify-end' : 'text-slate-500'}`}>
+                    {!isUser && (
+                      <span className="flex items-center gap-1.5">
+                        {msg.source === 'gemini' ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-sans font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+                            <Sparkles className="w-2.5 h-2.5" />
+                            Gemini 1.5
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-sans text-slate-400 bg-slate-800/80 px-1.5 py-0.5 rounded">
+                            <Layers className="w-2.5 h-2.5" />
+                            Motor Local
+                          </span>
+                        )}
+                      </span>
+                    )}
+                    <span>{msg.timestamp}</span>
                   </div>
                 </div>
 

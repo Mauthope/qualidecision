@@ -125,4 +125,5 @@ export interface AiChatMessage {
   riskRecommendation?: RiskEvaluationResult;
   suggestedPrompts?: string[];
   actionButton?: AiChatAction;
+  source?: 'gemini' | 'local_engine';
 }
