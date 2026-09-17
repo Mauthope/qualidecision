@@ -31,6 +31,7 @@ interface QualityContextType {
     customerId: string;
     customerNumber?: string;
     opNumber?: string;
+    date?: string;
     lotNumber: string;
     productName: string;
     defectTypeId: string;
@@ -57,6 +58,7 @@ interface QualityContextType {
   }) => DefectType;
   addComplaint: (data: {
     customerId: string;
+    date?: string;
     lotNumber: string;
     defectTypeId: string;
     quantityAffected: number;
@@ -233,6 +235,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     customerId: string;
     customerNumber?: string;
     opNumber?: string;
+    date?: string;
     lotNumber: string;
     productName: string;
     defectTypeId: string;
@@ -255,14 +258,17 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ? qualityService.evaluateConcessionRisk(customer, defect, data.quantity, data.severity, complaints, concessions)
       : null;
 
+    const entryDate = data.date?.trim() || new Date().toISOString().split('T')[0];
+    const year = entryDate.slice(0, 4);
+
     const newConcession: ConcessionShipment = {
       id: `env-${Date.now()}`,
-      code: `ENV-2026-${Math.floor(100 + Math.random() * 900)}`,
+      code: `ENV-${year}-${Math.floor(100 + Math.random() * 900)}`,
       customerId: data.customerId,
       customerName,
       customerNumber: data.customerNumber?.trim() || customer?.code,
       opNumber: data.opNumber?.trim() || `OP-${Date.now().toString().slice(-6)}`,
-      date: new Date().toISOString().split('T')[0],
+      date: entryDate,
       lotNumber: data.lotNumber,
       productName: data.productName,
       defectTypeId: data.defectTypeId,
@@ -278,7 +284,9 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       photos: data.photos || []
     };
 
-    const updated = [newConcession, ...concessions];
+    const updated = [newConcession, ...concessions].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
     setConcessions(updated);
     storageService.saveConcessions(updated);
     supabaseService.saveConcession(newConcession);
@@ -426,6 +434,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const addComplaint = useCallback((data: {
     customerId: string;
+    date?: string;
     lotNumber: string;
     defectTypeId: string;
     quantityAffected: number;
@@ -441,12 +450,15 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const customerName = customer?.name || 'Cliente';
     const defectTypeName = defect?.name || 'Defeito';
 
+    const entryDate = data.date?.trim() || new Date().toISOString().split('T')[0];
+    const year = entryDate.slice(0, 4);
+
     const newComplaint: Complaint = {
       id: `rec-${Date.now()}`,
-      code: `REC-2026-${Math.floor(100 + Math.random() * 900)}`,
+      code: `REC-${year}-${Math.floor(100 + Math.random() * 900)}`,
       customerId: data.customerId,
       customerName,
-      date: new Date().toISOString().split('T')[0],
+      date: entryDate,
       lotNumber: data.lotNumber,
       defectTypeId: data.defectTypeId,
       defectTypeName,
@@ -461,7 +473,9 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       costImpact: data.quantityAffected * (defect?.defaultUnitLoss || 18.00)
     };
 
-    const updated = [newComplaint, ...complaints];
+    const updated = [newComplaint, ...complaints].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
     setComplaints(updated);
     storageService.saveComplaints(updated);
     supabaseService.saveComplaint(newComplaint);

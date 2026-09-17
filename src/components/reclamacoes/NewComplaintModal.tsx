@@ -18,6 +18,7 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
   const { customers, defects, addComplaint } = useQuality();
 
   const [customerId, setCustomerId] = useState(defaultCustomerId || '');
+  const [date, setDate] = useState('');
   const [defectTypeId, setDefectTypeId] = useState('');
   const [lotNumber, setLotNumber] = useState('');
   const [quantityAffected, setQuantityAffected] = useState<number | ''>('');
@@ -32,6 +33,7 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
   React.useEffect(() => {
     if (isOpen) {
       setCustomerId(defaultCustomerId || '');
+      setDate('');
       setDefectTypeId('');
       setLotNumber('');
       setQuantityAffected('');
@@ -49,10 +51,11 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerId || !defectTypeId || !description.trim() || !lotNumber.trim() || numQuantity <= 0) return;
+    if (!customerId || !defectTypeId || !description.trim() || !lotNumber.trim() || !date || numQuantity <= 0) return;
 
     addComplaint({
       customerId,
+      date,
       lotNumber: lotNumber.trim(),
       defectTypeId,
       quantityAffected: numQuantity,
@@ -123,7 +126,30 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Data da Reclamação */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-slate-300">
+                  Data da Ocorrência *
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setDate(new Date().toISOString().split('T')[0])}
+                  className="text-[10px] font-semibold text-rose-400 hover:text-rose-300 transition-colors"
+                >
+                  [Hoje]
+                </button>
+              </div>
+              <input
+                type="date"
+                required
+                value={date}
+                onChange={e => setDate(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-rose-500/50 [color-scheme:dark]"
+              />
+            </div>
+
             {/* Lot */}
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">
@@ -134,7 +160,7 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
                 value={lotNumber}
                 onChange={e => setLotNumber(e.target.value)}
                 placeholder="Informe o lote reclamado..."
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-rose-500/50 font-mono"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-rose-500/50 font-mono"
                 required
               />
             </div>
@@ -151,7 +177,7 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
                 value={quantityAffected}
                 onChange={e => setQuantityAffected(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
                 placeholder="Ex: 500"
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none font-mono"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none font-mono"
                 required
               />
             </div>
@@ -164,11 +190,11 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
               <select
                 value={severity}
                 onChange={e => setSeverity(e.target.value as DefectSeverity)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none"
               >
-                <option value="severa">Severa (Impacto operacional/devolução)</option>
-                <option value="moderada">Moderada (Reclamação com retenção)</option>
-                <option value="leve">Leve (Notificação formal)</option>
+                <option value="severa">Severa (Devolução)</option>
+                <option value="moderada">Moderada (Retenção)</option>
+                <option value="leve">Leve (Notificação)</option>
               </select>
             </div>
           </div>
@@ -236,7 +262,7 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
             </button>
             <button
               type="submit"
-              disabled={!customerId || !defectTypeId || !description.trim() || !lotNumber.trim() || numQuantity <= 0}
+              disabled={!customerId || !defectTypeId || !description.trim() || !lotNumber.trim() || !date || numQuantity <= 0}
               className="px-5 py-2 rounded-xl text-xs font-bold bg-rose-500 hover:bg-rose-400 text-white shadow-md shadow-rose-500/20 transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <AlertCircle className="w-3.5 h-3.5" />
