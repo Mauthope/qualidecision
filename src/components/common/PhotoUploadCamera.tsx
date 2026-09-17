@@ -1,8 +1,11 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
-import { Camera, Upload, Trash2, Image as ImageIcon, Video, X } from 'lucide-react';
+import { Camera, Smartphone, Upload, Trash2, Eye, MapPin, Plus } from 'lucide-react';
 import { ComplaintPhoto } from '@/types';
+import { CameraCaptureModal } from './CameraCaptureModal';
+import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
+import { processImageFile } from '@/lib/imageUtils';
 
 interface Props {
   photos: ComplaintPhoto[];
@@ -18,228 +21,232 @@ export const PhotoUploadCamera: React.FC<Props> = ({
   label = 'Evidências Fotográficas'
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
-  const [isWebcamOpen, setIsWebcamOpen] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
+  const nativeCameraInputRef = useRef<HTMLInputElement>(null);
 
-  // Helper to convert File to base64 DataURL
-  const handleFiles = (files: FileList | null) => {
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
+  const [activeViewerPhoto, setActiveViewerPhoto] = useState<ComplaintPhoto | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Process files selected via native camera or gallery
+  const handleFiles = async (files: FileList | null, defaultLocation: string = 'LINHA DE PRODUÇÃO') => {
     if (!files || files.length === 0) return;
 
-    Array.from(files).forEach((file, index) => {
-      if (!file.type.startsWith('image/')) return;
-      if (photos.length >= maxPhotos) return;
+    setIsProcessing(true);
+    const newPhotosList = [...photos];
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const base64Url = e.target?.result as string;
-        if (!base64Url) return;
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (!file.type.startsWith('image/')) continue;
+        if (newPhotosList.length >= maxPhotos) break;
+
+        // Process image to normalize aspect ratio and compress
+        const processedUrl = await processImageFile(file, 1600, 0.86);
 
         const newPhoto: ComplaintPhoto = {
-          id: `photo-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 5)}`,
-          url: base64Url,
-          caption: file.name.replace(/\.[^/.]+$/, '') || 'Foto da amostra / desvio',
-          defectLocation: 'FÁBRICA / INSPEÇÃO'
+          id: `photo-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`,
+          url: processedUrl,
+          caption: file.name.replace(/\.[^/.]+$/, '') || `Foto da Amostra ${newPhotosList.length + 1}`,
+          defectLocation: defaultLocation
         };
 
-        onPhotosChange([...photos, newPhoto]);
-      };
-      reader.readAsDataURL(file);
-    });
+        newPhotosList.push(newPhoto);
+      }
+
+      onPhotosChange(newPhotosList);
+    } catch (err) {
+      console.error('Erro ao processar arquivo de foto:', err);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Handle capture from interactive live camera modal
+  const handleLiveCameraCapture = (dataUrl: string, defectLocation: string) => {
+    if (photos.length >= maxPhotos) return;
+
+    const newPhoto: ComplaintPhoto = {
+      id: `photo-cam-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      url: dataUrl,
+      caption: `Captura ${defectLocation} - ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`,
+      defectLocation: defectLocation || 'LINHA DE PRODUÇÃO'
+    };
+
+    onPhotosChange([...photos, newPhoto]);
   };
 
   const handleRemovePhoto = (id: string) => {
     onPhotosChange(photos.filter(p => p.id !== id));
   };
 
-  // Start live webcam for desktop / web browser
-  const startWebcam = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
-      });
-      setMediaStream(stream);
-      setIsWebcamOpen(true);
-      setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play();
-        }
-      }, 100);
-    } catch (err) {
-      console.warn('Webcam direct stream error, falling back to camera input:', err);
-      // Fallback directly to native camera input
-      cameraInputRef.current?.click();
-    }
-  };
-
-  const stopWebcam = () => {
-    if (mediaStream) {
-      mediaStream.getTracks().forEach(track => track.stop());
-      setMediaStream(null);
-    }
-    setIsWebcamOpen(false);
-  };
-
-  const captureWebcamFrame = () => {
-    if (!videoRef.current) return;
-    const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth || 1280;
-    canvas.height = videoRef.current.videoHeight || 720;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-
-    const newPhoto: ComplaintPhoto = {
-      id: `photo-cam-${Date.now()}`,
-      url: dataUrl,
-      caption: `Captura Câmera Qualidade - ${new Date().toLocaleTimeString('pt-BR')}`,
-      defectLocation: 'LINHA DE PRODUÇÃO'
-    };
-
-    onPhotosChange([...photos, newPhoto]);
-    stopWebcam();
-  };
-
   return (
-    <div className="space-y-3 p-4 rounded-xl bg-slate-900/70 border border-slate-800">
-      
-      {/* Label and counter */}
+    <div className="space-y-3.5 p-4 rounded-xl bg-slate-900/70 border border-slate-800">
+      {/* Hidden File Inputs */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={e => {
+          handleFiles(e.target.files, 'GALERIA / INSPEÇÃO');
+          e.target.value = '';
+        }}
+      />
+
+      <input
+        ref={nativeCameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={e => {
+          handleFiles(e.target.files, 'CÂMERA DO CELULAR');
+          e.target.value = '';
+        }}
+      />
+
+      {/* Label and Counter */}
       <div className="flex items-center justify-between">
         <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
           <Camera className="w-4 h-4 text-cyan-400" />
-          <span>{label} ({photos.length}/{maxPhotos})</span>
+          <span>{label}</span>
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
+            {photos.length}/{maxPhotos}
+          </span>
         </label>
-        <span className="text-[11px] text-slate-400">Tire foto ou carregue arquivos</span>
+
+        <span className="text-[11px] text-slate-400">
+          Enquadramento fiel e alta resolução
+        </span>
       </div>
 
-      {/* Action Buttons: Tire Foto / Carregar Arquivo */}
-      <div className="grid grid-cols-2 gap-2.5">
-        
-        {/* Hidden inputs */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          onChange={e => {
-            handleFiles(e.target.files);
-            e.target.value = '';
-          }}
-        />
+      {/* Capture Options Buttons */}
+      {photos.length < maxPhotos && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {/* 1. Live Camera Modal (WYSIWYG Frame) */}
+          <button
+            type="button"
+            onClick={() => setIsCameraModalOpen(true)}
+            className="flex items-center justify-center gap-2 p-3 rounded-xl bg-gradient-to-r from-cyan-500/15 to-teal-500/15 hover:from-cyan-500/25 hover:to-teal-500/25 border border-cyan-500/30 text-cyan-300 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95 group"
+          >
+            <Camera className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+            <span>Câmera com Mira (App)</span>
+          </button>
 
-        <input
-          ref={cameraInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={e => {
-            handleFiles(e.target.files);
-            e.target.value = '';
-          }}
-        />
+          {/* 2. Native Mobile Camera */}
+          <button
+            type="button"
+            onClick={() => nativeCameraInputRef.current?.click()}
+            className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95 group"
+            title="Abre a câmera do próprio celular ou tablet"
+          >
+            <Smartphone className="w-4 h-4 text-teal-400 group-hover:scale-110 transition-transform" />
+            <span>Câmera do Celular</span>
+          </button>
 
-        {/* Button: Tirar Foto (Câmera) */}
-        <button
-          type="button"
-          onClick={startWebcam}
-          className="flex items-center justify-center gap-2 p-3 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
-        >
-          <Camera className="w-4 h-4 text-cyan-400" />
-          <span>Tirar Foto (Câmera)</span>
-        </button>
+          {/* 3. Upload from Gallery / Computer */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95 group"
+          >
+            <Upload className="w-4 h-4 text-slate-400 group-hover:scale-110 transition-transform" />
+            <span>Galeria / Arquivo</span>
+          </button>
+        </div>
+      )}
 
-        {/* Button: Carregar Foto (Upload) */}
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
-        >
-          <Upload className="w-4 h-4 text-slate-300" />
-          <span>Carregar Foto (Galeria / PC)</span>
-        </button>
-      </div>
-
-      {/* Live Webcam Modal Capture if active */}
-      {isWebcamOpen && (
-        <div className="p-3.5 rounded-xl bg-slate-950 border border-cyan-500/40 space-y-3 animate-in fade-in duration-150">
-          <div className="flex items-center justify-between text-xs text-slate-200">
-            <span className="font-bold flex items-center gap-1.5 text-cyan-400">
-              <Video className="w-4 h-4" />
-              Câmera Ativa - Posicione o desvio na lente
-            </span>
-            <button
-              type="button"
-              onClick={stopWebcam}
-              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="relative rounded-lg overflow-hidden bg-black aspect-video max-h-56 flex items-center justify-center border border-slate-800">
-            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-          </div>
-
-          <div className="flex items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={stopWebcam}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={captureWebcamFrame}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-md shadow-cyan-500/20"
-            >
-              <Camera className="w-4 h-4" />
-              <span>Capturar Foto</span>
-            </button>
-          </div>
+      {/* Processing Loader Indicator */}
+      {isProcessing && (
+        <div className="p-3 text-center rounded-xl bg-slate-950 border border-cyan-500/30 text-xs text-cyan-300 font-medium animate-pulse flex items-center justify-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+          <span>Otimizando imagem para garantir enquadramento exato...</span>
         </div>
       )}
 
       {/* Thumbnails of Attached Photos */}
       {photos.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
           {photos.map((p, idx) => (
             <div
               key={p.id || idx}
-              className="relative group rounded-xl overflow-hidden border border-slate-700 bg-black aspect-video flex flex-col justify-end shadow-md"
+              className="relative group rounded-xl overflow-hidden border border-slate-700/80 bg-slate-950 aspect-[4/3] flex flex-col justify-between shadow-lg transition-all hover:border-cyan-500/40"
             >
-              <img src={p.url} alt={p.caption} className="absolute inset-0 w-full h-full object-cover" />
-              
-              {/* Gradient overlay with caption */}
-              <div className="relative z-10 p-1.5 bg-gradient-to-t from-black/95 via-black/60 to-transparent text-[10px] text-slate-200">
-                <div className="font-semibold truncate">{p.caption || 'Foto anexada'}</div>
-                <div className="text-[9px] text-cyan-400">{p.defectLocation || 'Amostra'}</div>
+              {/* Photo Image displayed with object-contain to PRESERVE 100% of the framing */}
+              <div className="relative flex-1 w-full h-full flex items-center justify-center bg-black/80 p-1">
+                <img
+                  src={p.url}
+                  alt={p.caption}
+                  className="w-full h-full object-contain"
+                />
               </div>
 
-              {/* Delete button */}
-              <button
-                type="button"
-                onClick={() => handleRemovePhoto(p.id)}
-                className="absolute top-1.5 right-1.5 p-1.5 rounded-lg bg-rose-600/90 hover:bg-rose-600 text-white opacity-0 group-hover:opacity-100 transition-opacity z-20 shadow-lg cursor-pointer"
-                title="Remover foto"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+              {/* Bottom Caption & Location Overlay */}
+              <div className="p-2 bg-gradient-to-t from-black via-slate-950/90 to-transparent border-t border-slate-800/60 text-[10px] space-y-0.5">
+                <div className="font-semibold text-slate-200 truncate" title={p.caption}>
+                  {p.caption}
+                </div>
+                {p.defectLocation && (
+                  <div className="flex items-center gap-1 text-cyan-400 font-medium truncate text-[9px]">
+                    <MapPin className="w-2.5 h-2.5 shrink-0" />
+                    <span>{p.defectLocation}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Top Quick Actions (Zoom / Delete) */}
+              <div className="absolute top-1.5 right-1.5 flex items-center gap-1.5 z-20">
+                {/* Fullscreen View */}
+                <button
+                  type="button"
+                  onClick={() => setActiveViewerPhoto(p)}
+                  className="p-1.5 rounded-lg bg-slate-900/90 hover:bg-cyan-500 hover:text-slate-950 text-slate-200 shadow-md transition-all cursor-pointer"
+                  title="Ampliar foto"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                </button>
+
+                {/* Delete */}
+                <button
+                  type="button"
+                  onClick={() => handleRemovePhoto(p.id)}
+                  className="p-1.5 rounded-lg bg-rose-600/90 hover:bg-rose-600 text-white shadow-md transition-all cursor-pointer"
+                  title="Remover foto"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="p-3 text-center rounded-lg border border-dashed border-slate-800 text-slate-500 text-[11px]">
-          Nenhuma foto anexada ainda. Clique acima para tirar uma foto ou fazer upload.
+        <div className="p-4 text-center rounded-xl border border-dashed border-slate-800 text-slate-500 text-xs space-y-1">
+          <p>Nenhuma foto anexada ainda.</p>
+          <p className="text-[11px] text-slate-600">
+            Tire foto ao vivo ou carregue da galeria para registrar as evidências de qualidade.
+          </p>
         </div>
       )}
 
+      {/* Live WYSIWYG Camera Modal */}
+      {isCameraModalOpen && (
+        <CameraCaptureModal
+          isOpen={isCameraModalOpen}
+          onClose={() => setIsCameraModalOpen(false)}
+          onCapture={handleLiveCameraCapture}
+          title="Captura de Evidência com Enquadramento Fiel"
+        />
+      )}
+
+      {/* Fullscreen Photo Viewer Modal */}
+      {activeViewerPhoto && (
+        <PhotoViewerModal
+          photo={activeViewerPhoto}
+          title="Visualização da Evidência Fotográfica"
+          onClose={() => setActiveViewerPhoto(null)}
+        />
+      )}
     </div>
   );
 };
