@@ -32,10 +32,13 @@ export default function EnviosPage() {
   const [filterStatus, setFilterStatus] = useState('all');
 
   const filteredConcessions = concessions.filter(c => {
-    const matchesSearch = c.code.toLowerCase().includes(search.toLowerCase()) ||
-      c.customerName.toLowerCase().includes(search.toLowerCase()) ||
-      c.lotNumber.toLowerCase().includes(search.toLowerCase()) ||
-      c.defectTypeName.toLowerCase().includes(search.toLowerCase());
+    const s = search.toLowerCase();
+    const matchesSearch = c.code.toLowerCase().includes(s) ||
+      c.customerName.toLowerCase().includes(s) ||
+      c.lotNumber.toLowerCase().includes(s) ||
+      (c.opNumber && c.opNumber.toLowerCase().includes(s)) ||
+      (c.bales && c.bales.some(b => b.toLowerCase().includes(s))) ||
+      c.defectTypeName.toLowerCase().includes(s);
 
     const matchesCustomer = filterCustomer === 'all' || c.customerId === filterCustomer;
     const matchesDefect = filterDefect === 'all' || c.defectTypeId === filterDefect;
@@ -289,7 +292,14 @@ export default function EnviosPage() {
                           </span>
                         )}
                       </div>
-                      <div className="font-mono text-[11px] text-slate-400">Lote: {c.lotNumber}</div>
+                      <div className="font-mono text-[11px] text-slate-400 flex flex-wrap items-center gap-1.5 mt-0.5">
+                        <span>Lote: {c.lotNumber}</span>
+                        {c.bales && c.bales.length > 0 && (
+                          <span className="text-[10px] font-mono text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/50" title={`Fardos: ${c.bales.join(', ')}`}>
+                            📦 {c.bales.length} fardo{c.bales.length > 1 ? 's' : ''}: {c.bales.slice(0, 3).join(', ')}{c.bales.length > 3 ? '...' : ''}
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     <td className="py-3.5 px-4">

@@ -33,6 +33,7 @@ interface QualityContextType {
     opNumber?: string;
     date?: string;
     lotNumber: string;
+    bales?: string[];
     productName: string;
     defectTypeId: string;
     quantity: number;
@@ -60,6 +61,7 @@ interface QualityContextType {
     customerId: string;
     date?: string;
     lotNumber: string;
+    bales?: string[];
     defectTypeId: string;
     quantityAffected: number;
     severity: DefectSeverity;
@@ -237,6 +239,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     opNumber?: string;
     date?: string;
     lotNumber: string;
+    bales?: string[];
     productName: string;
     defectTypeId: string;
     quantity: number;
@@ -270,6 +273,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       opNumber: data.opNumber?.trim() || `OP-${Date.now().toString().slice(-6)}`,
       date: entryDate,
       lotNumber: data.lotNumber,
+      bales: data.bales || [],
       productName: data.productName,
       defectTypeId: data.defectTypeId,
       defectTypeName,
@@ -436,6 +440,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     customerId: string;
     date?: string;
     lotNumber: string;
+    bales?: string[];
     defectTypeId: string;
     quantityAffected: number;
     severity: DefectSeverity;
@@ -460,6 +465,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       customerName,
       date: entryDate,
       lotNumber: data.lotNumber,
+      bales: data.bales || [],
       defectTypeId: data.defectTypeId,
       defectTypeName,
       quantityAffected: data.quantityAffected,

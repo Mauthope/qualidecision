@@ -7,6 +7,7 @@ import { AlertCircle, X } from 'lucide-react';
 import { PhotoUploadCamera } from '@/components/common/PhotoUploadCamera';
 import { SearchableCustomerSelect } from '@/components/common/SearchableCustomerSelect';
 import { SearchableDefectSelect } from '@/components/common/SearchableDefectSelect';
+import { BaleListInput } from '@/components/common/BaleListInput';
 
 interface Props {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
   const [date, setDate] = useState('');
   const [defectTypeId, setDefectTypeId] = useState('');
   const [lotNumber, setLotNumber] = useState('');
+  const [bales, setBales] = useState<string[]>([]);
   const [quantityAffected, setQuantityAffected] = useState<number | ''>('');
   const [severity, setSeverity] = useState<DefectSeverity>('severa');
   const [description, setDescription] = useState('');
@@ -36,6 +38,7 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
       setDate('');
       setDefectTypeId('');
       setLotNumber('');
+      setBales([]);
       setQuantityAffected('');
       setSeverity('severa');
       setDescription('');
@@ -57,6 +60,7 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
       customerId,
       date,
       lotNumber: lotNumber.trim(),
+      bales,
       defectTypeId,
       quantityAffected: numQuantity,
       severity,
@@ -198,6 +202,15 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
               </select>
             </div>
           </div>
+
+          {/* Fardos Reclamados (Adição dinâmica por botão) */}
+          <BaleListInput
+            bales={bales}
+            onChange={setBales}
+            variant="rose"
+            label="Identificação dos Fardos Reclamados"
+            helperText="Adicione o número de cada fardo reclamado com o botão 'Add Fardo' (ou intervalos como 101-105). Deixe vazio se a reclamação abranger o lote inteiro."
+          />
 
           {/* Description */}
           <div>

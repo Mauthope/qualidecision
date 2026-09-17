@@ -26,11 +26,22 @@ export const QuickSearchHero: React.FC = () => {
     : [];
 
   const matchingComplaints = searchLower
-    ? complaints.filter(c => c.customerName.toLowerCase().includes(searchLower) || c.lotNumber.toLowerCase().includes(searchLower) || c.defectTypeName.toLowerCase().includes(searchLower))
+    ? complaints.filter(c => 
+        c.customerName.toLowerCase().includes(searchLower) || 
+        c.lotNumber.toLowerCase().includes(searchLower) || 
+        (c.bales && c.bales.some(b => b.toLowerCase().includes(searchLower))) ||
+        c.defectTypeName.toLowerCase().includes(searchLower)
+      )
     : [];
 
   const matchingConcessions = searchLower
-    ? concessions.filter(c => c.customerName.toLowerCase().includes(searchLower) || c.lotNumber.toLowerCase().includes(searchLower) || c.defectTypeName.toLowerCase().includes(searchLower))
+    ? concessions.filter(c => 
+        c.customerName.toLowerCase().includes(searchLower) || 
+        c.lotNumber.toLowerCase().includes(searchLower) || 
+        (c.opNumber && c.opNumber.toLowerCase().includes(searchLower)) ||
+        (c.bales && c.bales.some(b => b.toLowerCase().includes(searchLower))) ||
+        c.defectTypeName.toLowerCase().includes(searchLower)
+      )
     : [];
 
   const hasResults = searchLower && (matchingCustomers.length > 0 || matchingComplaints.length > 0 || matchingConcessions.length > 0);
@@ -144,9 +155,43 @@ export const QuickSearchHero: React.FC = () => {
                           <div>
                             <span className="font-semibold text-rose-300 mr-2">[{complaint.code}]</span>
                             <span className="text-slate-200">{complaint.customerName} - Lote {complaint.lotNumber}</span>
+                            {complaint.bales && complaint.bales.length > 0 && (
+                              <span className="ml-2 text-[10px] text-rose-300 font-mono bg-rose-950/40 px-1 rounded">
+                                Fardos: {complaint.bales.join(', ')}
+                              </span>
+                            )}
                             <div className="text-[11px] text-slate-400">{complaint.defectTypeName}: "{complaint.description.slice(0, 70)}..."</div>
                           </div>
                           <span className="text-[10px] text-slate-500 shrink-0">{new Date(complaint.date).toLocaleDateString('pt-BR')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Concessions */}
+                {matchingConcessions.length > 0 && (
+                  <div className="space-y-1.5 pt-2 border-t border-slate-800">
+                    <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1.5">
+                      <Send className="w-3.5 h-3.5 text-cyan-400" />
+                      Envios com Concessão ({matchingConcessions.length})
+                    </div>
+                    <div className="space-y-1.5">
+                      {matchingConcessions.map(concession => (
+                        <div key={concession.id} className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs flex items-center justify-between">
+                          <div>
+                            <span className="font-semibold text-cyan-300 mr-2">[{concession.code}]</span>
+                            <span className="text-slate-200">{concession.customerName} - Lote {concession.lotNumber}</span>
+                            {concession.bales && concession.bales.length > 0 && (
+                              <span className="ml-2 text-[10px] text-cyan-300 font-mono bg-cyan-950/40 px-1 rounded">
+                                Fardos: {concession.bales.join(', ')}
+                              </span>
+                            )}
+                            <div className="text-[11px] text-slate-400">
+                              {concession.productName} • {concession.defectTypeName} • {concession.quantity.toLocaleString('pt-BR')} un
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-slate-500 shrink-0">{new Date(concession.date).toLocaleDateString('pt-BR')}</span>
                         </div>
                       ))}
                     </div>

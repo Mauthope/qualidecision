@@ -8,6 +8,7 @@ import { NewCustomerModal } from '@/components/clientes/NewCustomerModal';
 import { PhotoUploadCamera } from '@/components/common/PhotoUploadCamera';
 import { SearchableCustomerSelect } from '@/components/common/SearchableCustomerSelect';
 import { SearchableDefectSelect } from '@/components/common/SearchableDefectSelect';
+import { BaleListInput } from '@/components/common/BaleListInput';
 import { ComplaintPhoto } from '@/types';
 
 interface Props {
@@ -25,6 +26,7 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
   const [opNumber, setOpNumber] = useState('');
   const [defectTypeId, setDefectTypeId] = useState('');
   const [lotNumber, setLotNumber] = useState('');
+  const [bales, setBales] = useState<string[]>([]);
   const [productName, setProductName] = useState('');
   const [quantity, setQuantity] = useState<number | ''>('');
   const [severity, setSeverity] = useState<DefectSeverity | ''>('');
@@ -42,6 +44,7 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
       setOpNumber('');
       setDefectTypeId('');
       setLotNumber('');
+      setBales([]);
       setProductName('');
       setQuantity('');
       setSeverity('');
@@ -79,6 +82,7 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
       opNumber: opNumber.trim(),
       date,
       lotNumber: lotNumber.trim(),
+      bales,
       productName: productName.trim(),
       defectTypeId,
       quantity: numQuantity,
@@ -227,6 +231,15 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
               />
             </div>
           </div>
+
+          {/* Fardos Individuais (Adição dinâmica por botão) */}
+          <BaleListInput
+            bales={bales}
+            onChange={setBales}
+            variant="cyan"
+            label="Identificação dos Fardos com Desvio"
+            helperText="Adicione cada número de fardo com o botão 'Add Fardo' (ou intervalos como 101-105). Deixe vazio se abranger todo o lote."
+          />
 
           {/* Produto, Quantidade e Gravidade */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

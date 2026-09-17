@@ -159,6 +159,12 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
                     <span className="text-xs text-slate-400 font-mono">
                       (Lote: {item.lotNumber})
                     </span>
+
+                    {item.bales && item.bales.length > 0 && (
+                      <span className="px-2 py-0.5 rounded-md text-[11px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-800/50" title={`Fardos: ${item.bales.join(', ')}`}>
+                        📦 {item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 4).join(', ')}{item.bales.length > 4 ? '...' : ''}
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2.5 text-xs">

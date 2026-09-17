@@ -31,11 +31,13 @@ export default function ReclamacoesPage() {
   const [filterSeverity, setFilterSeverity] = useState('all');
 
   const filteredComplaints = complaints.filter(c => {
-    const matchesSearch = c.code.toLowerCase().includes(search.toLowerCase()) ||
-      c.customerName.toLowerCase().includes(search.toLowerCase()) ||
-      c.lotNumber.toLowerCase().includes(search.toLowerCase()) ||
-      c.defectTypeName.toLowerCase().includes(search.toLowerCase()) ||
-      c.description.toLowerCase().includes(search.toLowerCase());
+    const s = search.toLowerCase();
+    const matchesSearch = c.code.toLowerCase().includes(s) ||
+      c.customerName.toLowerCase().includes(s) ||
+      c.lotNumber.toLowerCase().includes(s) ||
+      (c.bales && c.bales.some(b => b.toLowerCase().includes(s))) ||
+      c.defectTypeName.toLowerCase().includes(s) ||
+      c.description.toLowerCase().includes(s);
 
     const matchesCustomer = filterCustomer === 'all' || c.customerId === filterCustomer;
     const matchesSeverity = filterSeverity === 'all' || c.severity === filterSeverity;
@@ -147,6 +149,11 @@ export default function ReclamacoesPage() {
                   <span className="text-xs text-slate-400">
                     (Lote <strong className="font-mono text-cyan-300">{item.lotNumber}</strong>)
                   </span>
+                  {item.bales && item.bales.length > 0 && (
+                    <span className="px-2 py-0.5 rounded text-xs font-mono font-medium bg-rose-500/10 text-rose-300 border border-rose-500/25" title={`Fardos reclamados: ${item.bales.join(', ')}`}>
+                      📦 {item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 3).join(', ')}{item.bales.length > 3 ? '...' : ''}
+                    </span>
+                  )}
                   <span className="px-2 py-0.5 rounded text-xs font-mono font-bold bg-amber-500/10 text-amber-300 border border-amber-500/25">
                     ⚖️ {item.quantityAffected?.toLocaleString('pt-BR')} kg
                   </span>

@@ -36,6 +36,39 @@ export const aiAssistantService = {
     // 5. Question Type: Indicators / Profitability / "quantos sacos..." / "lucro" / "indicador"
     const isIndicatorQuery = /lucro|lucratividade|indicador|total|quantos|volume|scrap|refugo|econom/i.test(query);
 
+    // SCENARIO BALE: Search by Bale Number ("fardo 104", "fardo #104", "fardos")
+    const baleMatch = query.match(/fardo(?:s)?\s*(?:#|n[ºo]\s*)?([a-z0-9-]+)/i);
+    if (baleMatch) {
+      const targetBale = baleMatch[1].toLowerCase();
+      const matchingConc = concessions.filter(c => c.bales && c.bales.some(b => b.toLowerCase() === targetBale || b.toLowerCase().includes(targetBale)));
+      const matchingComp = complaints.filter(c => c.bales && c.bales.some(b => b.toLowerCase() === targetBale || b.toLowerCase().includes(targetBale)));
+      
+      if (matchingConc.length > 0 || matchingComp.length > 0) {
+        let text = `📦 **Localização e Rastreabilidade do Fardo #${targetBale.toUpperCase()}:**\n\n`;
+        if (matchingConc.length > 0) {
+          text += `**Envios com Concessão Encontrados:**\n`;
+          matchingConc.forEach(c => {
+            text += `• **[${c.code}]** Enviado para **${c.customerName}** em ${new Date(c.date).toLocaleDateString('pt-BR')} (Lote: ${c.lotNumber}${c.opNumber ? `, OP: ${c.opNumber}` : ''}). Defeito: *${c.defectTypeName}* (${c.severity}).\n`;
+          });
+          text += '\n';
+        }
+        if (matchingComp.length > 0) {
+          text += `**Reclamações SAC Encontradas:**\n`;
+          matchingComp.forEach(c => {
+            text += `• **[${c.code}]** Reclamado por **${c.customerName}** em ${new Date(c.date).toLocaleDateString('pt-BR')} (Lote: ${c.lotNumber}). Motivo: *${c.defectTypeName}*.\n`;
+          });
+        }
+        return {
+          id: messageId,
+          sender: 'assistant',
+          text,
+          timestamp,
+          concessionCards: matchingConc,
+          complaintCards: matchingComp
+        };
+      }
+    }
+
     // SCENARIO A: Decision simulation for a customer and defect
     if (isDecisionQuery && matchedCustomer && matchedDefect) {
       // Extract quantity if any

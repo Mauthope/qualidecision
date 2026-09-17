@@ -143,7 +143,14 @@ export const RecentConcessionsTable: React.FC = () => {
                             </span>
                           )}
                         </div>
-                        <div className="font-mono text-[11px] text-slate-400">Lote: {item.lotNumber}</div>
+                        <div className="font-mono text-[11px] text-slate-400 flex flex-wrap items-center gap-1.5 mt-0.5">
+                          <span>Lote: {item.lotNumber}</span>
+                          {item.bales && item.bales.length > 0 && (
+                            <span className="text-[10px] font-mono text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/50" title={`Fardos: ${item.bales.join(', ')}`}>
+                              📦 {item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 3).join(', ')}{item.bales.length > 3 ? '...' : ''}
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       <td className="py-3.5 px-4">
