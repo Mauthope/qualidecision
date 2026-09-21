@@ -78,6 +78,7 @@ export default function DashboardPage() {
   const [selectedDefectId, setSelectedDefectId] = useState('todos');
   const [selectedStatus, setSelectedStatus] = useState<'todos' | 'aceito' | 'em_transito' | 'reclamado'>('todos');
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+  const [activeChartTab, setActiveChartTab] = useState<'concessoes' | 'reclamacoes'>('concessoes');
 
   // Modals
   const [isNewConcessionOpen, setIsNewConcessionOpen] = useState(false);
@@ -306,6 +307,147 @@ export default function DashboardPage() {
     return Object.values(map)
       .sort((a, b) => b.totalAmount - a.totalAmount);
   }, [filteredConcessions]);
+
+  // 5. Reclamações Filtradas Dinamicamente
+  const filteredComplaints = useMemo(() => {
+    return complaints.filter(item => {
+      // Busca por texto livre
+      if (searchTerm.trim()) {
+        const term = searchTerm.toLowerCase();
+        const matchesCode = item.code?.toLowerCase().includes(term);
+        const matchesCust = item.customerName?.toLowerCase().includes(term);
+        const matchesDef = item.defectTypeName?.toLowerCase().includes(term);
+        const matchesLot = item.lotNumber?.toLowerCase().includes(term);
+        const matchesBale = item.bales?.some(b => b.toLowerCase().includes(term));
+        const matchesDesc = item.description?.toLowerCase().includes(term);
+
+        if (!matchesCode && !matchesCust && !matchesDef && !matchesLot && !matchesBale && !matchesDesc) {
+          return false;
+        }
+      }
+
+      // Filtro por Cliente
+      if (selectedCustomerId !== 'todos' && item.customerId !== selectedCustomerId) {
+        return false;
+      }
+
+      // Filtro por Defeito Específico
+      if (selectedDefectId !== 'todos' && item.defectTypeId !== selectedDefectId) {
+        return false;
+      }
+
+      // Filtro por Categoria Técnica
+      if (selectedCategory !== 'todas') {
+        const def = defects.find(d => d.id === item.defectTypeId);
+        if (def && def.category !== selectedCategory) return false;
+      }
+
+      // Filtro por Período
+      if (period === 'personalizado') {
+        if (startDate && item.date < startDate) return false;
+        if (endDate && item.date > endDate) return false;
+      } else if (period === 'ano_2026') {
+        if (!item.date?.startsWith('2026')) return false;
+      } else if (period === 'ano_2025') {
+        if (!item.date?.startsWith('2025')) return false;
+      } else if (period === 'mes_atual') {
+        const now = new Date();
+        const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        if (!item.date?.startsWith(currentYM)) return false;
+      } else if (period === 'mes_anterior') {
+        const d = new Date();
+        d.setMonth(d.getMonth() - 1);
+        const prevYM = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        if (!item.date?.startsWith(prevYM)) return false;
+      } else if (period === 'ultimos_30') {
+        const d = new Date();
+        d.setDate(d.getDate() - 30);
+        const limitStr = d.toISOString().split('T')[0];
+        if (item.date < limitStr) return false;
+      } else if (period === 'ultimos_90') {
+        const d = new Date();
+        d.setDate(d.getDate() - 90);
+        const limitStr = d.toISOString().split('T')[0];
+        if (item.date < limitStr) return false;
+      }
+
+      return true;
+    });
+  }, [complaints, defects, searchTerm, selectedCustomerId, selectedCategory, selectedDefectId, period, startDate, endDate]);
+
+  // 6. Agrupamento de Reclamações por Defeito (Barras do SAC)
+  const complaintDefectData = useMemo(() => {
+    const map: Record<string, { name: string; count: number; totalWeight: number; color: string }> = {};
+
+    filteredComplaints.forEach(c => {
+      const def = defects.find(d => d.id === c.defectTypeId);
+      const name = c.defectTypeName || def?.name || 'Desvio Não Especificado';
+
+      if (!map[c.defectTypeId]) {
+        map[c.defectTypeId] = {
+          name,
+          count: 0,
+          totalWeight: 0,
+          color: ''
+        };
+      }
+      map[c.defectTypeId].count += 1;
+      map[c.defectTypeId].totalWeight += c.quantityAffected || 0;
+    });
+
+    const sorted = Object.values(map)
+      .filter(d => d.count > 0)
+      .sort((a, b) => b.count - a.count);
+
+    return sorted.map((item, index) => ({
+      ...item,
+      color: HARMONIOUS_CHART_COLORS[index % HARMONIOUS_CHART_COLORS.length]
+    }));
+  }, [filteredComplaints, defects]);
+
+  const totalComplaintWeight = useMemo(() => {
+    return filteredComplaints.reduce((acc, c) => acc + (c.quantityAffected || 0), 0);
+  }, [filteredComplaints]);
+
+  // 7. Distribuição por Severidade (Donut do SAC)
+  const complaintSeverityData = useMemo(() => {
+    let leve = 0;
+    let moderada = 0;
+    let severa = 0;
+
+    filteredComplaints.forEach(c => {
+      if (c.severity === 'severa') severa++;
+      else if (c.severity === 'moderada') moderada++;
+      else leve++;
+    });
+
+    return [
+      { name: 'Severa', value: severa, color: '#f43f5e' },
+      { name: 'Moderada', value: moderada, color: '#f59e0b' },
+      { name: 'Leve', value: leve, color: '#10b981' }
+    ].filter(i => i.value > 0);
+  }, [filteredComplaints]);
+
+  // 8. Ranking de Clientes com Mais Reclamações
+  const topComplaintCustomersRanking = useMemo(() => {
+    const map: Record<string, { customerId: string; customerName: string; count: number; totalWeight: number }> = {};
+
+    filteredComplaints.forEach(c => {
+      if (!map[c.customerId]) {
+        map[c.customerId] = {
+          customerId: c.customerId,
+          customerName: c.customerName,
+          count: 0,
+          totalWeight: 0
+        };
+      }
+      map[c.customerId].count += 1;
+      map[c.customerId].totalWeight += c.quantityAffected || 0;
+    });
+
+    return Object.values(map)
+      .sort((a, b) => b.count - a.count);
+  }, [filteredComplaints]);
 
   // Selected entities names for active filter pills
   const selectedCustomerName = useMemo(() => {
@@ -706,454 +848,918 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Graphs Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Bar Chart: Volume por Defeito */}
-        <div className="glow-card p-5 sm:p-6 rounded-2xl bg-slate-950/80 border border-slate-800 lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400">
-                <BarChart3 className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm sm:text-base font-bold text-white font-heading">
-                  Volume Expedido por Tipo de Defeito {hasActiveFilters && '(Filtrado)'}
-                </h3>
-                <p className="text-xs text-slate-400 hidden sm:block">
-                  Distribuição quantitativa de peças com desvio por tipo de não-conformidade
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-950/40 px-2.5 py-1 rounded-lg border border-cyan-500/20">
-                Total: {totalUnits.toLocaleString('pt-BR')} un
-              </span>
-            </div>
-          </div>
+      {/* Chart Section Header with Tabs */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950/70 p-2 rounded-2xl border border-slate-800">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveChartTab('concessoes')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+              activeChartTab === 'concessoes'
+                ? 'bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/25'
+                : 'text-slate-400 hover:text-white hover:bg-slate-900'
+            }`}
+          >
+            <PackageCheck className="w-4 h-4" />
+            <span>Gráficos de Concessões</span>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${
+              activeChartTab === 'concessoes' ? 'bg-slate-950/30 text-slate-950' : 'bg-slate-800 text-slate-300'
+            }`}>
+              {filteredConcessions.length}
+            </span>
+          </button>
 
-          <div className="h-72 w-full">
-            {defectData.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-400 text-xs gap-2">
-                <AlertCircle className="w-6 h-6 text-slate-600" />
-                <span>Nenhum desvio registrado para os filtros selecionados.</span>
-                {hasActiveFilters && (
-                  <button
-                    onClick={resetFilters}
-                    className="text-cyan-400 hover:underline font-semibold"
-                  >
-                    Limpar filtros
-                  </button>
-                )}
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={defectData} margin={{ top: 12, right: 10, left: -5, bottom: 25 }}>
-                  <defs>
-                    {defectData.map((entry, index) => (
-                      <linearGradient key={`bar-grad-${index}`} id={`bar-grad-${index}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
-                        <stop offset="100%" stopColor={entry.color} stopOpacity={0.55} />
-                      </linearGradient>
-                    ))}
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                  <XAxis
-                    dataKey="name"
-                    stroke="#64748b"
-                    fontSize={11}
-                    tickLine={false}
-                    tick={{ fill: '#94a3b8' }}
-                    tickFormatter={(v: string) => (v.length > 13 ? `${v.slice(0, 11)}…` : v)}
-                  />
-                  <YAxis
-                    stroke="#64748b"
-                    fontSize={11}
-                    tickLine={false}
-                    tick={{ fill: '#94a3b8' }}
-                    tickFormatter={v => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v)}
-                  />
-                  <Tooltip
-                    cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }}
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const item = payload[0].payload;
-                        const pct = totalUnits > 0 ? ((item.quantity / totalUnits) * 100).toFixed(1) : '0';
-                        return (
-                          <div className="p-3 rounded-xl bg-slate-950/95 border border-slate-800 shadow-2xl text-xs space-y-1.5 backdrop-blur-md min-w-[190px]">
-                            <div className="flex items-center gap-2 font-bold text-white text-sm pb-1 border-b border-slate-800/80">
-                              <span
-                                className="w-3 h-3 rounded-full shrink-0 shadow-sm"
-                                style={{ backgroundColor: item.color }}
-                              />
-                              <span className="truncate">{item.name}</span>
-                            </div>
-                            <div className="flex items-center justify-between text-slate-300 font-mono">
-                              <span className="text-slate-400">Volume:</span>
-                              <span className="font-bold text-white">
-                                {item.quantity.toLocaleString('pt-BR')} un
-                                <span className="text-slate-400 font-normal ml-1">({pct}%)</span>
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between font-mono">
-                              <span className="text-slate-400">Scrap Salvo:</span>
-                              <span className="font-bold text-emerald-400">
-                                R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Bar dataKey="quantity" radius={[7, 7, 0, 0]}>
-                    {defectData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={`url(#bar-grad-${index})`}
-                        stroke={entry.color}
-                        strokeWidth={1}
-                        className="hover:opacity-85 transition-opacity cursor-pointer"
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
+          <button
+            type="button"
+            onClick={() => setActiveChartTab('reclamacoes')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+              activeChartTab === 'reclamacoes'
+                ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/25'
+                : 'text-slate-400 hover:text-white hover:bg-slate-900'
+            }`}
+          >
+            <AlertTriangle className="w-4 h-4" />
+            <span>Gráficos de Reclamações (SAC)</span>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${
+              activeChartTab === 'reclamacoes' ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-300'
+            }`}>
+              {filteredComplaints.length}
+            </span>
+          </button>
         </div>
 
-        {/* Donut Chart: Distribuição Financeira */}
-        <div className="glow-card p-5 sm:p-6 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
-                <DollarSign className="w-4 h-4" />
+        <div className="text-xs text-slate-400 hidden md:flex items-center gap-3 pr-2">
+          {activeChartTab === 'concessoes' ? (
+            <span>Monitoramento de lotes concedidos e valor salvo de refugo</span>
+          ) : (
+            <span>Incidência de não-conformidades e laudos de SAC abertos por clientes</span>
+          )}
+        </div>
+      </div>
+
+      {activeChartTab === 'concessoes' ? (
+        <>
+          {/* Graphs Row: Concessões */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Bar Chart: Volume por Defeito */}
+            <div className="glow-card p-5 sm:p-6 rounded-2xl bg-slate-950/80 border border-slate-800 lg:col-span-2 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400">
+                    <BarChart3 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-bold text-white font-heading">
+                      Volume Expedido por Tipo de Defeito {hasActiveFilters && '(Filtrado)'}
+                    </h3>
+                    <p className="text-xs text-slate-400 hidden sm:block">
+                      Distribuição quantitativa de peças com desvio por tipo de não-conformidade
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-950/40 px-2.5 py-1 rounded-lg border border-cyan-500/20">
+                    Total: {totalUnits.toLocaleString('pt-BR')} un
+                  </span>
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-white font-heading">
-                  Composição do Scrap Salvo
-                </h3>
-                <p className="text-[11px] text-slate-400">
-                  {defectData.length} tipo{defectData.length !== 1 ? 's' : ''} no filtro
-                </p>
+
+              <div className="h-72 w-full">
+                {defectData.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-slate-400 text-xs gap-2">
+                    <AlertCircle className="w-6 h-6 text-slate-600" />
+                    <span>Nenhum desvio registrado para os filtros selecionados.</span>
+                    {hasActiveFilters && (
+                      <button
+                        onClick={resetFilters}
+                        className="text-cyan-400 hover:underline font-semibold"
+                      >
+                        Limpar filtros
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={defectData} margin={{ top: 12, right: 10, left: -5, bottom: 25 }}>
+                      <defs>
+                        {defectData.map((entry, index) => (
+                          <linearGradient key={`bar-grad-${index}`} id={`bar-grad-${index}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
+                            <stop offset="100%" stopColor={entry.color} stopOpacity={0.55} />
+                          </linearGradient>
+                        ))}
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                      <XAxis
+                        dataKey="name"
+                        stroke="#64748b"
+                        fontSize={11}
+                        tickLine={false}
+                        tick={{ fill: '#94a3b8' }}
+                        tickFormatter={(v: string) => (v.length > 13 ? `${v.slice(0, 11)}…` : v)}
+                      />
+                      <YAxis
+                        stroke="#64748b"
+                        fontSize={11}
+                        tickLine={false}
+                        tick={{ fill: '#94a3b8' }}
+                        tickFormatter={v => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v)}
+                      />
+                      <Tooltip
+                        cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }}
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const item = payload[0].payload;
+                            const pct = totalUnits > 0 ? ((item.quantity / totalUnits) * 100).toFixed(1) : '0';
+                            return (
+                              <div className="p-3 rounded-xl bg-slate-950/95 border border-slate-800 shadow-2xl text-xs space-y-1.5 backdrop-blur-md min-w-[190px]">
+                                <div className="flex items-center gap-2 font-bold text-white text-sm pb-1 border-b border-slate-800/80">
+                                  <span
+                                    className="w-3 h-3 rounded-full shrink-0 shadow-sm"
+                                    style={{ backgroundColor: item.color }}
+                                  />
+                                  <span className="truncate">{item.name}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-slate-300 font-mono">
+                                  <span className="text-slate-400">Volume:</span>
+                                  <span className="font-bold text-white">
+                                    {item.quantity.toLocaleString('pt-BR')} un
+                                    <span className="text-slate-400 font-normal ml-1">({pct}%)</span>
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between font-mono">
+                                  <span className="text-slate-400">Scrap Salvo:</span>
+                                  <span className="font-bold text-emerald-400">
+                                    R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Bar dataKey="quantity" radius={[7, 7, 0, 0]}>
+                        {defectData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={`url(#bar-grad-${index})`}
+                            stroke={entry.color}
+                            strokeWidth={1}
+                            className="hover:opacity-85 transition-opacity cursor-pointer"
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
               </div>
             </div>
-            <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/20">
-              100%
-            </span>
+
+            {/* Donut Chart: Distribuição Financeira */}
+            <div className="glow-card p-5 sm:p-6 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-4 flex flex-col justify-between">
+              <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
+                    <DollarSign className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white font-heading">
+                      Composição do Scrap Salvo
+                    </h3>
+                    <p className="text-[11px] text-slate-400">
+                      {defectData.length} tipo{defectData.length !== 1 ? 's' : ''} no filtro
+                    </p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/20">
+                  100%
+                </span>
+              </div>
+
+              {/* Donut container with central KPI */}
+              <div className="h-52 w-full flex items-center justify-center relative">
+                {pieData.length === 0 ? (
+                  <div className="text-slate-500 text-xs">Sem dados financeiros no filtro</div>
+                ) : (
+                  <>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={pieData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={52}
+                          outerRadius={78}
+                          paddingAngle={3}
+                          dataKey="value"
+                          stroke="#020617"
+                          strokeWidth={2}
+                        >
+                          {pieData.map((entry, index) => (
+                            <Cell
+                              key={`pie-cell-${index}`}
+                              fill={entry.color}
+                              className="hover:opacity-80 transition-opacity cursor-pointer"
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              const item = payload[0].payload;
+                              const pct = totalSaved > 0 ? ((item.value / totalSaved) * 100).toFixed(1) : '0';
+                              return (
+                                <div className="p-2.5 rounded-xl bg-slate-950/95 border border-slate-800 shadow-2xl text-xs space-y-1 backdrop-blur-md min-w-[170px]">
+                                  <div className="flex items-center gap-2 font-bold text-white truncate">
+                                    <span
+                                      className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
+                                      style={{ backgroundColor: item.color }}
+                                    />
+                                    <span className="truncate">{item.name}</span>
+                                  </div>
+                                  <div className="text-emerald-400 font-mono font-bold text-sm">
+                                    R$ {Number(item.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                  </div>
+                                  <div className="text-[10px] text-slate-400 font-mono">
+                                    {pct}% do valor total salvo
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+
+                    {/* Central Executive KPI */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
+                      <span className="text-[10px] uppercase font-semibold tracking-wider text-slate-400">
+                        Total Salvo
+                      </span>
+                      <span className="text-sm font-bold font-mono text-emerald-400">
+                        R$ {totalSaved >= 1000 ? `${(totalSaved / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}k` : totalSaved.toFixed(0)}
+                      </span>
+                      <span className="text-[9px] text-slate-500 font-mono">
+                        {totalUnits.toLocaleString('pt-BR')} un
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Mini Legend */}
+              <div className="space-y-1 text-xs max-h-36 overflow-y-auto custom-scrollbar pt-2 border-t border-slate-800/60">
+                {defectData.map((item, idx) => {
+                  const pct = totalSaved > 0 ? ((item.amount / totalSaved) * 100).toFixed(1) : '0';
+                  return (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between text-[11px] hover:bg-slate-900/60 px-1.5 py-1 rounded transition-colors"
+                    >
+                      <div className="flex items-center gap-2 truncate pr-2">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span className="text-slate-300 truncate font-medium" title={item.name}>
+                          {item.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="font-mono text-[10px] text-slate-400 font-semibold">
+                          {pct}%
+                        </span>
+                        <span className="font-mono text-emerald-400 font-bold">
+                          R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
-          {/* Donut container with central KPI */}
-          <div className="h-52 w-full flex items-center justify-center relative">
-            {pieData.length === 0 ? (
-              <div className="text-slate-500 text-xs">Sem dados financeiros no filtro</div>
-            ) : (
-              <>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={52}
-                      outerRadius={78}
-                      paddingAngle={3}
-                      dataKey="value"
-                      stroke="#020617"
-                      strokeWidth={2}
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell
-                          key={`pie-cell-${index}`}
-                          fill={entry.color}
-                          className="hover:opacity-80 transition-opacity cursor-pointer"
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const item = payload[0].payload;
-                          const pct = totalSaved > 0 ? ((item.value / totalSaved) * 100).toFixed(1) : '0';
-                          return (
-                            <div className="p-2.5 rounded-xl bg-slate-950/95 border border-slate-800 shadow-2xl text-xs space-y-1 backdrop-blur-md min-w-[170px]">
-                              <div className="flex items-center gap-2 font-bold text-white truncate">
-                                <span
-                                  className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
-                                  style={{ backgroundColor: item.color }}
-                                />
-                                <span className="truncate">{item.name}</span>
-                              </div>
-                              <div className="text-emerald-400 font-mono font-bold text-sm">
-                                R$ {Number(item.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                              </div>
-                              <div className="text-[10px] text-slate-400 font-mono">
-                                {pct}% do valor total salvo
-                              </div>
-                            </div>
+          {/* Top Customers Ranking & Recent Concessions Grid */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            
+            {/* Top Customers Ranking for Concessions */}
+            <div className="glow-card p-5 sm:p-6 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400">
+                    <Layers className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-bold text-white font-heading">
+                      Ranking de Clientes por Concessões Aceitas {hasActiveFilters && '(Filtrado)'}
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      Parceiros com maior volume de absorção de materiais com desvio controlado
+                    </p>
+                  </div>
+                </div>
+
+                <Link
+                  href="/clientes"
+                  className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors"
+                >
+                  Ver clientes
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+
+              <div className="overflow-x-auto custom-scrollbar">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-400 uppercase text-[11px]">
+                      <th className="pb-2.5 pr-4">Posição / Cliente</th>
+                      <th className="pb-2.5 px-4 text-right">Volume</th>
+                      <th className="pb-2.5 px-4 text-right">Valor Preservado</th>
+                      <th className="pb-2.5 pl-4 text-right">% Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {topCustomersRanking.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="py-6 text-center text-slate-500">
+                          Nenhum cliente com concessões no filtro selecionado.
+                        </td>
+                      </tr>
+                    ) : (
+                      topCustomersRanking.slice(0, 6).map((item, idx) => {
+                        const percent = totalSaved > 0 ? (item.totalAmount / totalSaved) * 100 : 0;
+                        return (
+                          <tr key={item.customerId} className="hover:bg-slate-900/50">
+                            <td className="py-3 pr-4 flex items-center gap-2.5">
+                              <span className="w-6 h-6 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center font-mono font-bold text-cyan-400 text-xs shrink-0">
+                                #{idx + 1}
+                              </span>
+                              <Link
+                                href={`/clientes/${item.customerId}`}
+                                className="font-bold text-slate-100 hover:text-cyan-300 transition-colors truncate max-w-[180px] sm:max-w-[240px]"
+                              >
+                                {item.customerName}
+                              </Link>
+                            </td>
+
+                            <td className="py-3 px-4 text-right font-mono font-bold text-slate-200">
+                              {item.totalUnits.toLocaleString('pt-BR')} un
+                            </td>
+
+                            <td className="py-3 px-4 text-right font-mono font-bold text-emerald-400">
+                              R$ {item.totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
+                            </td>
+
+                            <td className="py-3 pl-4 text-right font-mono text-cyan-400 font-semibold">
+                              {percent.toFixed(1)}%
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Recent Concessions Activity */}
+            <div className="glow-card p-5 sm:p-6 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400">
+                    <Send className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-bold text-white font-heading">
+                      Últimos Envios com Concessão Registrados
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      Lotes liberados com desvios e parecer de entrega ({filteredConcessions.length} no filtro)
+                    </p>
+                  </div>
+                </div>
+
+                <Link
+                  href="/envios"
+                  className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors"
+                >
+                  Ver todos ({concessions.length})
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+
+              <div className="overflow-x-auto custom-scrollbar">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-400 uppercase text-[11px]">
+                      <th className="pb-2.5 pr-3">Fardo(s) / Data</th>
+                      <th className="pb-2.5 px-3">Cliente</th>
+                      <th className="pb-2.5 px-3">Desvio</th>
+                      <th className="pb-2.5 px-3 text-right">Volume</th>
+                      <th className="pb-2.5 pl-3 text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {filteredConcessions.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-slate-500 space-y-2">
+                          <p>Nenhum envio com concessão corresponde aos filtros aplicados.</p>
+                          {hasActiveFilters && (
+                            <button
+                              type="button"
+                              onClick={resetFilters}
+                              className="px-3 py-1.5 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-semibold hover:bg-cyan-500/25 transition-colors cursor-pointer"
+                            >
+                              Limpar todos os filtros
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredConcessions.slice(0, 6).map(item => {
+                        const isReclaimed = complaints.some(
+                          comp =>
+                            comp.customerId === item.customerId &&
+                            (((comp.lotNumber && item.lotNumber && comp.lotNumber.toLowerCase().includes(item.lotNumber.toLowerCase())) ||
+                              (comp.bales && item.bales && comp.bales.some(b => item.bales?.includes(b)))) ||
+                              (comp.defectTypeId === item.defectTypeId && new Date(comp.date) >= new Date(item.date)))
+                        ) || item.customerFeedbackStatus === 'reclamado_posteriormente';
+
+                        let statusBadge = (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                            <Clock className="w-3 h-3" />
+                            Em Trânsito
+                          </span>
+                        );
+
+                        if (isReclaimed) {
+                          statusBadge = (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
+                              <AlertTriangle className="w-3 h-3" />
+                              Reclamado
+                            </span>
+                          );
+                        } else if (item.customerFeedbackStatus === 'aceito_sem_ressalvas') {
+                          statusBadge = (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              <ShieldCheck className="w-3 h-3" />
+                              Aceito
+                            </span>
                           );
                         }
-                        return null;
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
 
-                {/* Central Executive KPI */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
-                  <span className="text-[10px] uppercase font-semibold tracking-wider text-slate-400">
-                    Total Salvo
-                  </span>
-                  <span className="text-sm font-bold font-mono text-emerald-400">
-                    R$ {totalSaved >= 1000 ? `${(totalSaved / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}k` : totalSaved.toFixed(0)}
-                  </span>
-                  <span className="text-[9px] text-slate-500 font-mono">
-                    {totalUnits.toLocaleString('pt-BR')} un
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
+                        return (
+                          <tr key={item.id} className="hover:bg-slate-900/50">
+                            <td className="py-3 pr-3">
+                              <div className="font-mono font-bold text-cyan-400">
+                                {item.bales && item.bales.length > 0
+                                  ? `Fardo${item.bales.length > 1 ? 's' : ''} ${item.bales.slice(0, 2).join(', ')}${item.bales.length > 2 ? '...' : ''}`
+                                  : (item.lotNumber || item.code)}
+                              </div>
+                              <div className="text-[10px] text-slate-500">{new Date(item.date).toLocaleDateString('pt-BR')}</div>
+                            </td>
 
-          {/* Mini Legend */}
-          <div className="space-y-1 text-xs max-h-36 overflow-y-auto custom-scrollbar pt-2 border-t border-slate-800/60">
-            {defectData.map((item, idx) => {
-              const pct = totalSaved > 0 ? ((item.amount / totalSaved) * 100).toFixed(1) : '0';
-              return (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between text-[11px] hover:bg-slate-900/60 px-1.5 py-1 rounded transition-colors"
-                >
-                  <div className="flex items-center gap-2 truncate pr-2">
-                    <span
-                      className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
-                      style={{ backgroundColor: item.color }}
-                    />
-                    <span className="text-slate-300 truncate font-medium" title={item.name}>
-                      {item.name}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="font-mono text-[10px] text-slate-400 font-semibold">
-                      {pct}%
-                    </span>
-                    <span className="font-mono text-emerald-400 font-bold">
-                      R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+                            <td className="py-3 px-3 font-semibold text-slate-200 truncate max-w-[130px]">
+                              {item.customerName}
+                            </td>
 
-      {/* Top Customers Ranking & Recent Concessions Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        
-        {/* Top Customers Ranking for Concessions */}
-        <div className="glow-card p-5 sm:p-6 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400">
-                <Layers className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm sm:text-base font-bold text-white font-heading">
-                  Ranking de Clientes por Concessões Aceitas {hasActiveFilters && '(Filtrado)'}
-                </h3>
-                <p className="text-xs text-slate-400">
-                  Parceiros com maior volume de absorção de materiais com desvio controlado
-                </p>
+                            <td className="py-3 px-3 text-slate-300 truncate max-w-[120px]">
+                              {item.defectTypeName}
+                            </td>
+
+                            <td className="py-3 px-4 text-right font-mono font-bold text-slate-200">
+                              {item.quantity.toLocaleString('pt-BR')} un
+                            </td>
+
+                            <td className="py-3 pl-3 text-center">
+                              {statusBadge}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
-
-            <Link
-              href="/clientes"
-              className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors"
-            >
-              Ver clientes
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
           </div>
+        </>
+      ) : (
+        <>
+          {/* Graphs Row: Reclamações (SAC) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Bar Chart: Frequência de Reclamações por Defeito */}
+            <div className="glow-card p-5 sm:p-6 rounded-2xl bg-slate-950/80 border border-slate-800 lg:col-span-2 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400">
+                    <BarChart3 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-bold text-white font-heading">
+                      Frequência de Reclamações por Tipo de Defeito {hasActiveFilters && '(Filtrado)'}
+                    </h3>
+                    <p className="text-xs text-slate-400 hidden sm:block">
+                      Incidência quantitativa de chamados abertos no SAC por motivo técnico
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs font-mono font-bold text-rose-400 bg-rose-950/40 px-2.5 py-1 rounded-lg border border-rose-500/20">
+                    Total: {filteredComplaints.length} queixas ({totalComplaintWeight.toLocaleString('pt-BR')} kg)
+                  </span>
+                </div>
+              </div>
 
-          <div className="overflow-x-auto custom-scrollbar">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-400 uppercase text-[11px]">
-                  <th className="pb-2.5 pr-4">Posição / Cliente</th>
-                  <th className="pb-2.5 px-4 text-right">Volume</th>
-                  <th className="pb-2.5 px-4 text-right">Valor Preservado</th>
-                  <th className="pb-2.5 pl-4 text-right">% Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {topCustomersRanking.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="py-6 text-center text-slate-500">
-                      Nenhum cliente com concessões no filtro selecionado.
-                    </td>
-                  </tr>
+              <div className="h-72 w-full">
+                {complaintDefectData.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-slate-400 text-xs gap-2">
+                    <AlertCircle className="w-6 h-6 text-slate-600" />
+                    <span>Nenhuma reclamação registrada para os filtros selecionados.</span>
+                    {hasActiveFilters && (
+                      <button
+                        onClick={resetFilters}
+                        className="text-cyan-400 hover:underline font-semibold"
+                      >
+                        Limpar filtros
+                      </button>
+                    )}
+                  </div>
                 ) : (
-                  topCustomersRanking.slice(0, 6).map((item, idx) => {
-                    const percent = totalSaved > 0 ? (item.totalAmount / totalSaved) * 100 : 0;
-                    return (
-                      <tr key={item.customerId} className="hover:bg-slate-900/50">
-                        <td className="py-3 pr-4 flex items-center gap-2.5">
-                          <span className="w-6 h-6 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center font-mono font-bold text-cyan-400 text-xs shrink-0">
-                            #{idx + 1}
-                          </span>
-                          <Link
-                            href={`/clientes/${item.customerId}`}
-                            className="font-bold text-slate-100 hover:text-cyan-300 transition-colors truncate max-w-[180px] sm:max-w-[240px]"
-                          >
-                            {item.customerName}
-                          </Link>
-                        </td>
-
-                        <td className="py-3 px-4 text-right font-mono font-bold text-slate-200">
-                          {item.totalUnits.toLocaleString('pt-BR')} un
-                        </td>
-
-                        <td className="py-3 px-4 text-right font-mono font-bold text-emerald-400">
-                          R$ {item.totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
-                        </td>
-
-                        <td className="py-3 pl-4 text-right font-mono text-cyan-400 font-semibold">
-                          {percent.toFixed(1)}%
-                        </td>
-                      </tr>
-                    );
-                  })
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={complaintDefectData} margin={{ top: 12, right: 10, left: -5, bottom: 25 }}>
+                      <defs>
+                        {complaintDefectData.map((entry, index) => (
+                          <linearGradient key={`complaint-bar-grad-${index}`} id={`complaint-bar-grad-${index}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
+                            <stop offset="100%" stopColor={entry.color} stopOpacity={0.55} />
+                          </linearGradient>
+                        ))}
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                      <XAxis
+                        dataKey="name"
+                        stroke="#64748b"
+                        fontSize={11}
+                        tickLine={false}
+                        tick={{ fill: '#94a3b8' }}
+                        tickFormatter={(v: string) => (v.length > 13 ? `${v.slice(0, 11)}…` : v)}
+                      />
+                      <YAxis
+                        stroke="#64748b"
+                        fontSize={11}
+                        tickLine={false}
+                        tick={{ fill: '#94a3b8' }}
+                        allowDecimals={false}
+                      />
+                      <Tooltip
+                        cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }}
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const item = payload[0].payload;
+                            const pct = filteredComplaints.length > 0 ? ((item.count / filteredComplaints.length) * 100).toFixed(1) : '0';
+                            return (
+                              <div className="p-3 rounded-xl bg-slate-950/95 border border-slate-800 shadow-2xl text-xs space-y-1.5 backdrop-blur-md min-w-[200px]">
+                                <div className="flex items-center gap-2 font-bold text-white text-sm pb-1 border-b border-slate-800/80">
+                                  <span
+                                    className="w-3 h-3 rounded-full shrink-0 shadow-sm"
+                                    style={{ backgroundColor: item.color }}
+                                  />
+                                  <span className="truncate">{item.name}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-slate-300 font-mono">
+                                  <span className="text-slate-400">Ocorrências:</span>
+                                  <span className="font-bold text-white">
+                                    {item.count} chamado{item.count > 1 ? 's' : ''}
+                                    <span className="text-slate-400 font-normal ml-1">({pct}%)</span>
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between font-mono">
+                                  <span className="text-slate-400">Peso Reclamado:</span>
+                                  <span className="font-bold text-rose-400">
+                                    {item.totalWeight.toLocaleString('pt-BR')} kg
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Bar dataKey="count" radius={[7, 7, 0, 0]}>
+                        {complaintDefectData.map((entry, index) => (
+                          <Cell
+                            key={`complaint-cell-${index}`}
+                            fill={`url(#complaint-bar-grad-${index})`}
+                            stroke={entry.color}
+                            strokeWidth={1}
+                            className="hover:opacity-85 transition-opacity cursor-pointer"
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
                 )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Recent Concessions Activity */}
-        <div className="glow-card p-5 sm:p-6 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400">
-                <Send className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm sm:text-base font-bold text-white font-heading">
-                  Últimos Envios com Concessão Registrados
-                </h3>
-                <p className="text-xs text-slate-400">
-                  Lotes liberados com desvios e parecer de entrega ({filteredConcessions.length} no filtro)
-                </p>
               </div>
             </div>
 
-            <Link
-              href="/envios"
-              className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors"
-            >
-              Ver todos ({concessions.length})
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
+            {/* Donut Chart: Distribuição por Severidade */}
+            <div className="glow-card p-5 sm:p-6 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-4 flex flex-col justify-between">
+              <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400">
+                    <AlertTriangle className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white font-heading">
+                      Gravidade das Reclamações
+                    </h3>
+                    <p className="text-[11px] text-slate-400">
+                      Classificação técnica de criticidade
+                    </p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono font-bold text-rose-400 bg-rose-950/40 px-2 py-0.5 rounded border border-rose-500/20">
+                  SAC Geral
+                </span>
+              </div>
 
-          <div className="overflow-x-auto custom-scrollbar">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-400 uppercase text-[11px]">
-                  <th className="pb-2.5 pr-3">Fardo(s) / Data</th>
-                  <th className="pb-2.5 px-3">Cliente</th>
-                  <th className="pb-2.5 px-3">Desvio</th>
-                  <th className="pb-2.5 px-3 text-right">Volume</th>
-                  <th className="pb-2.5 pl-3 text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {filteredConcessions.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center text-slate-500 space-y-2">
-                      <p>Nenhum envio com concessão corresponde aos filtros aplicados.</p>
-                      {hasActiveFilters && (
-                        <button
-                          type="button"
-                          onClick={resetFilters}
-                          className="px-3 py-1.5 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-semibold hover:bg-cyan-500/25 transition-colors cursor-pointer"
+              {/* Donut container with central KPI */}
+              <div className="h-52 w-full flex items-center justify-center relative">
+                {complaintSeverityData.length === 0 ? (
+                  <div className="text-slate-500 text-xs">Sem queixas no filtro ativo</div>
+                ) : (
+                  <>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={complaintSeverityData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={52}
+                          outerRadius={78}
+                          paddingAngle={4}
+                          dataKey="value"
+                          stroke="#020617"
+                          strokeWidth={2}
                         >
-                          Limpar todos os filtros
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ) : (
-                  filteredConcessions.slice(0, 6).map(item => {
-                    const isReclaimed = complaints.some(
-                      comp =>
-                        comp.customerId === item.customerId &&
-                        (((comp.lotNumber && item.lotNumber && comp.lotNumber.toLowerCase().includes(item.lotNumber.toLowerCase())) ||
-                          (comp.bales && item.bales && comp.bales.some(b => item.bales?.includes(b)))) ||
-                          (comp.defectTypeId === item.defectTypeId && new Date(comp.date) >= new Date(item.date)))
-                    ) || item.customerFeedbackStatus === 'reclamado_posteriormente';
+                          {complaintSeverityData.map((entry, index) => (
+                            <Cell
+                              key={`severity-cell-${index}`}
+                              fill={entry.color}
+                              className="hover:opacity-80 transition-opacity cursor-pointer"
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              const item = payload[0].payload;
+                              const pct = filteredComplaints.length > 0 ? ((item.value / filteredComplaints.length) * 100).toFixed(1) : '0';
+                              return (
+                                <div className="p-2.5 rounded-xl bg-slate-950/95 border border-slate-800 shadow-2xl text-xs space-y-1 backdrop-blur-md min-w-[160px]">
+                                  <div className="flex items-center gap-2 font-bold text-white">
+                                    <span
+                                      className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
+                                      style={{ backgroundColor: item.color }}
+                                    />
+                                    <span>Gravidade {item.name}</span>
+                                  </div>
+                                  <div className="font-mono font-bold text-sm text-white">
+                                    {item.value} chamado{item.value > 1 ? 's' : ''}
+                                  </div>
+                                  <div className="text-[10px] text-slate-400 font-mono">
+                                    {pct}% do total de reclamações
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
 
-                    let statusBadge = (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                        <Clock className="w-3 h-3" />
-                        Em Trânsito
+                    {/* Central Executive KPI */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
+                      <span className="text-[10px] uppercase font-semibold tracking-wider text-slate-400">
+                        Total Queixas
                       </span>
-                    );
+                      <span className="text-base font-bold font-mono text-white">
+                        {filteredComplaints.length}
+                      </span>
+                      <span className="text-[9px] text-slate-400 font-mono">
+                        {totalComplaintWeight.toLocaleString('pt-BR')} kg
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
 
-                    if (isReclaimed) {
-                      statusBadge = (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
-                          <AlertTriangle className="w-3 h-3" />
-                          Reclamado
+              {/* Mini Legend for Severity */}
+              <div className="space-y-1.5 text-xs pt-2 border-t border-slate-800/60">
+                {complaintSeverityData.map((item, idx) => {
+                  const pct = filteredComplaints.length > 0 ? ((item.value / filteredComplaints.length) * 100).toFixed(1) : '0';
+                  return (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between text-[11px] hover:bg-slate-900/60 px-1.5 py-1 rounded transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span className="text-slate-300 font-medium">
+                          Gravidade {item.name}
                         </span>
-                      );
-                    } else if (item.customerFeedbackStatus === 'aceito_sem_ressalvas') {
-                      statusBadge = (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                          <ShieldCheck className="w-3 h-3" />
-                          Aceito
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 font-mono">
+                        <span className="text-[10px] text-slate-400 font-semibold">{pct}%</span>
+                        <span className="font-bold text-white">
+                          {item.value} ocorrência{item.value > 1 ? 's' : ''}
                         </span>
-                      );
-                    }
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
 
-                    return (
-                      <tr key={item.id} className="hover:bg-slate-900/50">
-                        <td className="py-3 pr-3">
-                          <div className="font-mono font-bold text-cyan-400">
-                            {item.bales && item.bales.length > 0
-                              ? `Fardo${item.bales.length > 1 ? 's' : ''} ${item.bales.slice(0, 2).join(', ')}${item.bales.length > 2 ? '...' : ''}`
-                              : (item.lotNumber || item.code)}
-                          </div>
-                          <div className="text-[10px] text-slate-500">{new Date(item.date).toLocaleDateString('pt-BR')}</div>
-                        </td>
+          {/* Complaints Ranking & Recent Complaints Table */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            
+            {/* Top Claiming Customers */}
+            <div className="glow-card p-5 sm:p-6 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400">
+                    <AlertTriangle className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-bold text-white font-heading">
+                      Ranking de Clientes por Reclamações (SAC) {hasActiveFilters && '(Filtrado)'}
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      Empresas com maior incidência de não-conformidades apontadas
+                    </p>
+                  </div>
+                </div>
 
-                        <td className="py-3 px-3 font-semibold text-slate-200 truncate max-w-[130px]">
-                          {item.customerName}
-                        </td>
+                <Link
+                  href="/clientes"
+                  className="text-xs font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-1 transition-colors"
+                >
+                  Ver clientes
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
 
-                        <td className="py-3 px-3 text-slate-300 truncate max-w-[120px]">
-                          {item.defectTypeName}
-                        </td>
-
-                        <td className="py-3 px-4 text-right font-mono font-bold text-slate-200">
-                          {item.quantity.toLocaleString('pt-BR')} un
-                        </td>
-
-                        <td className="py-3 pl-3 text-center">
-                          {statusBadge}
+              <div className="overflow-x-auto custom-scrollbar">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-400 uppercase text-[11px]">
+                      <th className="pb-2.5 pr-4">Posição / Cliente</th>
+                      <th className="pb-2.5 px-4 text-right">Ocorrências</th>
+                      <th className="pb-2.5 px-4 text-right">Peso Reclamado</th>
+                      <th className="pb-2.5 pl-4 text-right">% do SAC</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {topComplaintCustomersRanking.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="py-6 text-center text-slate-500">
+                          Nenhuma reclamação encontrada para o filtro ativo.
                         </td>
                       </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                    ) : (
+                      topComplaintCustomersRanking.slice(0, 6).map((item, idx) => {
+                        const pct = filteredComplaints.length > 0 ? (item.count / filteredComplaints.length) * 100 : 0;
+                        return (
+                          <tr key={item.customerId} className="hover:bg-slate-900/50">
+                            <td className="py-3 pr-4 flex items-center gap-2.5">
+                              <span className="w-6 h-6 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center font-mono font-bold text-rose-400 text-xs shrink-0">
+                                #{idx + 1}
+                              </span>
+                              <Link
+                                href={`/clientes/${item.customerId}`}
+                                className="font-bold text-slate-100 hover:text-rose-300 transition-colors truncate max-w-[180px] sm:max-w-[240px]"
+                              >
+                                {item.customerName}
+                              </Link>
+                            </td>
+
+                            <td className="py-3 px-4 text-right font-mono font-bold text-white">
+                              {item.count} chamado{item.count > 1 ? 's' : ''}
+                            </td>
+
+                            <td className="py-3 px-4 text-right font-mono font-bold text-rose-400">
+                              {item.totalWeight.toLocaleString('pt-BR')} kg
+                            </td>
+
+                            <td className="py-3 pl-4 text-right font-mono text-slate-300 font-semibold">
+                              {pct.toFixed(1)}%
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Recent Complaints Table */}
+            <div className="glow-card p-5 sm:p-6 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400">
+                    <AlertCircle className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-bold text-white font-heading">
+                      Últimas Reclamações de Clientes
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      Histórico de laudos e queixas de SAC ({filteredComplaints.length} no filtro)
+                    </p>
+                  </div>
+                </div>
+
+                <Link
+                  href="/reclamacoes"
+                  className="text-xs font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-1 transition-colors"
+                >
+                  Ver todas ({complaints.length})
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+
+              <div className="overflow-x-auto custom-scrollbar">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-400 uppercase text-[11px]">
+                      <th className="pb-2.5 pr-3">Código / Data</th>
+                      <th className="pb-2.5 px-3">Cliente</th>
+                      <th className="pb-2.5 px-3">Defeito</th>
+                      <th className="pb-2.5 px-3 text-right">Peso (Kg)</th>
+                      <th className="pb-2.5 pl-3 text-center">Gravidade</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {filteredComplaints.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-slate-500">
+                          Nenhuma reclamação corresponde aos filtros aplicados.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredComplaints.slice(0, 6).map(item => (
+                        <tr key={item.id} className="hover:bg-slate-900/50">
+                          <td className="py-3 pr-3">
+                            <div className="font-mono font-bold text-rose-400">{item.code}</div>
+                            <div className="text-[10px] text-slate-500">{new Date(item.date).toLocaleDateString('pt-BR')}</div>
+                          </td>
+
+                          <td className="py-3 px-3 font-semibold text-slate-200 truncate max-w-[130px]">
+                            {item.customerName}
+                          </td>
+
+                          <td className="py-3 px-3 text-slate-300 truncate max-w-[120px]">
+                            {item.defectTypeName}
+                          </td>
+
+                          <td className="py-3 px-3 text-right font-mono font-bold text-slate-200">
+                            {item.quantityAffected?.toLocaleString('pt-BR')} kg
+                          </td>
+
+                          <td className="py-3 pl-3 text-center">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                              item.severity === 'severa'
+                                ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                                : item.severity === 'moderada'
+                                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                                : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                            }`}>
+                              {item.severity}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
 
       {/* Modals */}
       <NewConcessionModal
