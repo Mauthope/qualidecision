@@ -13,22 +13,24 @@ import {
   CartesianGrid
 } from 'recharts';
 import { BarChart3, TrendingUp, Layers, DollarSign, Package } from 'lucide-react';
+import { HARMONIOUS_CHART_COLORS } from '@/lib/chartColors';
 
 export const DefectDistributionChart: React.FC = () => {
   const { stats, concessions } = useQuality();
   const [viewMode, setViewMode] = useState<'quantity' | 'amount'>('quantity');
 
-  // Prepare chart data from defectsVolumeMonth
-  const data = Object.values(stats.defectsVolumeMonth)
+  // Prepare chart data from defectsVolumeMonth with harmonious colors
+  const sortedRaw = Object.values(stats.defectsVolumeMonth)
     .filter(d => d.quantity > 0)
-    .map(d => ({
-      name: d.name.length > 18 ? d.name.slice(0, 16) + '...' : d.name,
-      fullName: d.name,
-      quantity: d.quantity,
-      amount: d.amount,
-      color: d.color
-    }))
     .sort((a, b) => b.quantity - a.quantity);
+
+  const data = sortedRaw.map((d, index) => ({
+    name: d.name.length > 18 ? d.name.slice(0, 16) + '...' : d.name,
+    fullName: d.name,
+    quantity: d.quantity,
+    amount: d.amount,
+    color: HARMONIOUS_CHART_COLORS[index % HARMONIOUS_CHART_COLORS.length]
+  }));
 
   const totalVolume = data.reduce((acc, curr) => acc + curr.quantity, 0);
   const totalSaved = data.reduce((acc, curr) => acc + curr.amount, 0);
@@ -87,7 +89,15 @@ export const DefectDistributionChart: React.FC = () => {
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+            <BarChart data={data} margin={{ top: 12, right: 10, left: 0, bottom: 20 }}>
+              <defs>
+                {data.map((entry, index) => (
+                  <linearGradient key={`chart-grad-${index}`} id={`chart-grad-${index}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
+                    <stop offset="100%" stopColor={entry.color} stopOpacity={0.55} />
+                  </linearGradient>
+                ))}
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
               <XAxis
                 dataKey="name"
@@ -108,12 +118,19 @@ export const DefectDistributionChart: React.FC = () => {
                 }
               />
               <Tooltip
+                cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }}
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     const item = payload[0].payload;
                     return (
-                      <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 shadow-2xl text-xs space-y-1 backdrop-blur-md">
-                        <div className="font-bold text-white text-sm">{item.fullName}</div>
+                      <div className="p-3 rounded-xl bg-slate-950/95 border border-slate-800 shadow-2xl text-xs space-y-1.5 backdrop-blur-md min-w-[200px]">
+                        <div className="flex items-center gap-2 font-bold text-white text-sm pb-1 border-b border-slate-800/80">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
+                            style={{ backgroundColor: item.color }}
+                          />
+                          <span className="truncate">{item.fullName}</span>
+                        </div>
                         <div className="text-cyan-400 font-mono">
                           Volume: <strong>{item.quantity.toLocaleString('pt-BR')} unidades</strong>
                         </div>
@@ -131,13 +148,15 @@ export const DefectDistributionChart: React.FC = () => {
               />
               <Bar
                 dataKey={viewMode === 'quantity' ? 'quantity' : 'amount'}
-                radius={[8, 8, 0, 0]}
+                radius={[7, 7, 0, 0]}
               >
                 {data.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
-                    fill={entry.color || '#06b6d4'}
-                    className="hover:opacity-85 transition-opacity"
+                    fill={`url(#chart-grad-${index})`}
+                    stroke={entry.color}
+                    strokeWidth={1}
+                    className="hover:opacity-85 transition-opacity cursor-pointer"
                   />
                 ))}
               </Bar>
