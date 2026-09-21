@@ -91,6 +91,9 @@ interface QualityContextType {
   exportData: () => string;
   importData: (json: string) => boolean;
   showToast: (message: string, type?: 'success' | 'info' | 'warning' | 'error') => void;
+  isLoaded: boolean;
+  isSyncing: boolean;
+  refreshData: () => Promise<void>;
 }
 
 const QualityContext = createContext<QualityContextType | undefined>(undefined);
@@ -185,6 +188,31 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
   } | null>(null);
   const [toasts, setToasts] = useState<ToastState[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // 1. Hidratação Instantânea do Cache Local (0ms - executada imediatamente no browser)
+  useEffect(() => {
+    try {
+      const cCust = storageService.getCustomers();
+      const cDef = storageService.getDefects();
+      const cComp = storageService.getComplaints();
+      const cConc = storageService.getConcessions();
+      const cSet = storageService.getSettings();
+
+      if (cCust && cCust.length > 0) setCustomers(cCust);
+      if (cDef && cDef.length > 0) setDefects(cDef);
+      if (cComp && cComp.length > 0) setComplaints(cComp);
+      if (cConc && cConc.length > 0) setConcessions(cConc);
+      if (cSet) setSettings(cSet);
+
+      if (cConc && cConc.length > 0) {
+        setIsLoaded(true);
+      }
+    } catch (e) {
+      console.warn('Erro ao hidratar cache instantâneo:', e);
+    }
+  }, []);
 
   const showToast = useCallback((message: string, type: 'success' | 'info' | 'warning' | 'error' = 'info') => {
     const id = `toast-${Date.now()}-${Math.random()}`;
@@ -194,8 +222,9 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }, 4000);
   }, []);
 
-  // Carga e sincronização assíncrona com o Supabase
+  // Carga e sincronização assíncrona com o Supabase (Stale-While-Revalidate em background)
   const loadData = useCallback(async () => {
+    setIsSyncing(true);
     try {
       const {
         customers: loadedCustomers,
@@ -235,6 +264,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setDefects(loadedDefects);
       setComplaints(loadedComplaints);
       setConcessions(calibratedConcessions);
+      setIsLoaded(true);
 
       // Salvar silenciosamente no cache local (sem disparar eventos circulares)
       storageService.saveCustomers(calibratedCustomers);
@@ -243,11 +273,14 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       storageService.saveConcessions(calibratedConcessions);
     } catch (err) {
       console.error('Erro ao sincronizar com Supabase:', err);
+    } finally {
+      setIsSyncing(false);
+      setIsLoaded(true);
     }
   }, []);
 
   useEffect(() => {
-    // Carrega dados do Supabase uma única vez na inicialização
+    // Sincroniza dados do Supabase na inicialização
     loadData();
   }, [loadData]);
 
@@ -814,7 +847,10 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
         resetData,
         exportData,
         importData,
-        showToast
+        showToast,
+        isLoaded,
+        isSyncing,
+        refreshData: loadData
       }}
     >
       {children}

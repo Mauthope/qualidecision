@@ -40,8 +40,8 @@ export const PhotoUploadCamera: React.FC<Props> = ({
         if (!file.type.startsWith('image/')) continue;
         if (newPhotosList.length >= maxPhotos) break;
 
-        // Process image to normalize aspect ratio and compress
-        const processedUrl = await processImageFile(file, 1600, 0.86);
+        // Process image to normalize aspect ratio and compress (max 1000px, 0.74 quality)
+        const processedUrl = await processImageFile(file, 1000, 0.74);
 
         const newPhoto: ComplaintPhoto = {
           id: `photo-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`,

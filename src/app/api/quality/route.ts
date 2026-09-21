@@ -117,6 +117,10 @@ export async function GET() {
         concessions,
         settings
       }
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=20, stale-while-revalidate=120'
+      }
     });
   } catch (error: unknown) {
     console.error('Erro na API /api/quality:', error);

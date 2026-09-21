@@ -81,7 +81,14 @@ export const storageService = {
   saveComplaints(complaints: Complaint[]): void {
     if (!isBrowser) return;
     try {
-      localStorage.setItem(STORAGE_KEYS.COMPLAINTS, JSON.stringify(complaints));
+      const safeComplaints = complaints.map(c => ({
+        ...c,
+        photos: c.photos?.map(p => ({
+          ...p,
+          url: p.url && p.url.startsWith('data:') && p.url.length > 2000 ? '' : p.url
+        }))
+      }));
+      localStorage.setItem(STORAGE_KEYS.COMPLAINTS, JSON.stringify(safeComplaints));
     } catch (e) {
       console.warn('Erro ao salvar reclamações no cache local:', e);
     }
@@ -114,7 +121,16 @@ export const storageService = {
   saveConcessions(concessions: ConcessionShipment[]): void {
     if (!isBrowser) return;
     try {
-      localStorage.setItem(STORAGE_KEYS.CONCESSIONS, JSON.stringify(concessions));
+      // Cria uma versão otimizada para o cache local:
+      // Remove URLs de base64 pesadas (> 2KB) para evitar estourar a cota de 5MB do localStorage
+      const safeConcessions = concessions.map(c => ({
+        ...c,
+        photos: c.photos?.map(p => ({
+          ...p,
+          url: p.url && p.url.startsWith('data:') && p.url.length > 2000 ? '' : p.url
+        }))
+      }));
+      localStorage.setItem(STORAGE_KEYS.CONCESSIONS, JSON.stringify(safeConcessions));
     } catch (e) {
       console.warn('Erro ao salvar concessões no cache local:', e);
     }

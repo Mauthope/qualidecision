@@ -36,8 +36,7 @@ export const supabaseService = {
     inFlightQualityRequest = (async () => {
       try {
         const response = await fetch('/api/quality', {
-          method: 'GET',
-          cache: 'no-store'
+          method: 'GET'
         });
 
         if (!response.ok) {

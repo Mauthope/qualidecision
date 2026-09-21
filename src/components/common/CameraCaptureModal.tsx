@@ -224,8 +224,8 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
     }
 
     const canvas = document.createElement('canvas');
-    // High-res standard: maximum dimension 1600px
-    const maxDim = 1600;
+    // Otimização industrial: dimensão máxima 1000px e qualidade 0.75 (alta nitidez com tamanho ~40KB)
+    const maxDim = 1000;
     let targetW = Math.round(sWidth);
     let targetH = Math.round(sHeight);
 
@@ -246,7 +246,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
 
     // Draw the exact visible rectangle that the user saw
     ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, targetW, targetH);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
 
     setCapturedImage(dataUrl);
   };
