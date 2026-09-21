@@ -6,19 +6,22 @@ import { ComplaintPhoto } from '@/types';
 import { CameraCaptureModal } from './CameraCaptureModal';
 import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
 import { processImageFile } from '@/lib/imageUtils';
+import { photoStorageService } from '@/services/photoStorageService';
 
 interface Props {
   photos: ComplaintPhoto[];
   onPhotosChange: (photos: ComplaintPhoto[]) => void;
   maxPhotos?: number;
   label?: string;
+  folder?: 'concessoes' | 'reclamacoes' | 'geral';
 }
 
 export const PhotoUploadCamera: React.FC<Props> = ({
   photos,
   onPhotosChange,
   maxPhotos = 6,
-  label = 'Evidências Fotográficas'
+  label = 'Evidências Fotográficas',
+  folder = 'geral'
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const nativeCameraInputRef = useRef<HTMLInputElement>(null);
@@ -26,12 +29,14 @@ export const PhotoUploadCamera: React.FC<Props> = ({
   const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
   const [activeViewerPhoto, setActiveViewerPhoto] = useState<ComplaintPhoto | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState('Otimizando imagem...');
 
   // Process files selected via native camera or gallery
   const handleFiles = async (files: FileList | null, defaultLocation: string = 'LINHA DE PRODUÇÃO') => {
     if (!files || files.length === 0) return;
 
     setIsProcessing(true);
+    setProcessingStatus('Otimizando e enviando para a nuvem...');
     const newPhotosList = [...photos];
 
     try {
@@ -40,12 +45,18 @@ export const PhotoUploadCamera: React.FC<Props> = ({
         if (!file.type.startsWith('image/')) continue;
         if (newPhotosList.length >= maxPhotos) break;
 
-        // Process image to normalize aspect ratio and compress (max 1000px, 0.74 quality)
+        // 1. Otimiza a imagem localmente (max 1000px, qualidade 0.74)
         const processedUrl = await processImageFile(file, 1000, 0.74);
+
+        // 2. Envia para o Supabase Storage (Bucket 'quality-evidence')
+        const cloudUrl = await photoStorageService.uploadPhoto(processedUrl, {
+          folder,
+          prefix: 'amostra'
+        });
 
         const newPhoto: ComplaintPhoto = {
           id: `photo-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`,
-          url: processedUrl,
+          url: cloudUrl,
           caption: file.name.replace(/\.[^/.]+$/, '') || `Foto da Amostra ${newPhotosList.length + 1}`,
           defectLocation: defaultLocation
         };
@@ -62,17 +73,42 @@ export const PhotoUploadCamera: React.FC<Props> = ({
   };
 
   // Handle capture from interactive live camera modal
-  const handleLiveCameraCapture = (dataUrl: string, defectLocation: string) => {
+  const handleLiveCameraCapture = async (dataUrl: string, defectLocation: string) => {
     if (photos.length >= maxPhotos) return;
 
-    const newPhoto: ComplaintPhoto = {
-      id: `photo-cam-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    const tempId = `photo-cam-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const caption = `Captura ${defectLocation} - ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+
+    // Preview imediato para o usuário
+    const previewPhoto: ComplaintPhoto = {
+      id: tempId,
       url: dataUrl,
-      caption: `Captura ${defectLocation} - ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`,
+      caption,
       defectLocation: defectLocation || 'LINHA DE PRODUÇÃO'
     };
+    const currentList = [...photos, previewPhoto];
+    onPhotosChange(currentList);
 
-    onPhotosChange([...photos, newPhoto]);
+    setIsProcessing(true);
+    setProcessingStatus('Salvando foto no Supabase Storage...');
+
+    try {
+      // Envia para o Supabase Storage
+      const cloudUrl = await photoStorageService.uploadPhoto(dataUrl, {
+        folder,
+        prefix: 'cam'
+      });
+
+      // Atualiza a foto na lista com a URL pública permanente
+      const updatedList = currentList.map(p =>
+        p.id === tempId ? { ...p, url: cloudUrl } : p
+      );
+      onPhotosChange(updatedList);
+    } catch (err) {
+      console.error('Erro ao enviar foto da câmera para nuvem:', err);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleRemovePhoto = (id: string) => {
@@ -161,7 +197,7 @@ export const PhotoUploadCamera: React.FC<Props> = ({
       {isProcessing && (
         <div className="p-3 text-center rounded-xl bg-slate-950 border border-cyan-500/30 text-xs text-cyan-300 font-medium animate-pulse flex items-center justify-center gap-2">
           <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-          <span>Otimizando imagem para garantir enquadramento exato...</span>
+          <span>{processingStatus}</span>
         </div>
       )}
 

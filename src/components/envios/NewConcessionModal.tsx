@@ -373,6 +373,7 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
             onPhotosChange={setPhotos}
             label="Evidências Fotográficas do Desvio Concedido"
             maxPhotos={6}
+            folder="concessoes"
           />
 
           {/* Technical Notes */}

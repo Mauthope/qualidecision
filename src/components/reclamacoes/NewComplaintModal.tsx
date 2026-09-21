@@ -277,6 +277,7 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
             onPhotosChange={setPhotos}
             label="Evidências Fotográficas da Não-Conformidade"
             maxPhotos={6}
+            folder="reclamacoes"
           />
 
           {/* Footer Actions */}
