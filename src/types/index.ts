@@ -2,7 +2,7 @@ export type ToleranceLevel = 'alta' | 'moderada' | 'baixa' | 'intolerante';
 
 export type DefectSeverity = 'leve' | 'moderada' | 'severa';
 
-export type DefectCategory = 'visual' | 'dimensional' | 'estrutural' | 'impressao' | 'costura';
+export type DefectCategory = 'visual' | 'dimensional' | 'estrutural' | 'impressao' | 'costura' | 'solda' | 'outro';
 
 export interface DefectType {
   id: string;

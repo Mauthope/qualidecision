@@ -502,7 +502,9 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       estrutural: '#f97316',
       impressao: '#f59e0b',
       dimensional: '#8b5cf6',
-      visual: '#06b6d4'
+      visual: '#06b6d4',
+      solda: '#10b981',
+      outro: '#64748b'
     };
 
     const newDefect: DefectType = {

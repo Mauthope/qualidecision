@@ -3,11 +3,13 @@
 import React, { useState } from 'react';
 import { useQuality } from '@/context/QualityContext';
 import { DefectSeverity, ComplaintPhoto } from '@/types';
-import { AlertCircle, X } from 'lucide-react';
+import { AlertCircle, X, PlusCircle, UserPlus } from 'lucide-react';
 import { PhotoUploadCamera } from '@/components/common/PhotoUploadCamera';
 import { SearchableCustomerSelect } from '@/components/common/SearchableCustomerSelect';
 import { SearchableDefectSelect } from '@/components/common/SearchableDefectSelect';
 import { BaleListInput } from '@/components/common/BaleListInput';
+import { NewCustomerModal } from '@/components/clientes/NewCustomerModal';
+import { NewDefectModal } from '@/components/defeitos/NewDefectModal';
 
 interface Props {
   isOpen: boolean;
@@ -29,6 +31,9 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
   const [correctiveAction, setCorrectiveAction] = useState('');
   const [origin, setOrigin] = useState<'sac_manual' | 'erp_sync'>('sac_manual');
   const [photos, setPhotos] = useState<ComplaintPhoto[]>([]);
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [isDefectModalOpen, setIsDefectModalOpen] = useState(false);
+  const [defectModalInitialName, setDefectModalInitialName] = useState('');
 
   // Limpa todos os campos ao abrir o modal
   React.useEffect(() => {
@@ -100,9 +105,19 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Customer with Search */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Cliente Reclamante *
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-slate-300">
+                  Cliente Reclamante *
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsCustomerModalOpen(true)}
+                  className="text-[11px] font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <UserPlus className="w-3 h-3" />
+                  <span>Novo Cliente</span>
+                </button>
+              </div>
               <SearchableCustomerSelect
                 customers={customers}
                 selectedCustomerId={customerId}
@@ -114,13 +129,30 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
 
             {/* Defect Type with Search */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Tipo de Não-Conformidade *
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-slate-300">
+                  Tipo de Não-Conformidade *
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDefectModalInitialName('');
+                    setIsDefectModalOpen(true);
+                  }}
+                  className="text-[11px] font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <PlusCircle className="w-3 h-3" />
+                  <span>Novo Defeito</span>
+                </button>
+              </div>
               <SearchableDefectSelect
                 defects={defects}
                 selectedDefectId={defectTypeId}
                 onSelectDefect={setDefectTypeId}
+                onCreateNew={term => {
+                  setDefectModalInitialName(term || '');
+                  setIsDefectModalOpen(true);
+                }}
                 placeholder="Selecione o defeito / problema..."
                 required
               />
@@ -267,6 +299,29 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
           </div>
         </form>
       </div>
+
+      {/* Quick Customer Registration Modal */}
+      {isCustomerModalOpen && (
+        <NewCustomerModal
+          isOpen={isCustomerModalOpen}
+          onClose={() => setIsCustomerModalOpen(false)}
+          onSuccess={newCust => {
+            setCustomerId(newCust.id);
+          }}
+        />
+      )}
+
+      {/* Quick Defect Registration Modal */}
+      {isDefectModalOpen && (
+        <NewDefectModal
+          isOpen={isDefectModalOpen}
+          onClose={() => setIsDefectModalOpen(false)}
+          onSuccess={newDef => {
+            setDefectTypeId(newDef.id);
+          }}
+          initialName={defectModalInitialName}
+        />
+      )}
     </div>
   );
 };

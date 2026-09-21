@@ -64,10 +64,12 @@ export const DefectManagementModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const categories: Array<{ id: DefectCategory | 'todas'; label: string }> = [
     { id: 'todas', label: 'Todas as Categorias' },
     { id: 'costura', label: 'Costura & Fechamento' },
+    { id: 'solda', label: 'Solda & Válvula' },
     { id: 'estrutural', label: 'Estrutural & Tecido' },
     { id: 'impressao', label: 'Impressão & Arte' },
     { id: 'dimensional', label: 'Dimensional & Corte' },
-    { id: 'visual', label: 'Visual & Limpeza' }
+    { id: 'visual', label: 'Visual & Limpeza' },
+    { id: 'outro', label: 'Outros Desvios' }
   ];
 
   const presetColors = [

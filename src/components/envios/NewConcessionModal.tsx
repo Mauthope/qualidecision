@@ -3,8 +3,9 @@
 import React, { useState, useMemo } from 'react';
 import { useQuality } from '@/context/QualityContext';
 import { DefectSeverity } from '@/types';
-import { Send, AlertTriangle, ShieldCheck, CheckCircle2, XCircle, X, Sparkles, DollarSign, UserPlus } from 'lucide-react';
+import { Send, AlertTriangle, ShieldCheck, CheckCircle2, XCircle, X, Sparkles, DollarSign, UserPlus, PlusCircle } from 'lucide-react';
 import { NewCustomerModal } from '@/components/clientes/NewCustomerModal';
+import { NewDefectModal } from '@/components/defeitos/NewDefectModal';
 import { PhotoUploadCamera } from '@/components/common/PhotoUploadCamera';
 import { SearchableCustomerSelect } from '@/components/common/SearchableCustomerSelect';
 import { SearchableDefectSelect } from '@/components/common/SearchableDefectSelect';
@@ -38,6 +39,8 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
   const [technicalNotes, setTechnicalNotes] = useState('');
   const [approvedBy, setApprovedBy] = useState('Mauricio Grigol (Qualidade)');
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [isDefectModalOpen, setIsDefectModalOpen] = useState(false);
+  const [defectModalInitialName, setDefectModalInitialName] = useState('');
   const [photos, setPhotos] = useState<ComplaintPhoto[]>([]);
 
   // Limpa os campos ao abrir o modal ou aplica initialData se fornecido pela simulação da IA
@@ -152,13 +155,30 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
 
             {/* Defect Type with Search Input */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Tipo de Desvio / Defeito *
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-slate-300">
+                  Tipo de Desvio / Defeito *
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDefectModalInitialName('');
+                    setIsDefectModalOpen(true);
+                  }}
+                  className="text-[11px] font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <PlusCircle className="w-3 h-3" />
+                  <span>Novo Defeito</span>
+                </button>
+              </div>
               <SearchableDefectSelect
                 defects={defects}
                 selectedDefectId={defectTypeId}
                 onSelectDefect={setDefectTypeId}
+                onCreateNew={term => {
+                  setDefectModalInitialName(term || '');
+                  setIsDefectModalOpen(true);
+                }}
                 placeholder="Selecione o defeito / desvio..."
                 required
               />
@@ -411,6 +431,18 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
           onSuccess={newCust => {
             setCustomerId(newCust.id);
           }}
+        />
+      )}
+
+      {/* Quick Defect Registration Modal */}
+      {isDefectModalOpen && (
+        <NewDefectModal
+          isOpen={isDefectModalOpen}
+          onClose={() => setIsDefectModalOpen(false)}
+          onSuccess={newDef => {
+            setDefectTypeId(newDef.id);
+          }}
+          initialName={defectModalInitialName}
         />
       )}
     </div>
