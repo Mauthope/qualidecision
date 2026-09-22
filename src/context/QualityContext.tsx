@@ -7,6 +7,7 @@ import { supabaseService } from '@/services/supabaseService';
 import { qualityService } from '@/services/qualityService';
 import { aiAssistantService } from '@/services/aiAssistantService';
 import { DEFAULT_CUSTOMERS, DEFAULT_DEFECTS, DEFAULT_COMPLAINTS, DEFAULT_CONCESSIONS } from '@/data/defaultQualityData';
+import { useAuth } from '@/context/AuthContext';
 
 interface ToastState {
   id: string;
@@ -99,7 +100,10 @@ interface QualityContextType {
 const QualityContext = createContext<QualityContextType | undefined>(undefined);
 
 export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, profile, canEdit, canDelete, isViewer } = useAuth();
+
   // Inicialização síncrona com dados do cache/default para evitar tela branca ou travamento
+
   const [customers, setCustomers] = useState<Customer[]>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -318,6 +322,11 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     approvedBy?: string;
     photos?: Array<{ id: string; url: string; caption: string; defectLocation?: string }>;
   }): ConcessionShipment => {
+    if (isViewer) {
+      showToast('Acesso Restrito: Usuários com perfil de Visualizador não podem criar novos envios.', 'warning');
+      throw new Error('Acesso restrito ao perfil Visualizador.');
+    }
+
     const customer = customers.find(c => c.id === data.customerId);
     const defect = defects.find(d => d.id === data.defectTypeId);
     const customerName = customer?.name || 'Cliente';
@@ -335,6 +344,8 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const baleList = data.bales || [];
     const resolvedLotOrBale = data.lotNumber?.trim() || (baleList.length > 0 ? (baleList.length === 1 ? `Fardo #${baleList[0]}` : `Fardos ${baleList.join(', ')}`) : 'Fardo N/I');
+
+    const approverName = data.approvedBy || (profile?.fullName ? `${profile.fullName} (${profile.department || 'Qualidade'})` : 'Mauricio Grigol (Qualidade)');
 
     const newConcession: ConcessionShipment = {
       id: `env-${Date.now()}`,
@@ -356,7 +367,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       riskScore: riskResult?.riskLevel || 'baixo',
       customerFeedbackStatus: 'em_transito',
       technicalNotes: data.technicalNotes,
-      approvedBy: data.approvedBy || 'Mauricio Grigol (Qualidade)',
+      approvedBy: approverName,
       photos: data.photos || []
     };
 
@@ -385,9 +396,14 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     showToast(`Concessão ${newConcession.code} registrada com sucesso!`, 'success');
     return newConcession;
-  }, [customers, defects, complaints, concessions, settings, showToast]);
+  }, [customers, defects, complaints, concessions, settings, showToast, isViewer, profile]);
 
   const deleteConcession = useCallback(async (id: string): Promise<boolean> => {
+    if (!canDelete) {
+      showToast('Acesso Restrito: Apenas usuários com perfil de Editor ou Administrador podem excluir concessões.', 'warning');
+      return false;
+    }
+
     const target = concessions.find(c => c.id === id);
     const updated = concessions.filter(c => c.id !== id);
     setConcessions(updated);
@@ -418,9 +434,14 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     showToast(`Envio com concessão ${target?.code || ''} excluído com sucesso!`, 'info');
     return true;
-  }, [concessions, customers, complaints, defects, showToast]);
+  }, [concessions, customers, complaints, defects, showToast, canDelete]);
 
   const updateSettings = useCallback((newSettings: Partial<QualitySettings>) => {
+    if (!canEdit) {
+      showToast('Acesso Restrito: Apenas Editores ou Administradores podem atualizar parâmetros industriais.', 'warning');
+      return;
+    }
+
     setSettings(prev => {
       const updated: QualitySettings = {
         ...prev,
@@ -432,7 +453,8 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       showToast('Parâmetros industriais (custo/peso) atualizados com sucesso!', 'success');
       return updated;
     });
-  }, [showToast]);
+  }, [showToast, canEdit]);
+
 
   const addCustomer = useCallback((data: {
     name: string;
@@ -441,6 +463,11 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     location?: string;
     initialProfile?: 'padrao' | 'exigente' | 'flexivel';
   }): Customer => {
+    if (isViewer) {
+      showToast('Acesso Restrito: Usuários com perfil de Visualizador não podem cadastrar novos clientes.', 'warning');
+      throw new Error('Acesso restrito ao perfil Visualizador.');
+    }
+
     const slug = data.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const newId = `cli-${slug}-${Date.now().toString().slice(-4)}`;
     const profile = data.initialProfile || 'padrao';
@@ -519,7 +546,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     supabaseService.saveCustomer(newCustomer);
     showToast(`Cliente ${newCustomer.name} cadastrado com sucesso!`, 'success');
     return newCustomer;
-  }, [customers, defects, showToast]);
+  }, [customers, defects, showToast, isViewer]);
 
   const addDefect = useCallback((data: {
     name: string;
@@ -528,6 +555,11 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     color?: string;
     defaultUnitLoss?: number;
   }): DefectType => {
+    if (isViewer) {
+      showToast('Acesso Restrito: Usuários com perfil de Visualizador não podem cadastrar novos defeitos.', 'warning');
+      throw new Error('Acesso restrito ao perfil Visualizador.');
+    }
+
     const slug = data.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const newId = `def-${slug}-${Date.now().toString().slice(-4)}`;
     const categoryColors: Record<DefectCategory, string> = {
@@ -555,7 +587,8 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     supabaseService.saveDefect(newDefect);
     showToast(`Defeito "${newDefect.name}" cadastrado com sucesso!`, 'success');
     return newDefect;
-  }, [defects, showToast]);
+  }, [defects, showToast, isViewer]);
+
 
   const addComplaint = useCallback((data: {
     customerId: string;
@@ -571,6 +604,11 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     origin?: 'erp_sync' | 'sac_manual';
     photos?: Array<{ id: string; url: string; caption: string; defectLocation?: string }>;
   }): Complaint => {
+    if (isViewer) {
+      showToast('Acesso Restrito: Usuários com perfil de Visualizador não podem cadastrar novas reclamações.', 'warning');
+      throw new Error('Acesso restrito ao perfil Visualizador.');
+    }
+
     const customer = customers.find(c => c.id === data.customerId);
     const defect = defects.find(d => d.id === data.defectTypeId);
     const customerName = customer?.name || 'Cliente';
@@ -629,9 +667,14 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     showToast(`Reclamação ${newComplaint.code} cadastrada no sistema!`, 'warning');
     return newComplaint;
-  }, [customers, defects, complaints, concessions, showToast]);
+  }, [customers, defects, complaints, concessions, showToast, isViewer]);
 
   const deleteComplaint = useCallback(async (id: string): Promise<boolean> => {
+    if (!canDelete) {
+      showToast('Acesso Restrito: Apenas usuários com perfil de Editor ou Administrador podem excluir reclamações.', 'warning');
+      return false;
+    }
+
     const target = complaints.find(c => c.id === id);
     const updated = complaints.filter(c => c.id !== id);
     setComplaints(updated);
@@ -661,7 +704,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     showToast(`Reclamação ${target?.code || ''} excluída com sucesso!`, 'info');
     return true;
-  }, [complaints, customers, concessions, defects, showToast]);
+  }, [complaints, customers, concessions, defects, showToast, canDelete]);
 
   const updateCustomerTolerance = useCallback((
     customerId: string,
@@ -669,6 +712,11 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     level: ToleranceLevel,
     notes?: string
   ) => {
+    if (!canEdit) {
+      showToast('Acesso Restrito: Apenas usuários com perfil de Editor ou Administrador podem alterar tolerâncias de clientes.', 'warning');
+      return;
+    }
+
     let targetUpdatedRatings: Record<string, { level: ToleranceLevel; notes?: string }> = {};
     let targetOverallScore = 70;
 
@@ -706,7 +754,8 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     storageService.saveCustomers(updated);
     supabaseService.updateCustomerTolerance(customerId, targetUpdatedRatings, targetOverallScore);
     showToast('Perfil de tolerância do cliente atualizado!', 'success');
-  }, [customers, showToast]);
+  }, [customers, showToast, canEdit]);
+
 
   const sendAiMessage = useCallback(async (prompt: string) => {
     if (!prompt.trim()) return;

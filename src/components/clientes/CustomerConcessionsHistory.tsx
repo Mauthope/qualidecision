@@ -19,6 +19,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { useQuality } from '@/context/QualityContext';
+import { useAuth } from '@/context/AuthContext';
 import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
 
 interface Props {
@@ -33,6 +34,7 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
   complaints
 }) => {
   const { deleteConcession } = useQuality();
+  const { canDelete } = useAuth();
   const [concessionToDelete, setConcessionToDelete] = useState<ConcessionShipment | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [activePhoto, setActivePhoto] = useState<ComplaintPhoto | null>(null);
@@ -198,14 +200,16 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
                       </span>
                     )}
 
-                    <button
-                      type="button"
-                      onClick={() => setConcessionToDelete(item)}
-                      className="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all cursor-pointer ml-1"
-                      title={`Excluir envio ${item.code}`}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {canDelete && (
+                      <button
+                        type="button"
+                        onClick={() => setConcessionToDelete(item)}
+                        className="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all cursor-pointer ml-1"
+                        title={`Excluir envio ${item.code}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
 

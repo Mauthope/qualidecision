@@ -20,9 +20,11 @@ import { ConcessionDecisionModal } from '@/components/clientes/ConcessionDecisio
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
 import { NewCustomerModal } from '@/components/clientes/NewCustomerModal';
 import { Customer } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 
 export default function ClientesPage() {
   const { customers, complaints, concessions, openAiDrawer } = useQuality();
+  const { canEdit, isViewer } = useAuth();
   const [search, setSearch] = useState('');
   const [filterSegment, setFilterSegment] = useState<string>('all');
   const [filterTolerance, setFilterTolerance] = useState<string>('all');
@@ -68,15 +70,17 @@ export default function ClientesPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsNewCustomerModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-cyan-500 text-slate-950 hover:bg-cyan-400 shadow-lg shadow-cyan-500/20 transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Novo Cliente</span>
-          </button>
-        </div>
+        {canEdit && (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsNewCustomerModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-cyan-500 text-slate-950 hover:bg-cyan-400 shadow-lg shadow-cyan-500/20 transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Novo Cliente</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Filter Bar */}
@@ -217,12 +221,14 @@ export default function ClientesPage() {
                 </button>
 
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setActiveCustomerForConcession(customer.id)}
-                    className="px-2.5 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-semibold transition-colors"
-                  >
-                    + Envio
-                  </button>
+                  {canEdit && (
+                    <button
+                      onClick={() => setActiveCustomerForConcession(customer.id)}
+                      className="px-2.5 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-semibold transition-colors"
+                    >
+                      + Envio
+                    </button>
+                  )}
 
                   <Link
                     href={`/clientes/${customer.id}`}

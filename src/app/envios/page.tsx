@@ -21,9 +21,11 @@ import {
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
 import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
 import { ComplaintPhoto, ConcessionShipment } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 
 export default function EnviosPage() {
   const { concessions, complaints, customers, defects, stats, showToast, deleteConcession } = useQuality();
+  const { canDelete, canEdit, isViewer } = useAuth();
   const [isNewConcessionOpen, setIsNewConcessionOpen] = useState(false);
   const [concessionToDelete, setConcessionToDelete] = useState<ConcessionShipment | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -103,13 +105,15 @@ export default function EnviosPage() {
             <span>Exportar CSV</span>
           </button>
 
-          <button
-            onClick={() => setIsNewConcessionOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 hover:from-cyan-400 hover:to-teal-400 shadow-lg shadow-cyan-500/20 transition-all active:scale-95"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>Novo Envio com Desvio</span>
-          </button>
+          {canEdit && (
+            <button
+              onClick={() => setIsNewConcessionOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 hover:from-cyan-400 hover:to-teal-400 shadow-lg shadow-cyan-500/20 transition-all active:scale-95"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Novo Envio com Desvio</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -255,7 +259,7 @@ export default function EnviosPage() {
                   <th className="pb-3 px-4 text-right">Scrap Salvo</th>
                   <th className="pb-3 px-4">Parecer Técnico</th>
                   <th className="pb-3 px-4 text-center">Status / Aceite</th>
-                  <th className="pb-3 pl-2 pr-4 text-center">Ações</th>
+                  {canDelete && <th className="pb-3 pl-2 pr-4 text-center">Ações</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
@@ -372,16 +376,18 @@ export default function EnviosPage() {
                       )}
                     </td>
 
-                    <td className="py-3.5 pl-2 pr-4 text-center">
-                      <button
-                        type="button"
-                        onClick={() => setConcessionToDelete(c)}
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all cursor-pointer"
-                        title={`Excluir envio ${c.code}`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
+                    {canDelete && (
+                      <td className="py-3.5 pl-2 pr-4 text-center">
+                        <button
+                          type="button"
+                          onClick={() => setConcessionToDelete(c)}
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all cursor-pointer"
+                          title={`Excluir envio ${c.code}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 );
               })}

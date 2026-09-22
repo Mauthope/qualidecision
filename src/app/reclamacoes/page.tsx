@@ -30,20 +30,25 @@ import {
   ShieldAlert,
   AlertTriangle,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Trash2
 } from 'lucide-react';
 import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
 import { NewComplaintModal } from '@/components/reclamacoes/NewComplaintModal';
 import { DefectManagementModal } from '@/components/reclamacoes/DefectManagementModal';
-import { ComplaintPhoto } from '@/types';
+import { ComplaintPhoto, Complaint } from '@/types';
 import { HARMONIOUS_CHART_COLORS } from '@/lib/chartColors';
+import { useAuth } from '@/context/AuthContext';
 
 export default function ReclamacoesPage() {
-  const { complaints, customers, defects, showToast } = useQuality();
+  const { complaints, customers, defects, showToast, deleteComplaint } = useQuality();
+  const { canDelete, canEdit, isViewer } = useAuth();
   const [activePhoto, setActivePhoto] = useState<ComplaintPhoto | null>(null);
   const [photoTitle, setPhotoTitle] = useState('');
   const [isNewComplaintModalOpen, setIsNewComplaintModalOpen] = useState(false);
   const [isDefectModalOpen, setIsDefectModalOpen] = useState(false);
+  const [complaintToDelete, setComplaintToDelete] = useState<Complaint | null>(null);
+  const [isDeletingComplaint, setIsDeletingComplaint] = useState(false);
   const [showCharts, setShowCharts] = useState(true);
 
   const [search, setSearch] = useState('');
@@ -169,13 +174,15 @@ export default function ReclamacoesPage() {
             <span>Gestão de Defeitos</span>
           </button>
 
-          <button
-            onClick={() => setIsNewComplaintModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-rose-500 text-white hover:bg-rose-400 shadow-lg shadow-rose-500/25 transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Acrescentar Reclamação</span>
-          </button>
+          {canEdit && (
+            <button
+              onClick={() => setIsNewComplaintModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-rose-500 text-white hover:bg-rose-400 shadow-lg shadow-rose-500/25 transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Acrescentar Reclamação</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -540,6 +547,16 @@ export default function ReclamacoesPage() {
                   }`}>
                     {item.severity}
                   </span>
+                  {canDelete && (
+                    <button
+                      type="button"
+                      onClick={() => setComplaintToDelete(item)}
+                      className="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all cursor-pointer ml-1"
+                      title={`Excluir reclamação ${item.code}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -630,6 +647,69 @@ export default function ReclamacoesPage() {
         isOpen={isDefectModalOpen}
         onClose={() => setIsDefectModalOpen(false)}
       />
+
+      {/* Delete Complaint Confirmation Modal */}
+      {complaintToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="w-full max-w-md bg-slate-950 border border-slate-800 rounded-2xl shadow-2xl p-6 space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white font-heading">
+                  Excluir Reclamação SAC
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Esta ação removerá o laudo e recalculará a tolerância do cliente.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-xs space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Código:</span>
+                <span className="font-mono font-bold text-rose-400">{complaintToDelete.code}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Cliente:</span>
+                <span className="font-semibold text-white">{complaintToDelete.customerName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Defeito:</span>
+                <span className="text-slate-200">{complaintToDelete.defectTypeName}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                disabled={isDeletingComplaint}
+                onClick={() => setComplaintToDelete(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-850 border border-slate-800 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingComplaint}
+                onClick={async () => {
+                  setIsDeletingComplaint(true);
+                  try {
+                    await deleteComplaint(complaintToDelete.id);
+                    setComplaintToDelete(null);
+                  } finally {
+                    setIsDeletingComplaint(false);
+                  }
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 shadow-lg shadow-rose-900/30 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {isDeletingComplaint ? 'Excluindo...' : 'Confirmar Exclusão'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

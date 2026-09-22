@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Outfit, Inter } from 'next/font/google';
 import './globals.css';
+import { AuthProvider } from '@/context/AuthContext';
 import { QualityProvider } from '@/context/QualityContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Toast } from '@/components/Toast';
@@ -31,13 +32,15 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className="dark">
       <body className={`${outfit.variable} ${inter.variable} font-sans bg-[#060a13] text-slate-100 min-h-screen antialiased selection:bg-cyan-500 selection:text-slate-950`}>
-        <QualityProvider>
-          <AppLayout>
-            {children}
-          </AppLayout>
-          <AiDrawer />
-          <Toast />
-        </QualityProvider>
+        <AuthProvider>
+          <QualityProvider>
+            <AppLayout>
+              {children}
+            </AppLayout>
+            <AiDrawer />
+            <Toast />
+          </QualityProvider>
+        </AuthProvider>
       </body>
     </html>
   );

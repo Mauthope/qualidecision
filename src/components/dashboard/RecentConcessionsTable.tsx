@@ -6,9 +6,11 @@ import Link from 'next/link';
 import { Send, CheckCircle2, Clock, AlertTriangle, ArrowRight, ExternalLink, ShieldCheck, Trash2 } from 'lucide-react';
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
 import { ConcessionShipment } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 
 export const RecentConcessionsTable: React.FC = () => {
   const { concessions, complaints, deleteConcession } = useQuality();
+  const { canDelete, canEdit, isViewer } = useAuth();
   const [isNewConcessionOpen, setIsNewConcessionOpen] = useState(false);
   const [concessionToDelete, setConcessionToDelete] = useState<ConcessionShipment | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -56,13 +58,15 @@ export const RecentConcessionsTable: React.FC = () => {
                 O sistema está limpo e sincronizado para operações reais. Registre o primeiro lote com desvio/concessão para acompanhar a aceitação e o refugo evitado.
               </p>
             </div>
-            <button
-              onClick={() => setIsNewConcessionOpen(true)}
-              className="mt-1 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 hover:from-cyan-400 hover:to-teal-400 shadow-md shadow-cyan-500/20 transition-all cursor-pointer"
-            >
-              <Send className="w-3.5 h-3.5" />
-              <span>Novo Envio com Desvio / Concessão</span>
-            </button>
+            {canEdit && (
+              <button
+                onClick={() => setIsNewConcessionOpen(true)}
+                className="mt-1 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 hover:from-cyan-400 hover:to-teal-400 shadow-md shadow-cyan-500/20 transition-all cursor-pointer"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>Novo Envio com Desvio / Concessão</span>
+              </button>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto custom-scrollbar">
@@ -76,7 +80,7 @@ export const RecentConcessionsTable: React.FC = () => {
                   <th className="pb-3 px-4 text-right">Volume Concedido</th>
                   <th className="pb-3 px-4 text-right">Scrap Salvo (R$)</th>
                   <th className="pb-3 px-4 text-center">Status / Feedback</th>
-                  <th className="pb-3 pl-2 pr-4 text-center">Ações</th>
+                  {canDelete && <th className="pb-3 pl-2 pr-4 text-center">Ações</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
@@ -179,16 +183,18 @@ export const RecentConcessionsTable: React.FC = () => {
                         {statusBadge}
                       </td>
 
-                      <td className="py-3.5 pl-2 pr-4 text-center">
-                        <button
-                          type="button"
-                          onClick={() => setConcessionToDelete(item)}
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all cursor-pointer"
-                          title={`Excluir envio ${item.code}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
+                      {canDelete && (
+                        <td className="py-3.5 pl-2 pr-4 text-center">
+                          <button
+                            type="button"
+                            onClick={() => setConcessionToDelete(item)}
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all cursor-pointer"
+                            title={`Excluir envio ${item.code}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}

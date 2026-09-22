@@ -134,3 +134,16 @@ export interface QualitySettings {
   costPerKg: number;
   updatedAt?: string;
 }
+
+export type UserRole = 'visualizador' | 'editor' | 'admin';
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  fullName: string;
+  role: UserRole;
+  department?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+

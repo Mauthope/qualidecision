@@ -17,9 +17,12 @@ import {
   PanelLeftOpen,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LogOut,
+  Lock
 } from 'lucide-react';
 import { useQuality } from '@/context/QualityContext';
+import { useAuth } from '@/context/AuthContext';
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
 import { ExportImportModal } from '@/components/modals/ExportImportModal';
 
@@ -37,9 +40,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCloseMobile
 }) => {
   const pathname = usePathname();
-  const { openAiDrawer, stats } = useQuality();
+  const { openAiDrawer, stats, showToast } = useQuality();
+  const { user, profile, role, canEdit, isViewer, isAdmin, signOut } = useAuth();
   const [isConcessionModalOpen, setIsConcessionModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
+  const getInitials = (name?: string) => {
+    if (!name) return 'RF';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
 
   const navItems = [
     {
@@ -248,20 +259,39 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {/* Novo Envio com Desvio */}
             <button
               onClick={() => {
+                if (isViewer) {
+                  showToast('Acesso Restrito: Seu usuário possui perfil de Visualizador. Apenas Editores e Administradores podem registrar novos envios.', 'warning');
+                  return;
+                }
                 if (isDrawer) onCloseMobile();
                 setIsConcessionModalOpen(true);
               }}
-              className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 hover:from-cyan-400 hover:to-teal-400 shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/35 transition-all cursor-pointer active:scale-95 ${
-                collapsed ? 'justify-center' : ''
-              }`}
-              title="Novo Envio com Desvio / Concessão"
+              className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 ${
+                isViewer
+                  ? 'bg-slate-800/80 border border-slate-700/60 text-slate-400 hover:text-slate-300'
+                  : 'bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 hover:from-cyan-400 hover:to-teal-400 shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/35'
+              } ${collapsed ? 'justify-center' : ''}`}
+              title={isViewer ? 'Acesso Restrito: Apenas Editores ou Admins' : 'Novo Envio com Desvio / Concessão'}
             >
-              <PlusCircle className="w-5 h-5 shrink-0" />
-              {!collapsed && <span className="truncate">Novo Envio</span>}
+              {isViewer ? (
+                <Lock className="w-5 h-5 text-slate-500 shrink-0" />
+              ) : (
+                <PlusCircle className="w-5 h-5 shrink-0" />
+              )}
+              {!collapsed && (
+                <span className="truncate flex items-center justify-between w-full">
+                  <span>Novo Envio</span>
+                  {isViewer && (
+                    <span className="text-[10px] font-mono text-slate-500 font-normal px-1 rounded bg-slate-900 border border-slate-700/50">
+                      Leitura
+                    </span>
+                  )}
+                </span>
+              )}
 
               {collapsed && (
                 <div className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-medium whitespace-nowrap shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50">
-                  Novo Envio com Desvio
+                  {isViewer ? 'Novo Envio (Apenas Editores)' : 'Novo Envio com Desvio'}
                 </div>
               )}
             </button>
@@ -269,7 +299,85 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Footer & Tools */}
-        <div className="p-3 border-t border-slate-800/80 space-y-2">
+        <div className="p-3 border-t border-slate-800/80 space-y-2.5">
+          {/* User Profile Card */}
+          {user && (
+            <div
+              className={`relative group p-2 rounded-2xl bg-slate-900/90 border border-slate-800/90 flex items-center gap-2.5 ${
+                collapsed ? 'justify-center flex-col' : ''
+              }`}
+            >
+              <div className="relative shrink-0">
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shadow-md ${
+                    isAdmin
+                      ? 'bg-gradient-to-tr from-purple-600 via-indigo-600 to-cyan-500 text-white shadow-purple-500/25'
+                      : role === 'editor'
+                      ? 'bg-gradient-to-tr from-cyan-500 to-teal-500 text-slate-950 shadow-cyan-500/20'
+                      : 'bg-slate-800 text-slate-300 border border-slate-700'
+                  }`}
+                >
+                  {getInitials(profile?.fullName || user.email)}
+                </div>
+                <span
+                  className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-slate-950"
+                  title="Conectado à Rafitec"
+                />
+              </div>
+
+              {!collapsed && (
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold text-white truncate" title={profile?.fullName || user.email}>
+                    {profile?.fullName || user.email?.split('@')[0]}
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span
+                      className={`text-[9px] uppercase font-mono font-bold px-1.5 py-0.5 rounded border ${
+                        isAdmin
+                          ? 'bg-purple-950/80 text-purple-300 border-purple-800/80'
+                          : role === 'editor'
+                          ? 'bg-cyan-950/80 text-cyan-300 border-cyan-800/80'
+                          : 'bg-slate-800 text-slate-400 border-slate-700'
+                      }`}
+                    >
+                      {isAdmin ? 'Admin' : role === 'editor' ? 'Editor' : 'Visualizador'}
+                    </span>
+                    {profile?.department && (
+                      <span className="text-[10px] text-slate-400 truncate max-w-[85px]">
+                        {profile.department}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Logout button */}
+              <button
+                type="button"
+                onClick={() => signOut()}
+                className={`p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all cursor-pointer ${
+                  collapsed ? 'mt-1' : ''
+                }`}
+                title="Encerrar Sessão / Sair"
+                aria-label="Sair da Conta"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+
+              {/* Collapsed hover tooltip */}
+              {collapsed && (
+                <div className="absolute left-full ml-3 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-medium whitespace-nowrap shadow-2xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50">
+                  <div className="font-bold">{profile?.fullName || user.email}</div>
+                  <div className="text-[10px] text-slate-400 font-mono">{user.email}</div>
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <span className="text-[10px] uppercase font-bold text-cyan-300">{role}</span>
+                    {profile?.department && <span className="text-[10px] text-slate-400">• {profile.department}</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Backup / Export */}
           <button
             onClick={() => {

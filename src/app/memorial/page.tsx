@@ -27,9 +27,11 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { DefectSeverity, ToleranceLevel } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 
 export default function MemorialPage() {
   const { customers, defects, complaints, concessions, settings, updateSettings } = useQuality();
+  const { canEdit } = useAuth();
 
   // Settings form local state
   const [sackWeightInput, setSackWeightInput] = useState(String(settings.sackWeightGrams));
@@ -152,17 +154,19 @@ export default function MemorialPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleResetSettings}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-700"
-              title="Restaurar padrão inicial de fábrica (77,73g e R$ 1,50/kg)"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Restaurar Padrão</span>
-            </button>
-          </div>
+          {canEdit && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleResetSettings}
+                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-700"
+                title="Restaurar padrão inicial de fábrica (77,73g e R$ 1,50/kg)"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Restaurar Padrão</span>
+              </button>
+            </div>
+          )}
         </div>
 
         <form onSubmit={handleSaveSettings} className="space-y-4">
@@ -185,10 +189,11 @@ export default function MemorialPage() {
                   step="0.01"
                   min="1"
                   max="50000"
+                  disabled={!canEdit}
                   value={sackWeightInput}
                   onChange={e => setSackWeightInput(e.target.value)}
                   placeholder="Ex: 77.73"
-                  className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-cyan-500 font-bold"
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-cyan-500 font-bold disabled:opacity-60 disabled:cursor-not-allowed"
                   required
                 />
                 <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400 font-semibold">
@@ -217,10 +222,11 @@ export default function MemorialPage() {
                   step="0.01"
                   min="0.01"
                   max="1000"
+                  disabled={!canEdit}
                   value={costPerKgInput}
                   onChange={e => setCostPerKgInput(e.target.value)}
                   placeholder="Ex: 1.50"
-                  className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-emerald-500 font-bold"
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-emerald-500 font-bold disabled:opacity-60 disabled:cursor-not-allowed"
                   required
                 />
                 <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400 font-semibold">
@@ -248,14 +254,20 @@ export default function MemorialPage() {
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={isSavingSettings || !sackWeightInput || !costPerKgInput}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-slate-950 font-bold text-xs shadow-md shadow-cyan-500/20 transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer disabled:opacity-50"
-            >
-              <Check className="w-4 h-4" />
-              <span>{isSavingSettings ? 'Salvando...' : 'Salvar Novos Parâmetros'}</span>
-            </button>
+            {canEdit ? (
+              <button
+                type="submit"
+                disabled={isSavingSettings || !sackWeightInput || !costPerKgInput}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-slate-950 font-bold text-xs shadow-md shadow-cyan-500/20 transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer disabled:opacity-50"
+              >
+                <Check className="w-4 h-4" />
+                <span>{isSavingSettings ? 'Salvando...' : 'Salvar Novos Parâmetros'}</span>
+              </button>
+            ) : (
+              <div className="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-[11px] text-slate-400 font-mono">
+                Visualização Protegida (Apenas Editores/Admins podem salvar)
+              </div>
+            )}
           </div>
         </form>
       </div>
