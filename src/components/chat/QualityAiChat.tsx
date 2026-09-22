@@ -98,6 +98,10 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
         setTestKeyStatus('success');
         setTestKeyMessage(data.reply || 'Conexão OK');
         setTestKeyDetails(data);
+        if (apiKeyInput.trim()) {
+          storageService.saveGeminiApiKey(apiKeyInput.trim());
+          setHasApiKey(true);
+        }
       } else {
         setTestKeyStatus('error');
         setTestKeyMessage(data.error || `Erro de resposta HTTP ${data.status || res.status}`);

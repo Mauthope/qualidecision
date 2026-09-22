@@ -725,16 +725,47 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       const localGeminiKey = storageService.getGeminiApiKey();
 
+      // Otimiza o payload removendo fotos base64 pesadas e mantendo metadados essenciais
+      const lightComplaints = complaints.map(c => ({
+        id: c.id,
+        code: c.code,
+        customerId: c.customerId,
+        customerName: c.customerName,
+        defectTypeId: c.defectTypeId,
+        defectTypeName: c.defectTypeName,
+        date: c.date,
+        severity: c.severity,
+        quantityAffected: c.quantityAffected,
+        status: c.status,
+        description: c.description
+      }));
+
+      const lightConcessions = concessions.map(c => ({
+        id: c.id,
+        code: c.code,
+        customerId: c.customerId,
+        customerName: c.customerName,
+        defectTypeId: c.defectTypeId,
+        defectTypeName: c.defectTypeName,
+        date: c.date,
+        severity: c.severity,
+        quantity: c.quantity,
+        totalSavedValue: c.totalSavedValue,
+        customerFeedbackStatus: c.customerFeedbackStatus,
+        lotNumber: c.lotNumber,
+        bales: c.bales
+      }));
+
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt,
-          history: newHistory,
+          history: newHistory.slice(-6),
           customers,
           defects,
-          complaints,
-          concessions,
+          complaints: lightComplaints,
+          concessions: lightConcessions,
           apiKey: localGeminiKey || undefined
         })
       });
@@ -745,9 +776,23 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setChatMessages(updatedHistory);
         storageService.saveChatMessages(updatedHistory);
       } else {
-        throw new Error(`API returned status ${response.status}`);
+        const errJson = await response.json().catch(() => null);
+        const errDetails = errJson?.geminiError || errJson?.error || `Falha na requisição HTTP ${response.status}`;
+        console.warn('API /api/ai/chat returned error, fallback to local engine:', errDetails);
+        const aiResponse = aiAssistantService.processQuery(
+          prompt,
+          newHistory,
+          customers,
+          defects,
+          complaints,
+          concessions
+        );
+        aiResponse.geminiError = errDetails;
+        const updatedHistory = [...newHistory, aiResponse];
+        setChatMessages(updatedHistory);
+        storageService.saveChatMessages(updatedHistory);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.warn('Fallback to local engine:', err);
       const aiResponse = aiAssistantService.processQuery(
         prompt,
@@ -757,6 +802,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
         complaints,
         concessions
       );
+      aiResponse.geminiError = `Erro na comunicação: ${err?.message || String(err)}`;
       const updatedHistory = [...newHistory, aiResponse];
       setChatMessages(updatedHistory);
       storageService.saveChatMessages(updatedHistory);

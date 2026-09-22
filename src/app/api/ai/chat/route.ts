@@ -4,8 +4,16 @@ import { qualityService } from '@/services/qualityService';
 import { Customer, DefectType, Complaint, ConcessionShipment, AiChatMessage, RiskEvaluationResult } from '@/types';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
+
+const modelCache = new Map<string, { targets: { version: string; model: string }[]; expires: number }>();
 
 async function getAvailableGeminiModels(apiKey: string): Promise<{ version: string; model: string }[]> {
+  const cached = modelCache.get(apiKey);
+  if (cached && Date.now() < cached.expires) {
+    return cached.targets;
+  }
+
   const versions = ['v1beta', 'v1'];
   for (const ver of versions) {
     try {
@@ -16,7 +24,7 @@ async function getAvailableGeminiModels(apiKey: string): Promise<{ version: stri
           'Content-Type': 'application/json',
           'x-goog-api-key': apiKey
         },
-        signal: AbortSignal.timeout(6000)
+        signal: AbortSignal.timeout(4000)
       });
       if (res.ok) {
         const data = await res.json();
@@ -45,7 +53,9 @@ async function getAvailableGeminiModels(apiKey: string): Promise<{ version: stri
             if (idxB !== -1) return 1;
             return 0;
           });
-          return sorted.map(m => ({ version: ver, model: m }));
+          const targets = sorted.map(m => ({ version: ver, model: m }));
+          modelCache.set(apiKey, { targets, expires: Date.now() + 10 * 60 * 1000 });
+          return targets;
         }
       }
     } catch (err) {
@@ -54,7 +64,7 @@ async function getAvailableGeminiModels(apiKey: string): Promise<{ version: stri
   }
 
   // Fallback padrão se ListModels não responder ou for bloqueado
-  return [
+  const fallback = [
     { version: 'v1beta', model: 'gemini-1.5-flash-latest' },
     { version: 'v1beta', model: 'gemini-2.0-flash' },
     { version: 'v1', model: 'gemini-1.5-flash' },
@@ -65,6 +75,8 @@ async function getAvailableGeminiModels(apiKey: string): Promise<{ version: stri
     { version: 'v1', model: 'gemini-pro' },
     { version: 'v1beta', model: 'gemini-pro' }
   ];
+  modelCache.set(apiKey, { targets: fallback, expires: Date.now() + 60 * 1000 });
+  return fallback;
 }
 
 export async function POST(req: Request) {
@@ -319,35 +331,38 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
       groundingContext += '\n';
     }
 
-    // Montagem das mensagens alternadas exigidas pela API do Gemini
-    const geminiContents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
+    // Montagem das mensagens alternadas estritamente válidas para a API do Gemini
+    const cleanTurns: Array<{ role: 'user' | 'model'; text: string }> = [];
 
-    const recentHistory = history.filter(m => m.text && m.text.trim().length > 0).slice(-6);
+    const previousMessages = (history || [])
+      .filter(m => m.text && m.text.trim().length > 0)
+      .slice(-4);
 
-    for (const msg of recentHistory) {
-      if (msg.sender === 'user') {
-        const text = geminiContents.length === 0 ? `${groundingContext}\n\nPERGUNTA DO USUÁRIO: ${msg.text}` : msg.text;
-        geminiContents.push({
-          role: 'user',
-          parts: [{ text }]
-        });
-      } else if (msg.sender === 'assistant') {
-        if (geminiContents.length > 0 && geminiContents[geminiContents.length - 1].role === 'user') {
-          geminiContents.push({
-            role: 'model',
-            parts: [{ text: msg.text }]
-          });
-        }
+    for (const msg of previousMessages) {
+      if (msg.sender === 'user' && msg.text.trim() === prompt.trim()) {
+        continue;
+      }
+      const role: 'user' | 'model' = msg.sender === 'assistant' ? 'model' : 'user';
+      if (cleanTurns.length === 0 && role !== 'user') {
+        continue;
+      }
+      if (cleanTurns.length > 0 && cleanTurns[cleanTurns.length - 1].role === role) {
+        cleanTurns[cleanTurns.length - 1].text += `\n${msg.text.trim().slice(0, 1000)}`;
+      } else {
+        cleanTurns.push({ role, text: msg.text.trim().slice(0, 1000) });
       }
     }
 
-    // Garante que o último item seja o prompt atual do usuário
-    if (geminiContents.length === 0 || geminiContents[geminiContents.length - 1].role !== 'user') {
-      geminiContents.push({
-        role: 'user',
-        parts: [{ text: prompt }]
-      });
+    if (cleanTurns.length > 0 && cleanTurns[cleanTurns.length - 1].role === 'user') {
+      cleanTurns[cleanTurns.length - 1].text = prompt.trim();
+    } else {
+      cleanTurns.push({ role: 'user', text: prompt.trim() });
     }
+
+    const geminiContents = cleanTurns.map(t => ({
+      role: t.role,
+      parts: [{ text: t.text }]
+    }));
 
     const fullSystemInstruction = `${systemPrompt}\n\n${groundingContext}`;
 
@@ -356,7 +371,7 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
     let rawReply = '';
     let lastGeminiErrorDetails = '';
 
-    for (const target of availableTargets.slice(0, 6)) {
+    for (const target of availableTargets.slice(0, 4)) {
       try {
         const geminiUrl = `https://generativelanguage.googleapis.com/${target.version}/models/${target.model}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
@@ -379,15 +394,36 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
           }
         }
 
-        const geminiRes = await fetch(geminiUrl, {
+        let geminiRes = await fetch(geminiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'x-goog-api-key': apiKey
           },
           body: JSON.stringify(bodyPayload),
-          signal: AbortSignal.timeout(12000)
+          signal: AbortSignal.timeout(8000)
         });
+
+        // Se der erro 400 (ex: system_instruction não aceita ou estrutura de cabeçalho), tenta embutindo as instruções no prompt
+        if (!geminiRes.ok && geminiRes.status === 400 && bodyPayload.system_instruction) {
+          const retryContents = JSON.parse(JSON.stringify(geminiContents));
+          retryContents[0].parts[0].text = `${fullSystemInstruction}\n\n${retryContents[0].parts[0].text}`;
+          geminiRes = await fetch(geminiUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': apiKey
+            },
+            body: JSON.stringify({
+              contents: retryContents,
+              generationConfig: {
+                temperature: 0.4,
+                maxOutputTokens: 1024
+              }
+            }),
+            signal: AbortSignal.timeout(8000)
+          });
+        }
 
         if (geminiRes.ok) {
           const geminiData = await geminiRes.json();
