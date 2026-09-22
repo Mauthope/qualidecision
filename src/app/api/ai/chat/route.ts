@@ -17,23 +17,102 @@ export async function POST(req: Request) {
       concessions: ConcessionShipment[];
     };
 
+    // 1. Resolução profunda da chave da API do Gemini (Cliente ou Servidor Vercel)
+    let rawApiKey = (body as any).apiKey ? String((body as any).apiKey) : '';
+
+    if (!rawApiKey) {
+      const standardKeys = [
+        process.env.GEMINI_API_KEY,
+        process.env.GOOGLE_API_KEY,
+        process.env.GOOGLE_GEMINI_API_KEY,
+        process.env.GEMINI_KEY,
+        process.env.GOOGLE_AI_KEY,
+        process.env.GEMINI_AI_KEY,
+        process.env.NEXT_PUBLIC_GEMINI_API_KEY,
+        process.env.NEXT_PUBLIC_GOOGLE_API_KEY
+      ];
+      for (const k of standardKeys) {
+        if (k && typeof k === 'string' && k.trim().length > 5) {
+          rawApiKey = k;
+          break;
+        }
+      }
+
+      // Se ainda não achou, varre dinamicamente process.env por qualquer chave que mencione gemini ou google
+      if (!rawApiKey) {
+        for (const [k, v] of Object.entries(process.env)) {
+          if (/gemini|google.*ai|ai.*key/i.test(k) && v && typeof v === 'string' && v.trim().length > 10) {
+            rawApiKey = v;
+            break;
+          }
+        }
+      }
+    }
+
+    const apiKey = rawApiKey ? String(rawApiKey).trim().replace(/^['"]|['"]$/g, '') : '';
+
+    // AÇÃO DE DIAGNÓSTICO E TESTE DE CONEXÃO
+    if ((body as any).action === 'test_connection') {
+      if (!apiKey) {
+        return NextResponse.json({
+          ok: false,
+          error: 'Nenhuma chave de API encontrada. Cole sua chave no campo acima ou cadastre a variável GEMINI_API_KEY no painel da Vercel.',
+          keyFound: false
+        });
+      }
+
+      try {
+        const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
+        const testRes = await fetch(testUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey
+          },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: 'Teste de conexão. Responda apenas "Conexão OK".' }] }]
+          }),
+          signal: AbortSignal.timeout(10000)
+        });
+
+        if (testRes.ok) {
+          const testData = await testRes.json();
+          const reply = testData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'Conexão OK';
+          return NextResponse.json({
+            ok: true,
+            status: 200,
+            reply,
+            model: 'gemini-1.5-flash',
+            keyPrefix: apiKey.slice(0, 6) + '...' + apiKey.slice(-4),
+            source: (body as any).apiKey ? 'Chave salva no navegador' : 'Variável de ambiente da Vercel'
+          });
+        } else {
+          const errText = await testRes.text();
+          let parsedMessage = errText;
+          try {
+            const parsed = JSON.parse(errText);
+            parsedMessage = parsed.error?.message || errText;
+          } catch {}
+
+          return NextResponse.json({
+            ok: false,
+            status: testRes.status,
+            error: parsedMessage,
+            keyPrefix: apiKey.slice(0, 6) + '...' + apiKey.slice(-4),
+            source: (body as any).apiKey ? 'Chave salva no navegador' : 'Variável de ambiente da Vercel'
+          });
+        }
+      } catch (err: any) {
+        return NextResponse.json({
+          ok: false,
+          error: err.message || 'Falha de rede ao contatar a API do Google Gemini'
+        });
+      }
+    }
+
     if (!prompt || typeof prompt !== 'string') {
       return NextResponse.json({ error: 'Prompt obrigatório' }, { status: 400 });
     }
-
-    // Aceita múltiplos nomes de variável de ambiente ou chave enviada pelo cliente com sanitização
-    const rawApiKey =
-      (body as any).apiKey ||
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_API_KEY ||
-      process.env.GOOGLE_GEMINI_API_KEY ||
-      process.env.GEMINI_KEY ||
-      process.env.GOOGLE_AI_KEY ||
-      process.env.GEMINI_AI_KEY ||
-      process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
-      process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
-
-    const apiKey = rawApiKey ? String(rawApiKey).trim().replace(/^['"]|['"]$/g, '') : '';
 
     // Se nenhuma chave do Gemini estiver configurada na Vercel ou .env, processa via motor analítico local
     if (!apiKey) {
@@ -197,8 +276,9 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
     const fullSystemInstruction = `${systemPrompt}\n\n${groundingContext}`;
 
     // Tenta modelos disponíveis do Gemini com fallback automático
-    const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash'];
+    const modelsToTry = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
     let rawReply = '';
+    let lastGeminiErrorDetails = '';
 
     for (const model of modelsToTry) {
       try {
@@ -206,7 +286,10 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
 
         const geminiRes = await fetch(geminiUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey
+          },
           body: JSON.stringify({
             system_instruction: {
               parts: [{ text: fullSystemInstruction }]
@@ -228,9 +311,16 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
           }
         } else {
           const errorText = await geminiRes.text();
+          let parsedMessage = errorText;
+          try {
+            const parsed = JSON.parse(errorText);
+            parsedMessage = parsed.error?.message || errorText;
+          } catch {}
+          lastGeminiErrorDetails = `HTTP ${geminiRes.status} (${model}): ${parsedMessage}`;
           console.warn(`Gemini (${model}) API Warning: ${geminiRes.status}`, errorText);
         }
-      } catch (err) {
+      } catch (err: any) {
+        lastGeminiErrorDetails = `Erro (${model}): ${err?.message || String(err)}`;
         console.warn(`Gemini (${model}) connection error:`, err);
       }
     }
@@ -245,7 +335,11 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
         complaints,
         concessions
       );
-      return NextResponse.json({ ...localResponse, source: 'local_engine' });
+      return NextResponse.json({
+        ...localResponse,
+        source: 'local_engine',
+        geminiError: lastGeminiErrorDetails || 'A API do Google Gemini não respondeu com sucesso.'
+      });
     }
 
     // Extrai SUGESTOES se fornecidas pelo Gemini

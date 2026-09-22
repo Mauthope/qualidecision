@@ -126,6 +126,7 @@ export interface AiChatMessage {
   suggestedPrompts?: string[];
   actionButton?: AiChatAction;
   source?: 'gemini' | 'local_engine';
+  geminiError?: string;
 }
 
 export interface QualitySettings {
