@@ -21,15 +21,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Prompt obrigatório' }, { status: 400 });
     }
 
-    // Aceita múltiplos nomes de variável de ambiente ou chave enviada pelo cliente
-    const apiKey =
+    // Aceita múltiplos nomes de variável de ambiente ou chave enviada pelo cliente com sanitização
+    const rawApiKey =
       (body as any).apiKey ||
       process.env.GEMINI_API_KEY ||
       process.env.GOOGLE_API_KEY ||
       process.env.GOOGLE_GEMINI_API_KEY ||
-      process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+      process.env.GEMINI_KEY ||
+      process.env.GOOGLE_AI_KEY ||
+      process.env.GEMINI_AI_KEY ||
+      process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
+      process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
 
-    // Se nenhuma chave do Gemini estiver configurada na Vercel ou .env, processa via motor de regras local
+    const apiKey = rawApiKey ? String(rawApiKey).trim().replace(/^['"]|['"]$/g, '') : '';
+
+    // Se nenhuma chave do Gemini estiver configurada na Vercel ou .env, processa via motor analítico local
     if (!apiKey) {
       const localResponse = aiAssistantService.processQuery(
         prompt,
@@ -184,48 +190,53 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
     if (geminiContents.length === 0 || geminiContents[geminiContents.length - 1].role !== 'user') {
       geminiContents.push({
         role: 'user',
-        parts: [{ text: geminiContents.length === 0 ? `${groundingContext}\n\nPERGUNTA DO USUÁRIO: ${prompt}` : prompt }]
+        parts: [{ text: prompt }]
       });
     }
 
-    // Chamada à API Google Gemini (usando gemini-1.5-flash com fallback)
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const fullSystemInstruction = `${systemPrompt}\n\n${groundingContext}`;
 
-    const geminiRes = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        system_instruction: {
-          parts: [{ text: systemPrompt }]
-        },
-        contents: geminiContents,
-        generationConfig: {
-          temperature: 0.4,
-          maxOutputTokens: 1024
+    // Tenta modelos disponíveis do Gemini com fallback automático
+    const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash'];
+    let rawReply = '';
+
+    for (const model of modelsToTry) {
+      try {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+        const geminiRes = await fetch(geminiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: {
+              parts: [{ text: fullSystemInstruction }]
+            },
+            contents: geminiContents,
+            generationConfig: {
+              temperature: 0.4,
+              maxOutputTokens: 1024
+            }
+          }),
+          signal: AbortSignal.timeout(12000)
+        });
+
+        if (geminiRes.ok) {
+          const geminiData = await geminiRes.json();
+          rawReply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          if (rawReply.trim()) {
+            break;
+          }
+        } else {
+          const errorText = await geminiRes.text();
+          console.warn(`Gemini (${model}) API Warning: ${geminiRes.status}`, errorText);
         }
-      }),
-      signal: AbortSignal.timeout(12000)
-    });
-
-    if (!geminiRes.ok) {
-      const errorText = await geminiRes.text();
-      console.warn('Gemini API Warning (falling back to local engine):', geminiRes.status, errorText);
-
-      const localResponse = aiAssistantService.processQuery(
-        prompt,
-        history,
-        customers,
-        defects,
-        complaints,
-        concessions
-      );
-      return NextResponse.json({ ...localResponse, source: 'local_engine' });
+      } catch (err) {
+        console.warn(`Gemini (${model}) connection error:`, err);
+      }
     }
 
-    const geminiData = await geminiRes.json();
-    let rawReply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
     if (!rawReply.trim()) {
+      console.warn('Gemini não retornou texto ou falhou em todos os modelos. Recorrendo ao motor analítico local.');
       const localResponse = aiAssistantService.processQuery(
         prompt,
         history,
