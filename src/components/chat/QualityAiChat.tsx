@@ -615,7 +615,22 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                   {testKeyMessage}
                 </p>
                 <div className="text-[11px] text-slate-300 font-sans space-y-1 pt-1 leading-relaxed">
-                  {testKeyMessage.toLowerCase().includes('not valid') || testKeyMessage.toLowerCase().includes('invalid') ? (
+                  {testKeyMessage.toLowerCase().includes('blocked') ? (
+                    <div className="space-y-1.5 text-amber-200 bg-amber-950/40 p-2.5 rounded-lg border border-amber-500/30">
+                      <p className="font-semibold text-amber-300">
+                        🚫 O Google bloqueou o método da API (API_KEY_SERVICE_BLOCKED):
+                      </p>
+                      <p className="text-[11px] leading-relaxed text-amber-200">
+                        Isso acontece quando a chave possui <strong>Restrições de API</strong> ativadas no Google Cloud Console e a <em>Generative Language API</em> não está autorizada, ou quando pertence a uma conta/projeto corporativo com bloqueio de IA.
+                      </p>
+                      <p className="text-[11px] leading-relaxed text-amber-200">
+                        <strong>Solução mais simples e garantida:</strong>
+                        <br />1. Abra o <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-cyan-400 underline font-semibold">Google AI Studio (aistudio.google.com/app/apikey)</a>.
+                        <br />2. Clique em <strong>"Create API key"</strong> e escolha <strong>"Create API key in new project"</strong> (em novo projeto sem restrições herdadas).
+                        <br />3. Cole a nova chave gerada no campo acima e clique em <strong>Testar Conexão</strong>.
+                      </p>
+                    </div>
+                  ) : testKeyMessage.toLowerCase().includes('not valid') || testKeyMessage.toLowerCase().includes('invalid') ? (
                     <p className="text-amber-300">
                       👉 <strong>Motivo provável:</strong> A chave informada não é reconhecida pelo Google Gemini. Gere uma nova chave no <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-cyan-400 underline font-semibold">Google AI Studio</a> e cole-a aqui.
                     </p>
