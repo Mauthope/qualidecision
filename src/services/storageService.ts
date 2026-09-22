@@ -220,5 +220,27 @@ export const storageService = {
     } catch (e) {
       console.warn('Erro ao salvar configurações no cache local:', e);
     }
+  },
+
+  getGeminiApiKey(): string {
+    if (!isBrowser) return '';
+    try {
+      return localStorage.getItem('qualitrack_gemini_api_key') || '';
+    } catch {
+      return '';
+    }
+  },
+
+  saveGeminiApiKey(key: string): void {
+    if (!isBrowser) return;
+    try {
+      if (key && key.trim()) {
+        localStorage.setItem('qualitrack_gemini_api_key', key.trim());
+      } else {
+        localStorage.removeItem('qualitrack_gemini_api_key');
+      }
+    } catch (e) {
+      console.warn('Erro ao salvar chave da API do Gemini:', e);
+    }
   }
 };

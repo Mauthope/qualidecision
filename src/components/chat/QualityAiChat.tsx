@@ -19,20 +19,23 @@ import {
   RotateCcw,
   Layers,
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  Key,
+  Database
 } from 'lucide-react';
+import { storageService } from '@/services/storageService';
 
 interface Props {
   isDrawer?: boolean;
 }
 
 const QUICK_PROMPTS = [
+  'Resumo do que foi enviado este ano',
+  'Resumo das reclamações de clientes',
   'Posso enviar 10.000 sacos com vinco para a Copacol?',
   'Qual o perfil de tolerância da Alisul?',
-  'Podemos mandar Big Bag com borrão para a Bunge?',
-  'Quais clientes aceitam falha de solda?',
-  'Quanto de scrap/refugo foi evitado este mês?',
-  'JBS aceita sacaria com mancha de óleo?'
+  'Quanto de scrap/refugo foi evitado no total?',
+  'Quais clientes aceitam falha de solda?'
 ];
 
 export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
@@ -47,6 +50,9 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
   const [activePhoto, setActivePhoto] = useState<ComplaintPhoto | null>(null);
   const [activePhotoTitle, setActivePhotoTitle] = useState<string>('');
   const [isConcessionModalOpen, setIsConcessionModalOpen] = useState(false);
+  const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [hasApiKey, setHasApiKey] = useState(false);
   const [concessionInitialData, setConcessionInitialData] = useState<{
     customerId?: string;
     defectTypeId?: string;
@@ -55,6 +61,18 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
   } | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const key = storageService.getGeminiApiKey();
+    setHasApiKey(Boolean(key && key.trim().length > 5));
+    if (key) setApiKeyInput(key);
+  }, []);
+
+  const handleSaveApiKey = () => {
+    storageService.saveGeminiApiKey(apiKeyInput);
+    setHasApiKey(Boolean(apiKeyInput && apiKeyInput.trim().length > 5));
+    setIsKeyModalOpen(false);
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -105,16 +123,33 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
           ))}
         </div>
 
-        {/* Clear Chat History */}
-        <button
-          type="button"
-          onClick={clearChatHistory}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors shrink-0 flex items-center gap-1 text-[11px] font-medium cursor-pointer"
-          title="Reiniciar conversa e limpar histórico"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Reiniciar</span>
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Gemini API Key config button */}
+          <button
+            type="button"
+            onClick={() => setIsKeyModalOpen(true)}
+            className={`px-2.5 py-1 rounded-lg transition-colors shrink-0 flex items-center gap-1.5 text-[11px] font-medium cursor-pointer border ${
+              hasApiKey
+                ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20'
+                : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200 hover:bg-slate-850'
+            }`}
+            title="Configurar chave do Google Gemini (Opcional)"
+          >
+            {hasApiKey ? <Sparkles className="w-3 h-3 text-emerald-400" /> : <Key className="w-3 h-3 text-slate-400" />}
+            <span className="hidden sm:inline">{hasApiKey ? 'Gemini Ativo' : 'Chave IA'}</span>
+          </button>
+
+          {/* Clear Chat History */}
+          <button
+            type="button"
+            onClick={clearChatHistory}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors shrink-0 flex items-center gap-1 text-[11px] font-medium cursor-pointer"
+            title="Reiniciar conversa e limpar histórico"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Reiniciar</span>
+          </button>
+        </div>
       </div>
 
       {/* Messages List */}
@@ -167,14 +202,17 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                     {!isUser && (
                       <span className="flex items-center gap-1.5">
                         {msg.source === 'gemini' ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-sans font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-sans font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
                             <Sparkles className="w-2.5 h-2.5" />
                             Gemini 1.5
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-sans text-slate-400 bg-slate-800/80 px-1.5 py-0.5 rounded">
-                            <Layers className="w-2.5 h-2.5" />
-                            Motor Local
+                          <span
+                            className="inline-flex items-center gap-1.5 text-[10px] font-sans font-medium text-cyan-300 bg-cyan-950/70 border border-cyan-800/40 px-2 py-0.5 rounded"
+                            title="Processamento analítico do QualiDecision conectado diretamente à base de dados do ERP e SAC."
+                          >
+                            <Database className="w-2.5 h-2.5 text-cyan-400" />
+                            Base ERP / QualiDecision
                           </span>
                         )}
                       </span>
@@ -398,6 +436,86 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
           }}
           initialData={concessionInitialData}
         />
+      )}
+
+      {/* Modal de Configuração da Chave da API do Google Gemini */}
+      {isKeyModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-cyan-500/15 flex items-center justify-center border border-cyan-500/30 text-cyan-400">
+                  <Key className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Chave Google Gemini (Opcional)</h3>
+                  <p className="text-[11px] text-slate-400">Habilitar síntese em nuvem com Gemini 1.5</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsKeyModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <XCircle className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="text-xs text-slate-300 space-y-2 leading-relaxed">
+              <p>
+                O sistema já possui o <strong>Motor Analítico QualiDecision</strong> operando localmente com 100% de precisão sobre a base do ERP e SAC (respondendo relatórios de envios, fardos, queixas e tolerâncias).
+              </p>
+              <p className="text-[11px] text-slate-400">
+                Se desejar ativar respostas com o modelo generativo Gemini 1.5 Flash do Google AI Studio, cole sua API Key abaixo:
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-semibold text-slate-300">API Key do Gemini:</label>
+              <input
+                type="password"
+                value={apiKeyInput}
+                onChange={e => setApiKeyInput(e.target.value)}
+                placeholder="AIzaSy..."
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              {hasApiKey ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setApiKeyInput('');
+                    storageService.saveGeminiApiKey('');
+                    setHasApiKey(false);
+                    setIsKeyModalOpen(false);
+                  }}
+                  className="text-xs text-rose-400 hover:text-rose-300 underline cursor-pointer"
+                >
+                  Remover chave
+                </button>
+              ) : <div />}
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsKeyModalOpen(false)}
+                  className="px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveApiKey}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 hover:from-cyan-400 hover:to-teal-400 transition-all cursor-pointer shadow-md"
+                >
+                  Salvar Chave
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

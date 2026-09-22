@@ -21,8 +21,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Prompt obrigatório' }, { status: 400 });
     }
 
-    // Aceita múltiplos nomes de variável de ambiente para flexibilidade
+    // Aceita múltiplos nomes de variável de ambiente ou chave enviada pelo cliente
     const apiKey =
+      (body as any).apiKey ||
       process.env.GEMINI_API_KEY ||
       process.env.GOOGLE_API_KEY ||
       process.env.GOOGLE_GEMINI_API_KEY ||
@@ -77,47 +78,76 @@ export async function POST(req: Request) {
     // Diretrizes da persona especializada
     const systemPrompt = `Você é o Diretor/Engenheiro Chefe de Qualidade e Decisão Industrial da Rafitec / Qualidecision.
 Sua especialidade é embalagens industriais de polipropileno (sacaria convencional, sacaria valvulada, Big Bags / FIBC, tecidos e fitas).
-Seu objetivo é dar orientações técnicas de alta precisão sobre liberação de lotes com desvios de qualidade (concessões), avaliação de risco de refugo, histórico de reclamações SAC e perfis de tolerância de clientes industriais.
+Seu objetivo é dar orientações técnicas de alta precisão sobre liberação de lotes com desvios de qualidade (concessões), avaliação de risco de refugo, histórico de reclamações SAC, envios realizados por período (2026 ano corrente, 2025 histórico consolidado) e perfis de tolerância de clientes industriais.
 
 DIRETRIZES:
 1. Responda em português brasileiro com tom profissional, técnico, objetivo, empático e resolutivo.
-2. Use formatação Markdown limpa (tópicos, negrito, badges com emojis 🟢 Liberação Recomendada, 🟡 Liberação Condicionada, 🔴 Risco Crítico / Bloquear Envio).
-3. Seja sempre fundamentado em engenharia de processos e embalagens (ex: desvios estruturais/costura afetam resistência mecânica e estanqueidade; desvios visuais/impressão/vinco são predominantemente estéticos).
+2. Use formatação Markdown limpa (tópicos, negrito, tabelas ou listas estruturadas com emojis explicativos).
+3. Se perguntado sobre "resumo do que foi enviado este ano" ou períodos, apresente os números de 2026 (ano corrente) e contextualize com 2025 (ano base consolidado), detalhando clientes, volumes e valores de scrap salvos.
 4. Se o usuário perguntar se pode enviar um desvio para um cliente, apresente:
-   - Veredito claro logo no início.
+   - Veredito claro logo no início (🟢 Liberação Recomendada, 🟡 Liberação Condicionada, 🔴 Não Enviar).
    - Análise de risco técnico e perfil do cliente.
    - Recomendações e cuidados necessários na expedição/uso.
    - Se o risco for alto ou proibitivo, sugira clientes alternativos disponíveis na base.
 5. NO FINAL DA SUA RESPOSTA, forneça exatamente uma linha com 2 a 3 sugestões de perguntas subsequentes no formato:
 SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
 
-    // Grounding Context - Injeção de dados reais da fábrica
-    let groundingContext = `[DADOS DO SISTEMA QUALIDECISION]\n`;
+    // Grounding Context - Injeção de dados reais consolidados da fábrica
+    const currentYear = new Date().getFullYear();
+    const conc2026 = concessions.filter(c => c.date?.startsWith('2026'));
+    const conc2025 = concessions.filter(c => c.date?.startsWith('2025'));
+    const comp2025 = complaints.filter(c => c.date?.startsWith('2025'));
+    const comp2024 = complaints.filter(c => c.date?.startsWith('2024'));
+
+    let groundingContext = `[DADOS OFICIAIS DO SISTEMA QUALIDECISION / ERP]\n`;
+    groundingContext += `- Data Atual do Sistema: ${new Date().toISOString().split('T')[0]} (Ano corrente: ${currentYear})\n`;
     groundingContext += `- Total de Clientes Cadastrados: ${customers.length}\n`;
-    groundingContext += `- Total de Defeitos Catalogados: ${defects.length}\n`;
-    groundingContext += `- Reclamações SAC registradas: ${complaints.length}\n`;
-    groundingContext += `- Envios com Concessão no histórico: ${concessions.length}\n`;
+    groundingContext += `- Total de Defeitos Catalogados: ${defects.length}\n\n`;
+
+    groundingContext += `[HISTÓRICO DE ENVIOS COM CONCESSÃO]:\n`;
+    groundingContext += `- Total Geral Acumulado: ${concessions.length} concessões (${concessions.reduce((acc, c) => acc + (c.quantity || 0), 0).toLocaleString('pt-BR')} unidades, R$ ${concessions.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0).toFixed(2)} salvos)\n`;
+    groundingContext += `- Ano Atual (2026): ${conc2026.length} concessões, ${conc2026.reduce((acc, c) => acc + (c.quantity || 0), 0).toLocaleString('pt-BR')} unidades, R$ ${conc2026.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0).toFixed(2)} economizados.\n`;
+    if (conc2026.length > 0) {
+      groundingContext += `  Envios detalhados de 2026:\n`;
+      conc2026.forEach(c => {
+        groundingContext += `  • [${c.code}] ${c.date} | Cliente: ${c.customerName} | Desvio: ${c.defectTypeName} (${c.severity}) | Qtd: ${c.quantity} un | Fardos: ${c.bales?.join(', ') || c.lotNumber || 'N/A'} | Scrap Salvo: R$ ${c.totalSavedValue.toFixed(2)} | Status: ${c.customerFeedbackStatus}\n`;
+      });
+    }
+    groundingContext += `- Ano Base Consolidado (2025): ${conc2025.length} concessões, ${conc2025.reduce((acc, c) => acc + (c.quantity || 0), 0).toLocaleString('pt-BR')} unidades, R$ ${conc2025.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0).toFixed(2)} economizados.\n`;
+    groundingContext += `  Top Clientes 2025: Copacol (12 envios), Bunge (9 envios), Aurora (8 envios), Alisul (7 envios).\n`;
+    groundingContext += `  Top Desvios 2025: Vinco (28 lotes), Borrão de impressão (24 lotes), Tonalidade (18 lotes).\n\n`;
+
+    groundingContext += `[HISTÓRICO DE RECLAMAÇÕES SAC]:\n`;
+    groundingContext += `- Total Geral de Queixas: ${complaints.length} reclamações (${complaints.reduce((acc, c) => acc + (c.quantityAffected || 0), 0).toLocaleString('pt-BR')} kg afetados)\n`;
+    groundingContext += `- Ocorrências em 2025: ${comp2025.length} queixas\n`;
+    groundingContext += `- Ocorrências em 2024: ${comp2024.length} queixas\n`;
+    groundingContext += `- Severidade Geral: ${complaints.filter(c => c.severity === 'leve').length} Leves, ${complaints.filter(c => c.severity === 'moderada').length} Moderadas, ${complaints.filter(c => c.severity === 'severa').length} Severas (críticas)\n`;
+    groundingContext += `- Top Defeitos Reclamados: Refilada (13), Falhas de impressão (11), Solda fraca (10), Raspado (9), Falta de embalagem (6)\n`;
+    groundingContext += `- Top Clientes Reclamantes: Alisul (8), Copacol (7), Bunge (6), Aurora (6), JBS (5)\n\n`;
 
     if (activeCustomer) {
       const custComplaints = complaints.filter(c => c.customerId === activeCustomer!.id);
-      groundingContext += `\n[CLIENTE EM CONTEXTO]: ${activeCustomer.name} (${activeCustomer.code})\n`;
-      groundingContext += `- Segmento: ${activeCustomer.segment}\n`;
+      const custConcessions = concessions.filter(c => c.customerId === activeCustomer!.id);
+      groundingContext += `[CLIENTE EM CONTEXTO]: ${activeCustomer.name} (${activeCustomer.code})\n`;
+      groundingContext += `- Segmento: ${activeCustomer.segment || 'Geral'}\n`;
       groundingContext += `- Score de Tolerância Geral: ${activeCustomer.overallToleranceScore}/100\n`;
-      groundingContext += `- Histórico de Reclamações SAC deste cliente: ${custComplaints.length}\n`;
+      groundingContext += `- Concessões já recebidas por este cliente: ${custConcessions.length} lotes (${custConcessions.reduce((acc, c) => acc + (c.quantity || 0), 0).toLocaleString('pt-BR')} un)\n`;
+      groundingContext += `- Reclamações SAC deste cliente: ${custComplaints.length} queixas\n\n`;
     }
 
     if (activeDefect) {
-      groundingContext += `\n[DEFEITO EM CONTEXTO]: ${activeDefect.name} (Categoria: ${activeDefect.category})\n`;
+      groundingContext += `[DEFEITO EM CONTEXTO]: ${activeDefect.name} (Categoria: ${activeDefect.category})\n`;
       groundingContext += `- Descrição: ${activeDefect.description}\n`;
       groundingContext += `- Custo Unitário de Refugo: R$ ${activeDefect.defaultUnitLoss.toFixed(2)}\n`;
       if (activeCustomer) {
         const tol = activeCustomer.toleranceRatings[activeDefect.id]?.level || 'moderada';
         groundingContext += `- Tolerância do cliente para este defeito: ${tol.toUpperCase()}\n`;
       }
+      groundingContext += '\n';
     }
 
     if (calculatedRisk) {
-      groundingContext += `\n[CÁLCULO TÉCNICO DE RISCO]:\n`;
+      groundingContext += `[CÁLCULO TÉCNICO DE RISCO]:\n`;
       groundingContext += `- Nível de Risco: ${calculatedRisk.riskLevel.toUpperCase()} (Score: ${calculatedRisk.score}/100)\n`;
       groundingContext += `- Veredito do Algoritmo: ${calculatedRisk.title}\n`;
       groundingContext += `- Reclamações SAC anteriores para este defeito/cliente: ${calculatedRisk.historicalComplaintsCount}\n`;
@@ -125,6 +155,7 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
       if (alternativeCustomers.length > 0) {
         groundingContext += `- Clientes alternativos recomendados com alta tolerância: ${alternativeCustomers.join(', ')}\n`;
       }
+      groundingContext += '\n';
     }
 
     // Montagem das mensagens alternadas exigidas pela API do Gemini

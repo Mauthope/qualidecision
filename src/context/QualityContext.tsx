@@ -723,6 +723,8 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsAiTyping(true);
 
     try {
+      const localGeminiKey = storageService.getGeminiApiKey();
+
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -732,7 +734,8 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
           customers,
           defects,
           complaints,
-          concessions
+          concessions,
+          apiKey: localGeminiKey || undefined
         })
       });
 

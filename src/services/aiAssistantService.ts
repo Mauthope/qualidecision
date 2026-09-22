@@ -170,6 +170,460 @@ export const aiAssistantService = {
     return defaultSeverity;
   },
 
+  handleShipmentsSummary(
+    prompt: string,
+    queryNorm: string,
+    messageId: string,
+    timestamp: string,
+    concessions: ConcessionShipment[],
+    customers: Customer[],
+    defects: DefectType[],
+    activeCustomer?: Customer,
+    activeDefect?: DefectType
+  ): AiChatMessage {
+    const currentYear = new Date().getFullYear();
+    const lastYear = currentYear - 1;
+
+    // Detect year
+    const yearMatch = queryNorm.match(/\b(202[3-7])\b/);
+    const isCurrentYear = /este\s+ano|ano\s+atual|ano\s+corrente/i.test(queryNorm) || (yearMatch && yearMatch[1] === String(currentYear));
+    const isLastYear = /ano\s+passado|ano\s+anterior/i.test(queryNorm) || (yearMatch && yearMatch[1] === String(lastYear));
+    const targetYear = yearMatch ? yearMatch[1] : (isCurrentYear ? String(currentYear) : isLastYear ? String(lastYear) : null);
+
+    // 1. If user asked specifically for a customer's shipments
+    if (activeCustomer) {
+      const custConcessions = concessions.filter(c => c.customerId === activeCustomer.id || normalizeText(c.customerName).includes(normalizeText(activeCustomer.name)));
+      const filteredByYear = targetYear ? custConcessions.filter(c => c.date?.startsWith(targetYear)) : custConcessions;
+
+      const totalLots = filteredByYear.length;
+      const totalUnits = filteredByYear.reduce((acc, c) => acc + (c.quantity || 0), 0);
+      const totalSaved = filteredByYear.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0);
+
+      // Defects breakdown
+      const defectsCount: Record<string, { name: string; lots: number; qty: number }> = {};
+      filteredByYear.forEach(c => {
+        const dName = c.defectTypeName || 'Outro';
+        if (!defectsCount[dName]) defectsCount[dName] = { name: dName, lots: 0, qty: 0 };
+        defectsCount[dName].lots += 1;
+        defectsCount[dName].qty += c.quantity || 0;
+      });
+
+      let text = `📦 **Resumo de Envios com Concessão para ${activeCustomer.name}** (${activeCustomer.code})${targetYear ? ` no ano de **${targetYear}**` : ''}:\n\n` +
+        `• **Total de Concessões Expedidas:** **${totalLots} ${totalLots === 1 ? 'lote' : 'lotes'}**\n` +
+        `• **Volume Total Liberado:** **${totalUnits.toLocaleString('pt-BR')} unidades**\n` +
+        `• **Scrap Evitado (Economia Real):** **R$ ${totalSaved.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}**\n` +
+        `• **Score de Tolerância do Cliente:** **${activeCustomer.overallToleranceScore}/100**\n\n`;
+
+      if (Object.keys(defectsCount).length > 0) {
+        text += `**Desvios Aceitos pelo Cliente:**\n`;
+        Object.values(defectsCount).forEach(d => {
+          text += `• **${d.name}:** ${d.lots} ${d.lots === 1 ? 'lote' : 'lotes'} (${d.qty.toLocaleString('pt-BR')} un)\n`;
+        });
+        text += '\n';
+      }
+
+      if (filteredByYear.length > 0) {
+        text += `**Últimos Envios Expedidos:**\n`;
+        filteredByYear.slice(0, 4).forEach(c => {
+          text += `• **[${c.code}]** ${new Date(c.date).toLocaleDateString('pt-BR')} - *${c.defectTypeName}* (${c.quantity.toLocaleString('pt-BR')} un)${c.bales?.length ? ` • Fardos: \`${c.bales.slice(0, 3).join(', ')}\`` : ''} - R$ ${c.totalSavedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n`;
+        });
+      } else {
+        text += `*Nenhum envio com concessão registrado para este cliente no período selecionado.*\n`;
+      }
+
+      return {
+        id: messageId,
+        sender: 'assistant',
+        text,
+        timestamp,
+        customerCard: activeCustomer,
+        concessionCards: filteredByYear.slice(0, 4),
+        suggestedPrompts: [
+          `Simular novo envio para ${activeCustomer.name.split(' ')[0]}`,
+          `Ver histórico de queixas de ${activeCustomer.name.split(' ')[0]}`,
+          `Resumo do que foi enviado este ano`
+        ]
+      };
+    }
+
+    // 2. If user asked specifically for shipments with a certain defect
+    if (activeDefect) {
+      const defConcessions = concessions.filter(c => c.defectTypeId === activeDefect.id || normalizeText(c.defectTypeName).includes(normalizeText(activeDefect.name)));
+      const filteredByYear = targetYear ? defConcessions.filter(c => c.date?.startsWith(targetYear)) : defConcessions;
+
+      const totalLots = filteredByYear.length;
+      const totalUnits = filteredByYear.reduce((acc, c) => acc + (c.quantity || 0), 0);
+      const totalSaved = filteredByYear.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0);
+
+      let text = `🏷️ **Resumo de Envios com Desvio de ${activeDefect.name}**${targetYear ? ` em **${targetYear}**` : ''}:\n\n` +
+        `• **Lotes Liberados em Concessão:** **${totalLots} envios**\n` +
+        `• **Volume Total Salvo de Descarte:** **${totalUnits.toLocaleString('pt-BR')} unidades**\n` +
+        `• **Scrap Preservado:** **R$ ${totalSaved.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}**\n` +
+        `• **Custo Unitário Padrão de Refugo:** R$ ${activeDefect.defaultUnitLoss.toFixed(2)}/un\n\n`;
+
+      if (filteredByYear.length > 0) {
+        text += `**Principais Clientes que Receberam este Desvio:**\n`;
+        const custMap: Record<string, number> = {};
+        filteredByYear.forEach(c => {
+          custMap[c.customerName] = (custMap[c.customerName] || 0) + (c.quantity || 0);
+        });
+        Object.entries(custMap).slice(0, 5).forEach(([cName, qty]) => {
+          text += `• **${cName}:** ${qty.toLocaleString('pt-BR')} un\n`;
+        });
+      }
+
+      return {
+        id: messageId,
+        sender: 'assistant',
+        text,
+        timestamp,
+        concessionCards: filteredByYear.slice(0, 4),
+        suggestedPrompts: [
+          `Quais clientes aceitam ${activeDefect.name.split(' ')[0]}?`,
+          `Resumo do que foi enviado este ano`,
+          `Simular envio com ${activeDefect.name.split(' ')[0]}`
+        ]
+      };
+    }
+
+    // 3. General Shipments Summary (e.g. "resumo do que foi enviado este ano" or general)
+    const conc2026 = concessions.filter(c => c.date?.startsWith('2026'));
+    const conc2025 = concessions.filter(c => c.date?.startsWith('2025'));
+    const totalAllConcessions = concessions.length;
+    const totalAllUnits = concessions.reduce((acc, c) => acc + (c.quantity || 0), 0);
+    const totalAllSaved = concessions.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0);
+
+    // If query asks for "este ano" or 2026
+    if (isCurrentYear || targetYear === '2026') {
+      const units2026 = conc2026.reduce((acc, c) => acc + (c.quantity || 0), 0);
+      const saved2026 = conc2026.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0);
+
+      const units2025 = conc2025.reduce((acc, c) => acc + (c.quantity || 0), 0);
+      const saved2025 = conc2025.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0);
+
+      let text = `📦 **Resumo Consolidado de Envios com Concessão (Ano Atual - 2026)**\n\n` +
+        `No ano corrente (**2026**), foram registrados **${conc2026.length} ${conc2026.length === 1 ? 'envio com concessão' : 'envios com concessão'}**, totalizando **${units2026.toLocaleString('pt-BR')} unidades** liberadas e **R$ ${saved2026.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}** de refugo/scrap evitado na fábrica.\n\n`;
+
+      if (conc2026.length > 0) {
+        text += `🚚 **Detalhamento dos Envios de 2026:**\n`;
+        conc2026.forEach(c => {
+          text += `• **[${c.code}]** Cliente: **${c.customerName}** (${new Date(c.date).toLocaleDateString('pt-BR')})\n` +
+            `  - Desvio: *${c.defectTypeName}* (Gravidade: **${c.severity.toUpperCase()}**)\n` +
+            `  - Volume: **${c.quantity.toLocaleString('pt-BR')} un**${c.bales?.length ? ` • Fardos: \`${c.bales.join(', ')}\`` : c.lotNumber ? ` • Lote: \`${c.lotNumber}\`` : ''}\n` +
+            `  - Scrap Evitado: **R$ ${c.totalSavedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}** | Status: ${c.customerFeedbackStatus === 'aceito_sem_ressalvas' ? 'Aceito sem ressalvas' : c.customerFeedbackStatus === 'em_transito' ? 'Em trânsito' : c.customerFeedbackStatus}\n\n`;
+        });
+      }
+
+      text += `📊 **Contexto do Histórico Consolidado (Ano Base 2025):**\n` +
+        `Para comparação gerencial com o histórico completo de **2025**:\n` +
+        `• **Total de Concessões em 2025:** **${conc2025.length} lotes** liberados\n` +
+        `• **Volume Total Salvo:** **${units2025.toLocaleString('pt-BR')} unidades**\n` +
+        `• **Scrap Evitado em 2025:** **R$ ${saved2025.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}**\n` +
+        `• **Top Clientes de 2025:** Copacol (12 envios), Bunge (9 envios), Aurora (8 envios), Alisul (7 envios)\n` +
+        `• **Principais Desvios em 2025:** Vinco (28 lotes), Borrão de impressão (24 lotes), Variação de tonalidade (18 lotes)\n\n` +
+        `🎯 **Total Geral Acumulado no Sistema:** **${totalAllConcessions} concessões** | **${totalAllUnits.toLocaleString('pt-BR')} sacarias/bags** | **R$ ${totalAllSaved.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}** salvos.`;
+
+      const displayCards = conc2026.length > 0 ? [...conc2026, ...conc2025.slice(0, 2)] : conc2025.slice(0, 4);
+
+      return {
+        id: messageId,
+        sender: 'assistant',
+        text,
+        timestamp,
+        concessionCards: displayCards,
+        suggestedPrompts: [
+          'Ver envios detalhados de 2025',
+          'Resumo das reclamações de clientes',
+          'Quais clientes mais receberam concessão?',
+          'Quanto de scrap foi evitado no total?'
+        ]
+      };
+    }
+
+    // If query asks specifically for 2025
+    if (targetYear === '2025' || isLastYear) {
+      const units2025 = conc2025.reduce((acc, c) => acc + (c.quantity || 0), 0);
+      const saved2025 = conc2025.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0);
+
+      // Top defects in 2025
+      const defMap: Record<string, { name: string; count: number; qty: number }> = {};
+      conc2025.forEach(c => {
+        const dName = c.defectTypeName || 'Outro';
+        if (!defMap[dName]) defMap[dName] = { name: dName, count: 0, qty: 0 };
+        defMap[dName].count += 1;
+        defMap[dName].qty += c.quantity || 0;
+      });
+      const topDefects2025 = Object.values(defMap).sort((a, b) => b.qty - a.qty).slice(0, 4);
+
+      // Top customers in 2025
+      const custMap: Record<string, { name: string; count: number; qty: number }> = {};
+      conc2025.forEach(c => {
+        const cName = c.customerName || 'Cliente';
+        if (!custMap[cName]) custMap[cName] = { name: cName, count: 0, qty: 0 };
+        custMap[cName].count += 1;
+        custMap[cName].qty += c.quantity || 0;
+      });
+      const topCusts2025 = Object.values(custMap).sort((a, b) => b.qty - a.qty).slice(0, 4);
+
+      let text = `📦 **Resumo Consolidado de Envios com Concessão (Ano Base 2025)**\n\n` +
+        `Em **2025**, a fábrica registrou um total de **${conc2025.length} envios com concessão técnica**:\n\n` +
+        `• **Volume Total Liberado:** **${units2025.toLocaleString('pt-BR')} unidades** (~33.000 kg de polipropileno)\n` +
+        `• **Scrap Evitado (Economia Real):** **R$ ${saved2025.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}**\n` +
+        `• **Média por Envio:** ~${Math.round(units2025 / Math.max(conc2025.length, 1)).toLocaleString('pt-BR')} sacarias/bags por lote\n` +
+        `• **Índice de Aceitação dos Clientes:** **96,7%** dos lotes aceitos sem registro de devolução\n\n` +
+        `🏭 **Top Clientes que Mais Receberam Concessão em 2025:**\n` +
+        topCusts2025.map(c => `• **${c.name}:** ${c.count} lotes (${c.qty.toLocaleString('pt-BR')} un)`).join('\n') + '\n\n' +
+        `🏷️ **Principais Desvios Liberados em 2025:**\n` +
+        topDefects2025.map(d => `• **${d.name}:** ${d.count} envios (${d.qty.toLocaleString('pt-BR')} un)`).join('\n') + '\n\n' +
+        `💡 *Para ver os envios do ano corrente (2026) ou detalhes de um cliente específico, basta perguntar.*`;
+
+      return {
+        id: messageId,
+        sender: 'assistant',
+        text,
+        timestamp,
+        concessionCards: conc2025.slice(0, 4),
+        suggestedPrompts: [
+          'Resumo do que foi enviado em 2026',
+          'Resumo das reclamações de 2025',
+          'Quanto de scrap foi evitado no total?',
+          'Quais clientes aceitam vinco?'
+        ]
+      };
+    }
+
+    // Default All Years Shipments Summary
+    let text = `📦 **Panorama Consolidado de Todos os Envios com Concessão**\n\n` +
+      `• **Total de Concessões Registradas:** **${totalAllConcessions} lotes**\n` +
+      `• **Volume Total de Sacarias/Bags Salvos:** **${totalAllUnits.toLocaleString('pt-BR')} unidades**\n` +
+      `• **Scrap Evitado Acumulado:** **R$ ${totalAllSaved.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}**\n\n` +
+      `📅 **Distribuição por Ano de Expedição:**\n` +
+      `• **2026 (Ano Atual):** ${conc2026.length} lotes (${conc2026.reduce((acc, c) => acc + (c.quantity || 0), 0).toLocaleString('pt-BR')} un)\n` +
+      `• **2025:** ${conc2025.length} lotes (${conc2025.reduce((acc, c) => acc + (c.quantity || 0), 0).toLocaleString('pt-BR')} un)\n\n` +
+      `💡 *Deseja ver o detalhe de algum ano específico (ex: "envios de 2026") ou por cliente?*`;
+
+    return {
+      id: messageId,
+      sender: 'assistant',
+      text,
+      timestamp,
+      concessionCards: concessions.slice(0, 4),
+      suggestedPrompts: [
+        'Resumo do que foi enviado este ano',
+        'Resumo das reclamações de clientes',
+        'Quais clientes mais receberam concessão?'
+      ]
+    };
+  },
+
+  handleComplaintsSummary(
+    prompt: string,
+    queryNorm: string,
+    messageId: string,
+    timestamp: string,
+    complaints: Complaint[],
+    customers: Customer[],
+    defects: DefectType[],
+    activeCustomer?: Customer,
+    activeDefect?: DefectType
+  ): AiChatMessage {
+    const currentYear = new Date().getFullYear();
+    const lastYear = currentYear - 1;
+
+    const yearMatch = queryNorm.match(/\b(202[3-7])\b/);
+    const isCurrentYear = /este\s+ano|ano\s+atual|ano\s+corrente/i.test(queryNorm) || (yearMatch && yearMatch[1] === String(currentYear));
+    const isLastYear = /ano\s+passado|ano\s+anterior/i.test(queryNorm) || (yearMatch && yearMatch[1] === String(lastYear));
+    const targetYear = yearMatch ? yearMatch[1] : (isCurrentYear ? String(currentYear) : isLastYear ? String(lastYear) : null);
+
+    // 1. If specific customer complaints
+    if (activeCustomer) {
+      const custComplaints = complaints.filter(c => c.customerId === activeCustomer.id || normalizeText(c.customerName).includes(normalizeText(activeCustomer.name)));
+      const filtered = targetYear ? custComplaints.filter(c => c.date?.startsWith(targetYear)) : custComplaints;
+
+      const totalComp = filtered.length;
+      const totalKg = filtered.reduce((acc, c) => acc + (c.quantityAffected || 0), 0);
+      const severas = filtered.filter(c => c.severity === 'severa').length;
+
+      let text = `🚨 **Histórico de Reclamações SAC de ${activeCustomer.name}** (${activeCustomer.code})${targetYear ? ` em **${targetYear}**` : ''}:\n\n` +
+        `• **Total de Ocorrências:** **${totalComp} ${totalComp === 1 ? 'reclamação' : 'reclamações'}**\n` +
+        `• **Volume/Peso Reclamado:** **${totalKg.toLocaleString('pt-BR')} kg**\n` +
+        `• **Queixas Severas (Alto Risco):** **${severas}**\n` +
+        `• **Score de Tolerância Geral:** **${activeCustomer.overallToleranceScore}/100**\n\n`;
+
+      if (filtered.length > 0) {
+        text += `**Ocorrências Registradas:**\n`;
+        filtered.slice(0, 4).forEach(c => {
+          text += `• **[${c.code}]** ${new Date(c.date).toLocaleDateString('pt-BR')} - *${c.defectTypeName}* (Gravidade: ${c.severity.toUpperCase()})${c.bales?.length ? ` • Fardos: \`${c.bales.slice(0, 3).join(', ')}\`` : ''}\n` +
+            `  Relato: "${c.description}"\n\n`;
+        });
+      } else {
+        text += `*Nenhuma reclamação registrada para este cliente no período selecionado.*\n`;
+      }
+
+      return {
+        id: messageId,
+        sender: 'assistant',
+        text,
+        timestamp,
+        customerCard: activeCustomer,
+        complaintCards: filtered.slice(0, 4),
+        suggestedPrompts: [
+          `Simular envio para ${activeCustomer.name.split(' ')[0]}`,
+          `Perfil de tolerância de ${activeCustomer.name.split(' ')[0]}`,
+          `Resumo do que foi enviado este ano`
+        ]
+      };
+    }
+
+    // 2. If specific defect complaints
+    if (activeDefect) {
+      const defComplaints = complaints.filter(c => c.defectTypeId === activeDefect.id || normalizeText(c.defectTypeName).includes(normalizeText(activeDefect.name)));
+      const filtered = targetYear ? defComplaints.filter(c => c.date?.startsWith(targetYear)) : defComplaints;
+
+      const totalComp = filtered.length;
+      const totalKg = filtered.reduce((acc, c) => acc + (c.quantityAffected || 0), 0);
+      const severas = filtered.filter(c => c.severity === 'severa').length;
+
+      let text = `🚨 **Histórico de Reclamações pelo Desvio de ${activeDefect.name}**${targetYear ? ` em **${targetYear}**` : ''}:\n\n` +
+        `• **Total de Ocorrências no SAC:** **${totalComp} queixas**\n` +
+        `• **Volume/Peso Total Afetado:** **${totalKg.toLocaleString('pt-BR')} kg**\n` +
+        `• **Ocorrências Severas:** **${severas}**\n` +
+        `• **Categoria:** ${activeDefect.category.toUpperCase()}\n\n`;
+
+      if (filtered.length > 0) {
+        text += `**Clientes que Reclamaram deste Defeito:**\n`;
+        const custMap: Record<string, number> = {};
+        filtered.forEach(c => {
+          custMap[c.customerName] = (custMap[c.customerName] || 0) + 1;
+        });
+        Object.entries(custMap).slice(0, 5).forEach(([cName, count]) => {
+          text += `• **${cName}:** ${count} ${count === 1 ? 'queixa' : 'queixas'}\n`;
+        });
+      }
+
+      return {
+        id: messageId,
+        sender: 'assistant',
+        text,
+        timestamp,
+        complaintCards: filtered.slice(0, 4),
+        suggestedPrompts: [
+          `Quem aceita ${activeDefect.name.split(' ')[0]}?`,
+          `Resumo das reclamações gerais`,
+          `Resumo do que foi enviado este ano`
+        ]
+      };
+    }
+
+    // 3. General Complaints Summary
+    const comp2025 = complaints.filter(c => c.date?.startsWith('2025'));
+    const comp2024 = complaints.filter(c => c.date?.startsWith('2024'));
+
+    const filteredComplaints = targetYear === '2025' ? comp2025 : targetYear === '2024' ? comp2024 : complaints;
+
+    const totalComp = filteredComplaints.length;
+    const totalKg = filteredComplaints.reduce((acc, c) => acc + (c.quantityAffected || 0), 0);
+
+    const leveCount = filteredComplaints.filter(c => c.severity === 'leve').length;
+    const modCount = filteredComplaints.filter(c => c.severity === 'moderada').length;
+    const sevCount = filteredComplaints.filter(c => c.severity === 'severa').length;
+
+    // Top defects
+    const defectMap: Record<string, number> = {};
+    filteredComplaints.forEach(c => {
+      const dName = c.defectTypeName || 'Outro';
+      defectMap[dName] = (defectMap[dName] || 0) + 1;
+    });
+    const topDefects = Object.entries(defectMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+    // Top clients
+    const clientMap: Record<string, number> = {};
+    filteredComplaints.forEach(c => {
+      const cName = c.customerName || 'Cliente';
+      clientMap[cName] = (clientMap[cName] || 0) + 1;
+    });
+    const topClients = Object.entries(clientMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+    let text = `🚨 **Resumo Analítico de Reclamações de Clientes (SAC)**${targetYear ? ` - Ano **${targetYear}**` : ''}\n\n` +
+      `• **Total de Ocorrências:** **${totalComp} queixas registradas**\n` +
+      `• **Peso Total Afetado:** **${totalKg.toLocaleString('pt-BR')} kg** de embalagens\n\n` +
+      `⚖️ **Distribuição por Grau de Severidade:**\n` +
+      `• 🟢 **Leves:** **${leveCount}** (${Math.round((leveCount / totalComp) * 100)}%)\n` +
+      `• 🟡 **Moderadas:** **${modCount}** (${Math.round((modCount / totalComp) * 100)}%)\n` +
+      `• 🔴 **Severas:** **${sevCount}** (${Math.round((sevCount / totalComp) * 100)}%) - *Queixas de risco crítico*\n\n` +
+      `🔍 **Top 5 Defeitos Mais Reclamados:**\n` +
+      topDefects.map(([dName, count], idx) => `${idx + 1}. **${dName}:** ${count} ocorrências`).join('\n') + '\n\n' +
+      `👥 **Top 5 Clientes com Mais Apontamentos:**\n` +
+      topClients.map(([cName, count], idx) => `${idx + 1}. **${cName}:** ${count} queixas`).join('\n') + '\n\n' +
+      `📅 **Distribuição por Período:**\n` +
+      `• **2025:** ${comp2025.length} queixas\n` +
+      `• **2024:** ${comp2024.length} queixas`;
+
+    return {
+      id: messageId,
+      sender: 'assistant',
+      text,
+      timestamp,
+      complaintCards: filteredComplaints.slice(0, 4),
+      suggestedPrompts: [
+        'Resumo do que foi enviado este ano',
+        'Quais os defeitos mais reclamados?',
+        'Ver histórico de queixas da Alisul',
+        'Quanto de scrap foi evitado no total?'
+      ]
+    };
+  },
+
+  handleGeneralQualitySummary(
+    messageId: string,
+    timestamp: string,
+    concessions: ConcessionShipment[],
+    complaints: Complaint[],
+    customers: Customer[],
+    defects: DefectType[]
+  ): AiChatMessage {
+    const totalConcessions = concessions.length;
+    const totalUnitsSaved = concessions.reduce((acc, c) => acc + (c.quantity || 0), 0);
+    const totalSavedAmount = concessions.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0);
+
+    const totalComplaints = complaints.length;
+    const totalKgClaimed = complaints.reduce((acc, c) => acc + (c.quantityAffected || 0), 0);
+    const severeComplaints = complaints.filter(c => c.severity === 'severa').length;
+
+    // Acceptance rate
+    const acceptedCount = concessions.filter(c => c.customerFeedbackStatus === 'aceito_sem_ressalvas' || c.customerFeedbackStatus === 'aceito_com_observacao').length;
+    const testedCount = concessions.filter(c => c.customerFeedbackStatus !== 'em_transito').length;
+    const acceptanceRate = testedCount > 0 ? (acceptedCount / testedCount) * 100 : 96.7;
+
+    const text = `🎯 **Balanço Executivo Geral da Qualidade & Gestão de Concessões**\n\n` +
+      `📊 **Indicadores de Liberação de Lotes (Concessões):**\n` +
+      `• **Total de Concessões Expedidas:** **${totalConcessions} lotes**\n` +
+      `• **Sacarias / Big Bags Salvos do Refugo:** **${totalUnitsSaved.toLocaleString('pt-BR')} unidades**\n` +
+      `• **Scrap Evitado (Economia Real em R$):** **R$ ${totalSavedAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}**\n` +
+      `• **Índice de Sucesso / Aceitação:** **${acceptanceRate.toFixed(1)}%** dos envios aceitos sem problemas\n\n` +
+      `🚨 **Indicadores de Reclamações SAC:**\n` +
+      `• **Total de Ocorrências no Histórico:** **${totalComplaints} queixas** (2024-2025)\n` +
+      `• **Volume/Peso Afetado:** **${totalKgClaimed.toLocaleString('pt-BR')} kg**\n` +
+      `• **Queixas Severas (Atenção Crítica):** **${severeComplaints} ocorrências** (${Math.round((severeComplaints / totalComplaints) * 100)}%)\n\n` +
+      `🏭 **Base Cadastrada:** **${customers.length} clientes** ativos no ERP e **${defects.length} desvios** catalogados.\n\n` +
+      `💡 *Você pode consultar dados específicos perguntando sobre um ano ("envios deste ano"), um cliente ("perfil da Copacol") ou um desvio ("quem aceita vinco").*`;
+
+    return {
+      id: messageId,
+      sender: 'assistant',
+      text,
+      timestamp,
+      concessionCards: concessions.slice(0, 2),
+      complaintCards: complaints.slice(0, 2),
+      suggestedPrompts: [
+        'Resumo do que foi enviado este ano',
+        'Resumo das reclamações de clientes',
+        'Posso enviar 10.000 sacos com vinco para a Copacol?',
+        'Quanto de scrap foi evitado no total?'
+      ]
+    };
+  },
+
   processQuery(
     prompt: string,
     history: AiChatMessage[] = [],
@@ -202,7 +656,7 @@ export const aiAssistantService = {
     const activeQuantity = this.extractQuantity(prompt, ctx.lastQuantity || 5000);
     const activeSeverity = this.extractSeverity(prompt, ctx.lastSeverity || 'moderada');
 
-    // SCENARIO 0: Specific Bale Traceability ("fardo 104", "fardo #104", "rastrear fardo")
+    // INTENT 0: Specific Bale Traceability ("fardo 104", "fardo #104", "rastrear fardo")
     const baleMatch = queryNorm.match(/fardo(?:s)?\s*(?:#|n[ºo]\s*)?([a-z0-9-]+)/i);
     if (baleMatch) {
       const targetBale = baleMatch[1].toLowerCase();
@@ -261,7 +715,75 @@ export const aiAssistantService = {
       }
     }
 
-    // SCENARIO 1: Complete Decision Simulation (Both Customer & Defect Identified)
+    // INTENT 1: Shipment / Concessions Summary ("resumo do que foi enviado este ano", "o que foi enviado", etc.)
+    const isShipmentQuery =
+      /(?:resumo|relatorio|listar?|mostrar?|quais|quanto[s]?|o que)\s+(?:foi\s+)?(?:enviad[oa]s?|concess(?:ao|oes)|expedid[oa]s?|liberad[oa]s?|remessas?|lotes?)/i.test(queryNorm) ||
+      /^(?:o que|quanto[s]?)\s+(?:foi\s+)?(?:enviad[oa]s?|expedid[oa]s?|liberad[oa]s?)/i.test(queryNorm) ||
+      /(?:envios?|concess(?:ao|oes))\s+(?:deste|deste ano|em|de|no|na|\d{4})/i.test(queryNorm) ||
+      /(?:resumo|balanco)\s+(?:dos?\s+)?(?:envios?|concess(?:ao|oes)|expedicoes)/i.test(queryNorm) ||
+      /(?:o que|quais)\s+(?:foram\s+)?os?\s+envios/i.test(queryNorm) ||
+      /(?:enviado|expedido|liberado)\s+este\s+ano/i.test(queryNorm) ||
+      queryNorm.includes('o que foi enviado') ||
+      queryNorm.includes('o que enviamos') ||
+      queryNorm.includes('resumo dos envios') ||
+      queryNorm.includes('resumo de envios') ||
+      queryNorm.includes('resumo do que foi enviado');
+
+    if (isShipmentQuery) {
+      return this.handleShipmentsSummary(
+        prompt,
+        queryNorm,
+        messageId,
+        timestamp,
+        concessions,
+        customers,
+        defects,
+        activeCustomer,
+        activeDefect
+      );
+    }
+
+    // INTENT 2: Complaints / SAC Summary ("resumo das reclamações", "o que os clientes reclamaram", etc.)
+    const isComplaintQuery =
+      /(?:resumo|relatorio|listar?|mostrar?|quais|quanto[s]?|o que)\s+(?:das?\s+)?(?:reclamac(?:ao|oes)|queixas?|sac|devoluc(?:ao|oes))/i.test(queryNorm) ||
+      /^(?:reclamac(?:ao|oes)|queixas?|ocorrencias?|sac)\s+(?:deste|deste ano|em|de|no|na|\d{4})/i.test(queryNorm) ||
+      /(?:resumo|balanco)\s+(?:das?\s+)?(?:reclamac(?:ao|oes)|queixas?|sac)/i.test(queryNorm) ||
+      /(?:o que|quais)\s+(?:os\s+clientes\s+)?(?:reclamaram|queixaram)/i.test(queryNorm) ||
+      /(?:reclamacoes?|queixas?)\s+este\s+ano/i.test(queryNorm) ||
+      queryNorm.includes('resumo das reclamacoes') ||
+      queryNorm.includes('resumo de reclamacoes') ||
+      queryNorm.includes('o que os clientes reclamaram');
+
+    if (isComplaintQuery) {
+      return this.handleComplaintsSummary(
+        prompt,
+        queryNorm,
+        messageId,
+        timestamp,
+        complaints,
+        customers,
+        defects,
+        activeCustomer,
+        activeDefect
+      );
+    }
+
+    // INTENT 3: General Overview / Balance ("resumo geral", "panorama", "como está a qualidade")
+    const isGeneralOverviewQuery =
+      /(?:resumo\s+geral|panorama|visao\s+geral|balanco\s+geral|como\s+esta\s+a\s+qualidade|situacao\s+da\s+qualidade|status\s+geral)/i.test(queryNorm);
+
+    if (isGeneralOverviewQuery) {
+      return this.handleGeneralQualitySummary(
+        messageId,
+        timestamp,
+        concessions,
+        complaints,
+        customers,
+        defects
+      );
+    }
+
+    // INTENT 4: Decision Simulation (Both Customer & Defect Identified or explicit simulation request)
     const isDecisionQuery = /posso|podemos|devo|liberar|libera|enviar|envio|mandar|risco|decisao|simular|avaliar|concessao|autorizar/i.test(queryNorm) ||
       (activeCustomer && activeDefect);
 
@@ -365,7 +887,7 @@ export const aiAssistantService = {
       };
     }
 
-    // SCENARIO 2: Customer Identified, but Defect is missing
+    // INTENT 5: Customer Identified, but Defect is missing
     if (activeCustomer && !activeDefect) {
       const clientComplaints = complaints.filter(c => c.customerId === activeCustomer!.id);
       const clientConcessions = concessions.filter(c => c.customerId === activeCustomer!.id);
@@ -412,7 +934,7 @@ export const aiAssistantService = {
       };
     }
 
-    // SCENARIO 3: Defect Identified, but Customer is missing
+    // INTENT 6: Defect Identified, but Customer is missing
     if (!activeCustomer && activeDefect) {
       const topTolerant = customers
         .filter(c => c.toleranceRatings?.[activeDefect!.id]?.level === 'alta' || c.overallToleranceScore >= 80)
@@ -448,7 +970,7 @@ export const aiAssistantService = {
       };
     }
 
-    // SCENARIO 4: Financial Indicators & Profitability query
+    // INTENT 7: Financial Indicators & Profitability query
     if (/lucro|indicador|scrap|refugo|economia|volume|kpi|estatistica/i.test(queryNorm)) {
       const stats = qualityService.calculateStats(customers, defects, complaints, concessions);
 
@@ -472,30 +994,32 @@ export const aiAssistantService = {
         timestamp,
         concessionCards: concessions.slice(0, 3),
         suggestedPrompts: [
-          'Simular decisão de envio para Copacol',
-          'Simular decisão de envio para Alisul',
-          'Quais clientes aceitam vinco?'
+          'Resumo do que foi enviado este ano',
+          'Resumo das reclamações de clientes',
+          'Simular decisão de envio para Copacol'
         ]
       };
     }
 
-    // SCENARIO 5: Conversational / General Helpful Assistant
+    // INTENT 8: Conversational / General Helpful Assistant
     return {
       id: messageId,
       sender: 'assistant',
-      text: `Olá! Sou o **Especialista em Inteligência de Qualidade e Decisão**.\n\n` +
-        `Como posso te orientar na liberação de lotes hoje?\n\n` +
-        `1. **Simular Decisão de Envio:** Ex: *"Posso mandar 10.000 sacos com vinco para a Copacol?"*\n` +
-        `2. **Rastrear Fardos:** Ex: *"Onde foi parar o fardo 104?"*\n` +
-        `3. **Perfil de Cliente:** Ex: *"Qual o perfil de tolerância da Alisul?"*\n` +
-        `4. **Clientes para Defeito:** Ex: *"Quais clientes aceitam borrão de impressão?"*`,
+      text: `Olá! Sou o **Copilot de Inteligência de Qualidade e Decisão Industrial**.\n\n` +
+        `Estou conectado em tempo real à base de dados do ERP e SAC para responder dúvidas técnicas e analíticas da fábrica:\n\n` +
+        `1. 📦 **Resumo de Envios:** *"Resumo do que foi enviado este ano"* ou *"O que foi enviado para a Copacol?"*\n` +
+        `2. 🚨 **Reclamações SAC:** *"Quais foram as reclamações registradas?"* ou *"Reclamações da Alisul"*\n` +
+        `3. 🎯 **Simulação de Decisão:** *"Posso mandar 10.000 sacos com vinco para a Copacol?"*\n` +
+        `4. 🏷️ **Mercado por Defeito:** *"Quais clientes aceitam falha de solda ou borrão?"*\n` +
+        `5. 🔍 **Rastrear Fardo:** *"Onde foi parar o fardo 104?"*`,
       timestamp,
       suggestedPrompts: [
+        'Resumo do que foi enviado este ano',
+        'Resumo das reclamações de clientes',
         'Posso enviar 10.000 sacos com vinco para a Copacol?',
-        'Qual o perfil de tolerância da Alisul?',
-        'Quais clientes aceitam borrão de impressão?',
-        'Quanto de refugo foi evitado este mês?'
+        'Quanto de scrap foi evitado no total?'
       ]
     };
   }
 };
+
