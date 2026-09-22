@@ -5,6 +5,68 @@ import { Customer, DefectType, Complaint, ConcessionShipment, AiChatMessage, Ris
 
 export const dynamic = 'force-dynamic';
 
+async function getAvailableGeminiModels(apiKey: string): Promise<{ version: string; model: string }[]> {
+  const versions = ['v1beta', 'v1'];
+  for (const ver of versions) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/${ver}/models?key=${encodeURIComponent(apiKey)}`;
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey
+        },
+        signal: AbortSignal.timeout(6000)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const validModels = (data.models || [])
+          .filter((m: any) => m.supportedGenerationMethods?.includes('generateContent'))
+          .map((m: any) => m.name.replace(/^models\//, ''));
+
+        if (validModels.length > 0) {
+          // Ordena por preferência de modelos rápidos e modernos
+          const preferences = [
+            'gemini-1.5-flash-latest',
+            'gemini-2.0-flash',
+            'gemini-1.5-flash',
+            'gemini-1.5-flash-002',
+            'gemini-1.5-flash-001',
+            'gemini-2.5-flash',
+            'gemini-1.5-pro-latest',
+            'gemini-1.5-pro',
+            'gemini-pro'
+          ];
+          const sorted = [...validModels].sort((a, b) => {
+            const idxA = preferences.findIndex(p => a === p || a.includes(p));
+            const idxB = preferences.findIndex(p => b === p || b.includes(p));
+            if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+            if (idxA !== -1) return -1;
+            if (idxB !== -1) return 1;
+            return 0;
+          });
+          return sorted.map(m => ({ version: ver, model: m }));
+        }
+      }
+    } catch (err) {
+      console.warn(`ListModels error on ${ver}:`, err);
+    }
+  }
+
+  // Fallback padrão se ListModels não responder ou for bloqueado
+  return [
+    { version: 'v1beta', model: 'gemini-1.5-flash-latest' },
+    { version: 'v1beta', model: 'gemini-2.0-flash' },
+    { version: 'v1', model: 'gemini-1.5-flash' },
+    { version: 'v1beta', model: 'gemini-1.5-flash-002' },
+    { version: 'v1beta', model: 'gemini-1.5-flash-001' },
+    { version: 'v1beta', model: 'gemini-1.5-flash' },
+    { version: 'v1beta', model: 'gemini-1.5-pro-latest' },
+    { version: 'v1', model: 'gemini-pro' },
+    { version: 'v1beta', model: 'gemini-pro' }
+  ];
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -62,46 +124,60 @@ export async function POST(req: Request) {
       }
 
       try {
-        const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
-        const testRes = await fetch(testUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': apiKey
-          },
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: 'Teste de conexão. Responda apenas "Conexão OK".' }] }]
-          }),
-          signal: AbortSignal.timeout(10000)
-        });
+        const availableTargets = await getAvailableGeminiModels(apiKey);
+        let lastErrText = '';
+        let lastStatus = 400;
 
-        if (testRes.ok) {
-          const testData = await testRes.json();
-          const reply = testData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'Conexão OK';
-          return NextResponse.json({
-            ok: true,
-            status: 200,
-            reply,
-            model: 'gemini-1.5-flash',
-            keyPrefix: apiKey.slice(0, 6) + '...' + apiKey.slice(-4),
-            source: (body as any).apiKey ? 'Chave salva no navegador' : 'Variável de ambiente da Vercel'
-          });
-        } else {
-          const errText = await testRes.text();
-          let parsedMessage = errText;
+        for (const target of availableTargets) {
           try {
-            const parsed = JSON.parse(errText);
-            parsedMessage = parsed.error?.message || errText;
-          } catch {}
+            const testUrl = `https://generativelanguage.googleapis.com/${target.version}/models/${target.model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+            const testRes = await fetch(testUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': apiKey
+              },
+              body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: 'Teste de conexão. Responda apenas "Conexão OK".' }] }]
+              }),
+              signal: AbortSignal.timeout(8000)
+            });
 
-          return NextResponse.json({
-            ok: false,
-            status: testRes.status,
-            error: parsedMessage,
-            keyPrefix: apiKey.slice(0, 6) + '...' + apiKey.slice(-4),
-            source: (body as any).apiKey ? 'Chave salva no navegador' : 'Variável de ambiente da Vercel'
-          });
+            if (testRes.ok) {
+              const testData = await testRes.json();
+              const reply = testData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'Conexão OK';
+              return NextResponse.json({
+                ok: true,
+                status: 200,
+                reply,
+                model: target.model,
+                version: target.version,
+                discoveredModels: availableTargets.map(t => `${t.model} (${t.version})`).slice(0, 6),
+                keyPrefix: apiKey.slice(0, 6) + '...' + apiKey.slice(-4),
+                source: (body as any).apiKey ? 'Chave salva no navegador' : 'Variável de ambiente da Vercel'
+              });
+            } else {
+              lastStatus = testRes.status;
+              const errText = await testRes.text();
+              let parsedMessage = errText;
+              try {
+                const parsed = JSON.parse(errText);
+                parsedMessage = parsed.error?.message || errText;
+              } catch {}
+              lastErrText = `(${target.version}/${target.model}) ${parsedMessage}`;
+            }
+          } catch (err: any) {
+            lastErrText = `(${target.version}/${target.model}) ${err.message || String(err)}`;
+          }
         }
+
+        return NextResponse.json({
+          ok: false,
+          status: lastStatus,
+          error: lastErrText || 'Nenhum dos modelos disponíveis respondeu ao teste.',
+          keyPrefix: apiKey.slice(0, 6) + '...' + apiKey.slice(-4),
+          source: (body as any).apiKey ? 'Chave salva no navegador' : 'Variável de ambiente da Vercel'
+        });
       } catch (err: any) {
         return NextResponse.json({
           ok: false,
@@ -275,14 +351,33 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
 
     const fullSystemInstruction = `${systemPrompt}\n\n${groundingContext}`;
 
-    // Tenta modelos disponíveis do Gemini com fallback automático
-    const modelsToTry = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+    // Tenta modelos disponíveis do Gemini com resolução dinâmica e fallback automático
+    const availableTargets = await getAvailableGeminiModels(apiKey);
     let rawReply = '';
     let lastGeminiErrorDetails = '';
 
-    for (const model of modelsToTry) {
+    for (const target of availableTargets.slice(0, 6)) {
       try {
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+        const geminiUrl = `https://generativelanguage.googleapis.com/${target.version}/models/${target.model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+        const contentsCopy: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = JSON.parse(JSON.stringify(geminiContents));
+        const bodyPayload: any = {
+          contents: contentsCopy,
+          generationConfig: {
+            temperature: 0.4,
+            maxOutputTokens: 1024
+          }
+        };
+
+        if (target.version === 'v1beta' && !target.model.includes('gemini-pro')) {
+          bodyPayload.system_instruction = {
+            parts: [{ text: fullSystemInstruction }]
+          };
+        } else {
+          if (contentsCopy.length > 0 && contentsCopy[0].role === 'user') {
+            contentsCopy[0].parts[0].text = `${fullSystemInstruction}\n\n${contentsCopy[0].parts[0].text}`;
+          }
+        }
 
         const geminiRes = await fetch(geminiUrl, {
           method: 'POST',
@@ -290,16 +385,7 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
             'Content-Type': 'application/json',
             'x-goog-api-key': apiKey
           },
-          body: JSON.stringify({
-            system_instruction: {
-              parts: [{ text: fullSystemInstruction }]
-            },
-            contents: geminiContents,
-            generationConfig: {
-              temperature: 0.4,
-              maxOutputTokens: 1024
-            }
-          }),
+          body: JSON.stringify(bodyPayload),
           signal: AbortSignal.timeout(12000)
         });
 
@@ -316,12 +402,12 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
             const parsed = JSON.parse(errorText);
             parsedMessage = parsed.error?.message || errorText;
           } catch {}
-          lastGeminiErrorDetails = `HTTP ${geminiRes.status} (${model}): ${parsedMessage}`;
-          console.warn(`Gemini (${model}) API Warning: ${geminiRes.status}`, errorText);
+          lastGeminiErrorDetails = `HTTP ${geminiRes.status} (${target.version}/${target.model}): ${parsedMessage}`;
+          console.warn(`Gemini (${target.version}/${target.model}) API Warning: ${geminiRes.status}`, errorText);
         }
       } catch (err: any) {
-        lastGeminiErrorDetails = `Erro (${model}): ${err?.message || String(err)}`;
-        console.warn(`Gemini (${model}) connection error:`, err);
+        lastGeminiErrorDetails = `Erro (${target.version}/${target.model}): ${err?.message || String(err)}`;
+        console.warn(`Gemini (${target.version}/${target.model}) connection error:`, err);
       }
     }
 
