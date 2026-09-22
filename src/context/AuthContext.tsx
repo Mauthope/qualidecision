@@ -15,8 +15,17 @@ interface AuthContextType {
   canDelete: boolean;
   isAdmin: boolean;
   isViewer: boolean;
+  isRecoveryMode: boolean;
+  setIsRecoveryMode: (val: boolean) => void;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signUp: (fullName: string, email: string, password: string, department?: string) => Promise<{ success: boolean; error?: string }>;
+  signUp: (
+    fullName: string,
+    email: string,
+    password: string,
+    department?: string
+  ) => Promise<{ success: boolean; requiresEmailConfirmation?: boolean; error?: string }>;
+  sendPasswordResetEmail: (email: string) => Promise<{ success: boolean; error?: string }>;
+  updatePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateUserRole: (userId: string, newRole: UserRole) => Promise<{ success: boolean; error?: string }>;
@@ -37,6 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
 
   // Fetch or refresh profile from public.profiles
   const fetchProfile = useCallback(async (userId: string, email?: string, userMetadata?: Record<string, any>) => {
@@ -122,6 +132,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return;
 
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsRecoveryMode(true);
+      }
+
       if (session?.user) {
         setUser(session.user);
         await fetchProfile(session.user.id, session.user.email, session.user.user_metadata);
@@ -180,7 +194,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     email: string,
     password: string,
     department: string = 'Qualidade'
-  ): Promise<{ success: boolean; error?: string }> => {
+  ): Promise<{ success: boolean; requiresEmailConfirmation?: boolean; error?: string }> => {
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedName = fullName.trim();
 
@@ -200,10 +214,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const emailRedirectTo = origin ? `${origin}/login?confirmed=true` : undefined;
+
       const { data, error } = await supabase.auth.signUp({
         email: trimmedEmail,
         password,
         options: {
+          emailRedirectTo,
           data: {
             full_name: trimmedName,
             department
@@ -213,32 +231,79 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         if (error.message.includes('User already registered')) {
-          return { success: false, error: 'Este e-mail @rafitec.com.br já possui uma conta ativa. Tente fazer login.' };
+          return { success: false, error: 'Este e-mail @rafitec.com.br já possui uma conta ativa. Tente fazer login ou redefinir sua senha.' };
         }
         return { success: false, error: error.message };
       }
 
-      if (data?.user) {
-        // Se a sessão não veio diretamente no signUp, efetua login automático imediato
-        if (!data.session) {
-          const loginRes = await supabase.auth.signInWithPassword({
-            email: trimmedEmail,
-            password
-          });
-          if (loginRes.data?.user) {
-            setUser(loginRes.data.user);
-            await fetchProfile(loginRes.data.user.id, loginRes.data.user.email, { full_name: trimmedName, department });
-            return { success: true };
-          }
-        }
+      // Se Supabase retornar array identities vazio, o email já está cadastrado
+      if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        return { success: false, error: 'Este e-mail @rafitec.com.br já possui cadastro no sistema. Tente fazer login ou redefinir a senha.' };
+      }
 
+      // Se não há sessão ativa imediata ou se o e-mail não estiver com email_confirmed_at preenchido, necessita de confirmação por e-mail
+      const requiresEmailConfirmation = !data?.session || !data?.user?.email_confirmed_at;
+
+      if (data?.session && data?.user) {
         setUser(data.user);
         await fetchProfile(data.user.id, data.user.email, { full_name: trimmedName, department });
       }
 
-      return { success: true };
+      return {
+        success: true,
+        requiresEmailConfirmation
+      };
     } catch (err: any) {
       return { success: false, error: err?.message || 'Falha ao processar o cadastro institucional.' };
+    }
+  };
+
+  const sendPasswordResetEmail = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    const trimmedEmail = email.trim().toLowerCase();
+
+    if (!isValidRafitecEmail(trimmedEmail)) {
+      return {
+        success: false,
+        error: `Acesso corporativo restrito. Apenas contas institucionais ${CORPORATE_DOMAIN} podem solicitar redefinição.`
+      };
+    }
+
+    try {
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const redirectTo = origin ? `${origin}/login?mode=reset_password` : undefined;
+
+      const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
+        redirectTo
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Erro ao enviar e-mail de recuperação.' };
+    }
+  };
+
+  const updatePassword = async (newPassword: string): Promise<{ success: boolean; error?: string }> => {
+    if (!newPassword || newPassword.length < 6) {
+      return { success: false, error: 'A nova senha deve ter no mínimo 6 caracteres.' };
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      setIsRecoveryMode(false);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Erro ao atualizar a senha.' };
     }
   };
 
@@ -303,8 +368,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         canDelete,
         isAdmin,
         isViewer,
+        isRecoveryMode,
+        setIsRecoveryMode,
         signIn,
         signUp,
+        sendPasswordResetEmail,
+        updatePassword,
         signOut,
         refreshProfile,
         updateUserRole

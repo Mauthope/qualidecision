@@ -20,13 +20,15 @@ import {
   ChevronRight,
   LogOut,
   Lock,
-  UserCog
+  UserCog,
+  KeyRound
 } from 'lucide-react';
 import { useQuality } from '@/context/QualityContext';
 import { useAuth } from '@/context/AuthContext';
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
 import { ExportImportModal } from '@/components/modals/ExportImportModal';
 import { UserManagementModal } from '@/components/modals/UserManagementModal';
+import { ChangePasswordModal } from '@/components/modals/ChangePasswordModal';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -47,6 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [isConcessionModalOpen, setIsConcessionModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
 
   const getInitials = (name?: string) => {
     if (!name) return 'RF';
@@ -399,6 +402,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </button>
               )}
 
+              {/* Alterar Senha button */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (isDrawer) onCloseMobile();
+                  setIsChangePasswordModalOpen(true);
+                }}
+                className={`p-1.5 rounded-lg text-slate-400 hover:text-cyan-300 hover:bg-cyan-500/10 border border-transparent hover:border-cyan-500/20 transition-all cursor-pointer ${
+                  collapsed ? 'mt-1' : ''
+                }`}
+                title="Alterar Senha Corporativa"
+                aria-label="Alterar Senha"
+              >
+                <KeyRound className="w-4 h-4" />
+              </button>
+
               {/* Logout button */}
               <button
                 type="button"
@@ -522,6 +541,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <UserManagementModal
           isOpen={isUserModalOpen}
           onClose={() => setIsUserModalOpen(false)}
+        />
+      )}
+
+      {isChangePasswordModalOpen && (
+        <ChangePasswordModal
+          isOpen={isChangePasswordModalOpen}
+          onClose={() => setIsChangePasswordModalOpen(false)}
         />
       )}
     </>
