@@ -219,6 +219,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data?.user) {
+        // Se a sessão não veio diretamente no signUp, efetua login automático imediato
+        if (!data.session) {
+          const loginRes = await supabase.auth.signInWithPassword({
+            email: trimmedEmail,
+            password
+          });
+          if (loginRes.data?.user) {
+            setUser(loginRes.data.user);
+            await fetchProfile(loginRes.data.user.id, loginRes.data.user.email, { full_name: trimmedName, department });
+            return { success: true };
+          }
+        }
+
         setUser(data.user);
         await fetchProfile(data.user.id, data.user.email, { full_name: trimmedName, department });
       }
