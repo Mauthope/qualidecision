@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuality } from '@/context/QualityContext';
 import { ComplaintPhoto, DefectSeverity } from '@/types';
 import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
@@ -63,6 +63,8 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
     source?: string;
     reply?: string;
   } | null>(null);
+  const [connectionCheck, setConnectionCheck] = useState<'testing' | 'connected' | 'disconnected'>('testing');
+  const [connectedModelName, setConnectedModelName] = useState<string>('');
   const [concessionInitialData, setConcessionInitialData] = useState<{
     customerId?: string;
     defectTypeId?: string;
@@ -72,11 +74,36 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const checkLiveConnection = useCallback(async () => {
+    try {
+      const key = storageService.getGeminiApiKey();
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'test_connection',
+          apiKey: key || undefined
+        })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setConnectionCheck('connected');
+        setConnectedModelName(data.model || 'Gemini 1.5');
+        setHasApiKey(true);
+      } else {
+        setConnectionCheck('disconnected');
+      }
+    } catch {
+      setConnectionCheck('disconnected');
+    }
+  }, []);
+
   useEffect(() => {
     const key = storageService.getGeminiApiKey();
     setHasApiKey(Boolean(key && key.trim().length > 5));
     if (key) setApiKeyInput(key);
-  }, []);
+    checkLiveConnection();
+  }, [checkLiveConnection]);
 
   const handleTestConnection = async () => {
     setTestKeyStatus('testing');
@@ -102,6 +129,8 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
           storageService.saveGeminiApiKey(apiKeyInput.trim());
           setHasApiKey(true);
         }
+        setConnectionCheck('connected');
+        setConnectedModelName(data.model || 'Gemini 1.5');
       } else {
         setTestKeyStatus('error');
         setTestKeyMessage(data.error || `Erro de resposta HTTP ${data.status || res.status}`);
@@ -170,19 +199,45 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          {/* Gemini API Key config button */}
+          {/* Status e Botão da IA Gemini */}
           <button
             type="button"
-            onClick={() => setIsKeyModalOpen(true)}
+            onClick={() => {
+              setIsKeyModalOpen(true);
+              setTestKeyStatus('idle');
+              setTestKeyMessage('');
+            }}
             className={`px-2.5 py-1 rounded-lg transition-colors shrink-0 flex items-center gap-1.5 text-[11px] font-medium cursor-pointer border ${
-              hasApiKey
-                ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20'
-                : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200 hover:bg-slate-850'
+              connectionCheck === 'connected'
+                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25 shadow-sm shadow-emerald-500/10'
+                : connectionCheck === 'testing'
+                ? 'bg-slate-900 text-slate-400 border-slate-800'
+                : 'bg-amber-500/10 text-amber-300 border-amber-500/30 hover:bg-amber-500/20'
             }`}
-            title="Configurar chave do Google Gemini (Opcional)"
+            title={
+              connectionCheck === 'connected'
+                ? `Conectado à IA Google Gemini (${connectedModelName}). Respostas serão geradas pela IA.`
+                : 'Conexão com a IA não ativa. Clique para configurar e conectar.'
+            }
           >
-            {hasApiKey ? <Sparkles className="w-3 h-3 text-emerald-400" /> : <Key className="w-3 h-3 text-slate-400" />}
-            <span className="hidden sm:inline">{hasApiKey ? 'Gemini Ativo' : 'Chave IA'}</span>
+            {connectionCheck === 'connected' ? (
+              <>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <Sparkles className="w-3 h-3 text-emerald-400" />
+                <span className="hidden sm:inline">IA Ativa ({connectedModelName || 'Gemini'})</span>
+              </>
+            ) : connectionCheck === 'testing' ? (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin text-slate-400" />
+                <span className="hidden sm:inline">Testando Conexão IA...</span>
+              </>
+            ) : (
+              <>
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                <Database className="w-3 h-3 text-amber-400" />
+                <span className="hidden sm:inline">Modo Base ERP (Conectar IA)</span>
+              </>
+            )}
           </button>
 
           {/* Clear Chat History */}
