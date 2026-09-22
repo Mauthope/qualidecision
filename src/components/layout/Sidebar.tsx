@@ -19,12 +19,14 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Lock
+  Lock,
+  UserCog
 } from 'lucide-react';
 import { useQuality } from '@/context/QualityContext';
 import { useAuth } from '@/context/AuthContext';
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
 import { ExportImportModal } from '@/components/modals/ExportImportModal';
+import { UserManagementModal } from '@/components/modals/UserManagementModal';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -44,6 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { user, profile, role, canEdit, isViewer, isAdmin, signOut } = useAuth();
   const [isConcessionModalOpen, setIsConcessionModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
 
   const getInitials = (name?: string) => {
     if (!name) return 'RF';
@@ -295,6 +298,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               )}
             </button>
+
+            {/* Gestão de Usuários (Admin Exclusivo) */}
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  if (isDrawer) onCloseMobile();
+                  setIsUserModalOpen(true);
+                }}
+                className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold bg-purple-950/40 border border-purple-800/60 text-purple-300 hover:text-purple-100 hover:bg-purple-900/40 transition-all cursor-pointer shadow-md shadow-purple-950/20 ${
+                  collapsed ? 'justify-center' : ''
+                }`}
+                title="Gestão de Usuários & Níveis (Painel do Administrador)"
+              >
+                <UserCog className="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform shrink-0" />
+                {!collapsed && (
+                  <span className="truncate flex items-center justify-between w-full">
+                    <span>Gestão de Usuários</span>
+                    <span className="text-[9px] font-mono uppercase px-1.5 py-0.2 rounded bg-purple-900 text-purple-200 border border-purple-700">
+                      Admin
+                    </span>
+                  </span>
+                )}
+
+                {collapsed && (
+                  <div className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-medium whitespace-nowrap shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50">
+                    Gestão de Usuários (Admin)
+                  </div>
+                )}
+              </button>
+            )}
           </div>
         </div>
 
@@ -349,6 +382,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     )}
                   </div>
                 </div>
+              )}
+
+              {/* Admin Manage Users shortcut button */}
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => setIsUserModalOpen(true)}
+                  className={`p-1.5 rounded-lg text-purple-400 hover:text-purple-200 hover:bg-purple-500/10 border border-transparent hover:border-purple-500/20 transition-all cursor-pointer ${
+                    collapsed ? 'mt-1' : ''
+                  }`}
+                  title="Painel de Usuários & Promoções"
+                  aria-label="Gerenciar Usuários"
+                >
+                  <UserCog className="w-4 h-4" />
+                </button>
               )}
 
               {/* Logout button */}
@@ -469,6 +517,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onClose={() => setIsExportModalOpen(false)}
         />
       )}
+
+      {isUserModalOpen && (
+        <UserManagementModal
+          isOpen={isUserModalOpen}
+          onClose={() => setIsUserModalOpen(false)}
+        />
+      )}
     </>
   );
 };
+
