@@ -39,7 +39,8 @@ import {
   CheckCircle2,
   RefreshCw,
   SlidersHorizontal,
-  ChevronDown
+  ChevronDown,
+  Scale
 } from 'lucide-react';
 import { DefectCategory } from '@/types';
 import { HARMONIOUS_CHART_COLORS } from '@/lib/chartColors';
@@ -62,6 +63,7 @@ export default function DashboardPage() {
     complaints,
     customers,
     defects,
+    settings,
     openAiDrawer,
     isLoaded,
     isSyncing,
@@ -229,6 +231,11 @@ export default function DashboardPage() {
   }, [filteredConcessions]);
 
   const avgSavedPerUnit = totalUnits > 0 ? totalSaved / totalUnits : 0;
+
+  const totalWeightKg = useMemo(() => {
+    const gramWeight = settings?.sackWeightGrams || 77.73;
+    return (totalUnits * gramWeight) / 1000;
+  }, [totalUnits, settings?.sackWeightGrams]);
 
   const acceptanceRate = useMemo(() => {
     if (filteredConcessions.length === 0) return 100;
@@ -800,12 +807,30 @@ export default function DashboardPage() {
               <PackageCheck className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-extrabold font-mono text-cyan-300">
-            {totalUnits.toLocaleString('pt-BR')} <span className="text-xs font-sans font-normal text-slate-400">un</span>
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="text-2xl font-extrabold font-mono text-cyan-300">
+              {totalUnits.toLocaleString('pt-BR')} <span className="text-xs font-sans font-normal text-slate-400">un</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-teal-500/15 border border-teal-500/30 text-teal-300 font-mono text-xs font-bold shadow-inner">
+              <Scale className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+              <span>
+                {totalWeightKg >= 10000
+                  ? `${Math.round(totalWeightKg).toLocaleString('pt-BR')} kg`
+                  : `${totalWeightKg.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 })} kg`
+                }
+              </span>
+            </span>
           </div>
-          <p className="text-[11px] text-slate-400">
-            {hasActiveFilters ? 'No filtro selecionado' : 'Sacarias/Bags salvos de virar refugo'}
-          </p>
+          <div className="flex items-center justify-between text-[11px] text-slate-400 pt-0.5">
+            <span className="truncate">
+              {hasActiveFilters ? 'No filtro selecionado' : 'Sacarias/Bags salvos de virar refugo'}
+            </span>
+            {totalWeightKg > 0 && (
+              <span className="font-mono text-slate-500 text-[10px] shrink-0 ml-2" title={`Média configurada no Memorial: ${settings?.sackWeightGrams || 77.73}g/unidade`}>
+                ~{(totalWeightKg / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} ton
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="glow-card p-5 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 space-y-2">

@@ -16,7 +16,8 @@ import {
   Download,
   Camera,
   Eye,
-  Trash2
+  Trash2,
+  Scale
 } from 'lucide-react';
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
 import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
@@ -24,7 +25,7 @@ import { ComplaintPhoto, ConcessionShipment } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 
 export default function EnviosPage() {
-  const { concessions, complaints, customers, defects, stats, showToast, deleteConcession } = useQuality();
+  const { concessions, complaints, customers, defects, stats, settings, showToast, deleteConcession } = useQuality();
   const { canDelete, canEdit, isViewer } = useAuth();
   const [isNewConcessionOpen, setIsNewConcessionOpen] = useState(false);
   const [concessionToDelete, setConcessionToDelete] = useState<ConcessionShipment | null>(null);
@@ -122,8 +123,16 @@ export default function EnviosPage() {
         <div className="glow-card p-4 rounded-2xl bg-cyan-950/20 border border-cyan-500/30 flex items-center justify-between">
           <div>
             <div className="text-xs font-semibold text-slate-400">Total de Unidades Concedidas</div>
-            <div className="text-xl font-bold font-mono text-cyan-300 mt-0.5">
-              {stats.totalUnitsSaved.toLocaleString('pt-BR')} sacarias/bags
+            <div className="flex items-baseline gap-2 flex-wrap mt-0.5">
+              <span className="text-xl font-bold font-mono text-cyan-300">
+                {stats.totalUnitsSaved.toLocaleString('pt-BR')} <span className="text-xs font-normal text-slate-400 font-sans">un</span>
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-teal-500/15 border border-teal-500/30 text-teal-300 font-mono text-xs font-bold shadow-inner">
+                <Scale className="w-3 h-3 text-teal-400 shrink-0" />
+                <span>
+                  {Math.round((stats.totalUnitsSaved * (settings?.sackWeightGrams || 77.73)) / 1000).toLocaleString('pt-BR')} kg
+                </span>
+              </span>
             </div>
           </div>
           <div className="p-3 rounded-xl bg-cyan-500/10 text-cyan-400">
