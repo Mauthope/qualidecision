@@ -5,6 +5,7 @@ import { useQuality } from '@/context/QualityContext';
 import { ComplaintPhoto, DefectSeverity } from '@/types';
 import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
+import { RichChatMessage } from './RichChatMessage';
 import {
   Send,
   Bot,
@@ -280,66 +281,7 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                       : 'bg-slate-900/90 border border-slate-800 text-slate-100 rounded-tl-none'
                   }`}
                 >
-                  <div className="whitespace-pre-line space-y-1">
-                    {msg.text.split('\n').map((line, lIdx) => {
-                      const trimmed = line.trim();
-                      const parts = line.split(/(\*\*.*?\*\*|`.*?`)/g);
-                      const isBullet = trimmed.startsWith('•') || trimmed.startsWith('-');
-                      const isNumbered = /^\d+\.\s/.test(trimmed);
-
-                      // Visual callout highlights
-                      const isClientSection = trimmed.startsWith('🏭');
-                      const isAlertSection = trimmed.startsWith('🚨');
-                      const isShieldSection = trimmed.startsWith('🛡️');
-                      const isChecklistSection = trimmed.startsWith('📋');
-                      const isCameraSection = trimmed.startsWith('📷');
-                      const isComplaintItem = trimmed.startsWith('• ❌') || trimmed.startsWith('❌');
-                      const isSuccessItem = trimmed.startsWith('• ✅') || trimmed.startsWith('✅');
-                      const isChecklistItem = trimmed.startsWith('• 🛑') || trimmed.startsWith('• 🔍') || trimmed.startsWith('• 📦');
-
-                      let calloutClasses = '';
-                      if (isClientSection) {
-                        calloutClasses = 'border-l-4 border-cyan-400 bg-gradient-to-r from-cyan-950/50 to-transparent text-cyan-100 p-2.5 rounded-r-xl my-1.5 shadow-sm font-semibold';
-                      } else if (isAlertSection) {
-                        calloutClasses = 'border-l-4 border-rose-500 bg-gradient-to-r from-rose-950/40 to-transparent text-rose-100 p-2 rounded-r-lg my-1.5 shadow-sm font-bold text-xs uppercase tracking-wide';
-                      } else if (isShieldSection) {
-                        calloutClasses = 'border-l-4 border-cyan-500 bg-gradient-to-r from-cyan-950/40 to-transparent text-cyan-100 p-2 rounded-r-lg my-1.5 shadow-sm font-bold text-xs uppercase tracking-wide';
-                      } else if (isChecklistSection) {
-                        calloutClasses = 'border-l-4 border-emerald-500 bg-gradient-to-r from-emerald-950/40 to-transparent text-emerald-100 p-2 rounded-r-lg my-1.5 shadow-sm font-bold text-xs uppercase tracking-wide';
-                      } else if (isCameraSection) {
-                        calloutClasses = 'border-l-4 border-purple-500 bg-gradient-to-r from-purple-950/40 to-transparent text-purple-100 p-2 rounded-r-lg my-1.5 shadow-sm font-bold text-xs uppercase tracking-wide';
-                      } else if (isComplaintItem) {
-                        calloutClasses = 'p-2 rounded-lg bg-rose-950/30 border border-rose-800/40 text-rose-200 my-1 shadow-sm text-xs';
-                      } else if (isSuccessItem) {
-                        calloutClasses = 'p-2 rounded-lg bg-emerald-950/30 border border-emerald-800/40 text-emerald-200 my-1 shadow-sm text-xs font-semibold';
-                      } else if (isChecklistItem) {
-                        calloutClasses = 'p-2 rounded-lg bg-slate-900/80 border border-slate-800 text-slate-200 my-1 shadow-sm text-xs';
-                      }
-                      
-                      return (
-                        <div
-                          key={lIdx}
-                          className={`${calloutClasses} ${isBullet && !isComplaintItem && !isSuccessItem && !isChecklistItem ? 'ml-3 my-0.5' : isNumbered ? 'ml-1 my-1' : 'my-0.5'}`}
-                        >
-                          <p>
-                            {parts.map((part, pIdx) => {
-                              if (part.startsWith('**') && part.endsWith('**')) {
-                                return <strong key={pIdx} className="font-bold text-cyan-200">{part.slice(2, -2)}</strong>;
-                              }
-                              if (part.startsWith('`') && part.endsWith('`')) {
-                                return (
-                                  <code key={pIdx} className="px-1.5 py-0.5 rounded font-mono font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-800/50 text-[11px]">
-                                    {part.slice(1, -1)}
-                                  </code>
-                                );
-                              }
-                              return part;
-                            })}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <RichChatMessage text={msg.text} isUser={isUser} />
 
                   <div className={`text-[10px] mt-2 flex flex-col gap-1.5 font-mono ${isUser ? 'text-cyan-100/70 items-end' : 'text-slate-500 items-start'}`}>
                     <div className="flex items-center justify-between w-full">
