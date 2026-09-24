@@ -60,6 +60,7 @@ export default function ReclamacoesPage() {
       const s = search.toLowerCase();
       const matchesSearch = c.code.toLowerCase().includes(s) ||
         c.customerName.toLowerCase().includes(s) ||
+        (c.opNumber && c.opNumber.toLowerCase().includes(s)) ||
         (c.lotNumber && c.lotNumber.toLowerCase().includes(s)) ||
         (c.bales && c.bales.some(b => b.toLowerCase().includes(s))) ||
         c.defectTypeName.toLowerCase().includes(s) ||
@@ -518,6 +519,11 @@ export default function ReclamacoesPage() {
                   >
                     {item.customerName}
                   </Link>
+                  {item.opNumber && (
+                    <span className="px-2 py-0.5 rounded text-xs font-mono font-bold bg-cyan-950/60 text-cyan-300 border border-cyan-500/30" title="Ordem de Produção">
+                      OP: {item.opNumber}
+                    </span>
+                  )}
                   {item.bales && item.bales.length > 0 ? (
                     <span className="px-2 py-0.5 rounded text-xs font-mono font-medium bg-rose-500/10 text-rose-300 border border-rose-500/25" title={`Fardos reclamados: ${item.bales.join(', ')}`}>
                       📦 {item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 4).join(', ')}{item.bales.length > 4 ? ` (+${item.bales.length - 4})` : ''}
@@ -675,6 +681,12 @@ export default function ReclamacoesPage() {
                 <span className="text-slate-400">Cliente:</span>
                 <span className="font-semibold text-white">{complaintToDelete.customerName}</span>
               </div>
+              {complaintToDelete.opNumber && (
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Ordem de Produção (OP):</span>
+                  <span className="font-mono font-bold text-cyan-300">{complaintToDelete.opNumber}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-slate-400">Defeito:</span>
                 <span className="text-slate-200">{complaintToDelete.defectTypeName}</span>

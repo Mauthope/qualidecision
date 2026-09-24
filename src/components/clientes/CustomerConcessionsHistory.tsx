@@ -16,11 +16,13 @@ import {
   Camera,
   Eye,
   Image as ImageIcon,
-  Trash2
+  Trash2,
+  Pencil
 } from 'lucide-react';
 import { useQuality } from '@/context/QualityContext';
 import { useAuth } from '@/context/AuthContext';
 import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
+import { EditConcessionModal } from '@/components/envios/EditConcessionModal';
 
 interface Props {
   customer: Customer;
@@ -34,7 +36,8 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
   complaints
 }) => {
   const { deleteConcession } = useQuality();
-  const { canDelete } = useAuth();
+  const { canDelete, canEdit } = useAuth();
+  const [concessionToEdit, setConcessionToEdit] = useState<ConcessionShipment | null>(null);
   const [concessionToDelete, setConcessionToDelete] = useState<ConcessionShipment | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [activePhoto, setActivePhoto] = useState<ComplaintPhoto | null>(null);
@@ -200,6 +203,17 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
                       </span>
                     )}
 
+                    {canEdit && (
+                      <button
+                        type="button"
+                        onClick={() => setConcessionToEdit(item)}
+                        className="p-1 rounded-lg text-cyan-400 hover:text-white hover:bg-cyan-500/20 border border-cyan-500/30 bg-cyan-950/40 shadow-sm shadow-cyan-950/50 transition-all cursor-pointer ml-1"
+                        title={`Editar envio ${item.code}`}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                    )}
+
                     {canDelete && (
                       <button
                         type="button"
@@ -350,6 +364,14 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
           photo={activePhoto}
           title={photoTitle}
           onClose={() => setActivePhoto(null)}
+        />
+      )}
+
+      {concessionToEdit && (
+        <EditConcessionModal
+          isOpen={!!concessionToEdit}
+          concession={concessionToEdit}
+          onClose={() => setConcessionToEdit(null)}
         />
       )}
 

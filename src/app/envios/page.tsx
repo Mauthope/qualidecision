@@ -17,9 +17,11 @@ import {
   Camera,
   Eye,
   Trash2,
-  Scale
+  Scale,
+  Pencil
 } from 'lucide-react';
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
+import { EditConcessionModal } from '@/components/envios/EditConcessionModal';
 import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
 import { ComplaintPhoto, ConcessionShipment } from '@/types';
 import { useAuth } from '@/context/AuthContext';
@@ -28,6 +30,7 @@ export default function EnviosPage() {
   const { concessions, complaints, customers, defects, stats, settings, showToast, deleteConcession } = useQuality();
   const { canDelete, canEdit, isViewer } = useAuth();
   const [isNewConcessionOpen, setIsNewConcessionOpen] = useState(false);
+  const [concessionToEdit, setConcessionToEdit] = useState<ConcessionShipment | null>(null);
   const [concessionToDelete, setConcessionToDelete] = useState<ConcessionShipment | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [activePhoto, setActivePhoto] = useState<ComplaintPhoto | null>(null);
@@ -268,7 +271,7 @@ export default function EnviosPage() {
                   <th className="pb-3 px-4 text-right">Scrap Salvo</th>
                   <th className="pb-3 px-4">Parecer Técnico</th>
                   <th className="pb-3 px-4 text-center">Status / Aceite</th>
-                  {canDelete && <th className="pb-3 pl-2 pr-4 text-center">Ações</th>}
+                  <th className="pb-3 pl-2 pr-4 text-center">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
@@ -385,18 +388,47 @@ export default function EnviosPage() {
                       )}
                     </td>
 
-                    {canDelete && (
-                      <td className="py-3.5 pl-2 pr-4 text-center">
+                    <td className="py-3.5 pl-2 pr-4 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
                         <button
                           type="button"
-                          onClick={() => setConcessionToDelete(c)}
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all cursor-pointer"
-                          title={`Excluir envio ${c.code}`}
+                          onClick={() => {
+                            if (!canEdit) {
+                              showToast('Acesso Restrito: Apenas Editores e Administradores podem editar concessões.', 'warning');
+                              return;
+                            }
+                            setConcessionToEdit(c);
+                          }}
+                          className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                            canEdit
+                              ? 'text-cyan-400 hover:text-white hover:bg-cyan-500/20 border-cyan-500/30 bg-cyan-950/40 shadow-sm shadow-cyan-950/50'
+                              : 'text-slate-600 border-transparent cursor-not-allowed opacity-50'
+                          }`}
+                          title={canEdit ? `Editar envio ${c.code}` : 'Apenas Editores e Administradores podem editar'}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!canDelete) {
+                              showToast('Acesso Restrito: Apenas Editores e Administradores podem excluir concessões.', 'warning');
+                              return;
+                            }
+                            setConcessionToDelete(c);
+                          }}
+                          className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                            canDelete
+                              ? 'text-slate-400 hover:text-rose-400 hover:bg-rose-500/15 border-transparent hover:border-rose-500/30'
+                              : 'text-slate-600 border-transparent cursor-not-allowed opacity-50'
+                          }`}
+                          title={canDelete ? `Excluir envio ${c.code}` : 'Apenas Editores e Administradores podem excluir'}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
-                      </td>
-                    )}
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
@@ -408,6 +440,14 @@ export default function EnviosPage() {
 
       {isNewConcessionOpen && (
         <NewConcessionModal isOpen={isNewConcessionOpen} onClose={() => setIsNewConcessionOpen(false)} />
+      )}
+
+      {concessionToEdit && (
+        <EditConcessionModal
+          isOpen={!!concessionToEdit}
+          concession={concessionToEdit}
+          onClose={() => setConcessionToEdit(null)}
+        />
       )}
 
       {/* Delete Confirmation Modal */}

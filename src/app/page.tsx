@@ -323,12 +323,13 @@ export default function DashboardPage() {
         const term = searchTerm.toLowerCase();
         const matchesCode = item.code?.toLowerCase().includes(term);
         const matchesCust = item.customerName?.toLowerCase().includes(term);
+        const matchesOp = item.opNumber?.toLowerCase().includes(term);
         const matchesDef = item.defectTypeName?.toLowerCase().includes(term);
         const matchesLot = item.lotNumber?.toLowerCase().includes(term);
         const matchesBale = item.bales?.some(b => b.toLowerCase().includes(term));
         const matchesDesc = item.description?.toLowerCase().includes(term);
 
-        if (!matchesCode && !matchesCust && !matchesDef && !matchesLot && !matchesBale && !matchesDesc) {
+        if (!matchesCode && !matchesCust && !matchesOp && !matchesDef && !matchesLot && !matchesBale && !matchesDesc) {
           return false;
         }
       }
@@ -1752,8 +1753,15 @@ export default function DashboardPage() {
                             <div className="text-[10px] text-slate-500">{new Date(item.date).toLocaleDateString('pt-BR')}</div>
                           </td>
 
-                          <td className="py-3 px-3 font-semibold text-slate-200 truncate max-w-[130px]">
-                            {item.customerName}
+                          <td className="py-3 px-3">
+                            <div className="font-semibold text-slate-200 truncate max-w-[150px]">
+                              {item.customerName}
+                            </div>
+                            {item.opNumber && (
+                              <div className="text-[10px] font-mono font-bold text-cyan-300">
+                                OP: {item.opNumber}
+                              </div>
+                            )}
                           </td>
 
                           <td className="py-3 px-3 text-slate-300 truncate max-w-[120px]">

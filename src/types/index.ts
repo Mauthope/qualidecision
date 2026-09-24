@@ -43,6 +43,7 @@ export interface Complaint {
   customerId: string;
   customerName: string;
   date: string;
+  opNumber?: string; // Número da Ordem de Produção (OP)
   lotNumber?: string;
   bales?: string[]; // Identificadores individuais dos fardos
   defectTypeId: string;

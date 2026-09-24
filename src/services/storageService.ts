@@ -72,7 +72,11 @@ export const storageService = {
         this.saveComplaints(DEFAULT_COMPLAINTS);
         return DEFAULT_COMPLAINTS;
       }
-      return JSON.parse(data);
+      const parsed: Complaint[] = JSON.parse(data);
+      return parsed.map(c => ({
+        ...c,
+        opNumber: c.opNumber || (c.lotNumber ? c.lotNumber.replace(/^OP\s*/i, '') : undefined)
+      }));
     } catch {
       return DEFAULT_COMPLAINTS;
     }

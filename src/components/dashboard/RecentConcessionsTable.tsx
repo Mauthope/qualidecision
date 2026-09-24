@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import { useQuality } from '@/context/QualityContext';
 import Link from 'next/link';
-import { Send, CheckCircle2, Clock, AlertTriangle, ArrowRight, ExternalLink, ShieldCheck, Trash2 } from 'lucide-react';
+import { Send, CheckCircle2, Clock, AlertTriangle, ArrowRight, ExternalLink, ShieldCheck, Trash2, Pencil } from 'lucide-react';
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
+import { EditConcessionModal } from '@/components/envios/EditConcessionModal';
 import { ConcessionShipment } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 
@@ -12,6 +13,7 @@ export const RecentConcessionsTable: React.FC = () => {
   const { concessions, complaints, deleteConcession } = useQuality();
   const { canDelete, canEdit, isViewer } = useAuth();
   const [isNewConcessionOpen, setIsNewConcessionOpen] = useState(false);
+  const [concessionToEdit, setConcessionToEdit] = useState<ConcessionShipment | null>(null);
   const [concessionToDelete, setConcessionToDelete] = useState<ConcessionShipment | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -80,7 +82,7 @@ export const RecentConcessionsTable: React.FC = () => {
                   <th className="pb-3 px-4 text-right">Volume Concedido</th>
                   <th className="pb-3 px-4 text-right">Scrap Salvo (R$)</th>
                   <th className="pb-3 px-4 text-center">Status / Feedback</th>
-                  {canDelete && <th className="pb-3 pl-2 pr-4 text-center">Ações</th>}
+                  {(canEdit || canDelete) && <th className="pb-3 pl-2 pr-4 text-center">Ações</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
@@ -183,16 +185,31 @@ export const RecentConcessionsTable: React.FC = () => {
                         {statusBadge}
                       </td>
 
-                      {canDelete && (
+                      {(canEdit || canDelete) && (
                         <td className="py-3.5 pl-2 pr-4 text-center">
-                          <button
-                            type="button"
-                            onClick={() => setConcessionToDelete(item)}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all cursor-pointer"
-                            title={`Excluir envio ${item.code}`}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center justify-center gap-1.5">
+                            {canEdit && (
+                              <button
+                                type="button"
+                                onClick={() => setConcessionToEdit(item)}
+                                className="p-1.5 rounded-lg text-cyan-400 hover:text-white hover:bg-cyan-500/20 border border-cyan-500/30 bg-cyan-950/40 shadow-sm shadow-cyan-950/50 transition-all cursor-pointer"
+                                title={`Editar envio ${item.code}`}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                            )}
+
+                            {canDelete && (
+                              <button
+                                type="button"
+                                onClick={() => setConcessionToDelete(item)}
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all cursor-pointer"
+                                title={`Excluir envio ${item.code}`}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       )}
                     </tr>
@@ -206,6 +223,14 @@ export const RecentConcessionsTable: React.FC = () => {
 
       {isNewConcessionOpen && (
         <NewConcessionModal isOpen={isNewConcessionOpen} onClose={() => setIsNewConcessionOpen(false)} />
+      )}
+
+      {concessionToEdit && (
+        <EditConcessionModal
+          isOpen={!!concessionToEdit}
+          concession={concessionToEdit}
+          onClose={() => setConcessionToEdit(null)}
+        />
       )}
 
       {/* Delete Confirmation Modal */}

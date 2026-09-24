@@ -46,6 +46,7 @@ interface QualityContextType {
     approvedBy?: string;
     photos?: Array<{ id: string; url: string; caption: string; defectLocation?: string }>;
   }) => ConcessionShipment;
+  updateConcession: (id: string, data: Partial<ConcessionShipment>) => ConcessionShipment | null;
   deleteConcession: (id: string) => Promise<boolean>;
   deleteComplaint: (id: string) => Promise<boolean>;
   addCustomer: (data: {
@@ -64,6 +65,7 @@ interface QualityContextType {
   }) => DefectType;
   addComplaint: (data: {
     customerId: string;
+    opNumber?: string;
     date?: string;
     lotNumber?: string;
     bales?: string[];
@@ -137,7 +139,11 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
         console.warn('Erro ao ler cache inicial de reclamações:', e);
       }
     }
-    return DEFAULT_COMPLAINTS.map(c => ({ ...c, photos: [] }));
+    return DEFAULT_COMPLAINTS.map(c => ({
+      ...c,
+      opNumber: c.opNumber || (c.lotNumber ? c.lotNumber.replace(/^OP\s*/i, '') : undefined),
+      photos: []
+    }));
   });
 
   const [concessions, setConcessions] = useState<ConcessionShipment[]>(() => {
@@ -249,11 +255,17 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
         unitSavedValue: c.unitSavedValue || qualityService.calculateUnitSavedValue(activeSettings.sackWeightGrams, activeSettings.costPerKg)
       }));
 
+      // Calibração dos laudos de reclamações com opNumber
+      const calibratedComplaints = loadedComplaints.map(c => ({
+        ...c,
+        opNumber: c.opNumber || (c.lotNumber ? c.lotNumber.replace(/^OP\s*/i, '') : undefined)
+      }));
+
       // Calibração dos perfis de tolerância de acordo com as queixas reais
       const calibratedCustomers = loadedCustomers.map(customer => {
         const { overallToleranceScore, toleranceRatings } = qualityService.calculateCustomerTolerance(
           customer,
-          loadedComplaints,
+          calibratedComplaints,
           calibratedConcessions,
           loadedDefects
         );
@@ -266,14 +278,14 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       setCustomers(calibratedCustomers);
       setDefects(loadedDefects);
-      setComplaints(loadedComplaints);
+      setComplaints(calibratedComplaints);
       setConcessions(calibratedConcessions);
       setIsLoaded(true);
 
       // Salvar silenciosamente no cache local (sem disparar eventos circulares)
       storageService.saveCustomers(calibratedCustomers);
       storageService.saveDefects(loadedDefects);
-      storageService.saveComplaints(loadedComplaints);
+      storageService.saveComplaints(calibratedComplaints);
       storageService.saveConcessions(calibratedConcessions);
     } catch (err) {
       console.error('Erro ao sincronizar com Supabase:', err);
@@ -397,6 +409,91 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     showToast(`Concessão ${newConcession.code} registrada com sucesso!`, 'success');
     return newConcession;
   }, [customers, defects, complaints, concessions, settings, showToast, isViewer, profile]);
+
+  const updateConcession = useCallback((id: string, data: Partial<ConcessionShipment>): ConcessionShipment | null => {
+    if (!canEdit) {
+      showToast('Acesso Restrito: Apenas usuários com perfil de Editor ou Administrador podem alterar concessões.', 'warning');
+      return null;
+    }
+
+    const existing = concessions.find(c => c.id === id);
+    if (!existing) {
+      showToast('Concessão não encontrada.', 'error');
+      return null;
+    }
+
+    const customer = data.customerId ? customers.find(c => c.id === data.customerId) : customers.find(c => c.id === existing.customerId);
+    const defect = data.defectTypeId ? defects.find(d => d.id === data.defectTypeId) : defects.find(d => d.id === existing.defectTypeId);
+    const customerName = customer?.name || existing.customerName;
+    const defectTypeName = defect?.name || existing.defectTypeName;
+
+    const quantity = data.quantity !== undefined ? data.quantity : existing.quantity;
+    const severity = data.severity || existing.severity;
+
+    const unitSavedValue = data.unitSavedValue ?? qualityService.calculateUnitSavedValue(settings.sackWeightGrams, settings.costPerKg);
+    const totalSavedValue = qualityService.calculateSavedProfit(quantity, settings.sackWeightGrams, settings.costPerKg);
+
+    const baleList = data.bales !== undefined ? data.bales : existing.bales;
+    const resolvedLotOrBale = data.lotNumber !== undefined
+      ? data.lotNumber
+      : (baleList && baleList.length > 0 ? (baleList.length === 1 ? `Fardo #${baleList[0]}` : `Fardos ${baleList.join(', ')}`) : existing.lotNumber);
+
+    // Calculate risk
+    const riskResult = customer && defect
+      ? qualityService.evaluateConcessionRisk(customer, defect, quantity, severity, complaints, concessions)
+      : null;
+
+    const updatedConcession: ConcessionShipment = {
+      ...existing,
+      ...data,
+      customerId: data.customerId || existing.customerId,
+      customerName,
+      customerNumber: data.customerNumber !== undefined ? data.customerNumber : existing.customerNumber,
+      opNumber: data.opNumber !== undefined ? data.opNumber : existing.opNumber,
+      date: data.date || existing.date,
+      lotNumber: resolvedLotOrBale,
+      bales: baleList,
+      productName: data.productName || existing.productName,
+      defectTypeId: data.defectTypeId || existing.defectTypeId,
+      defectTypeName,
+      quantity,
+      severity,
+      unitSavedValue,
+      totalSavedValue,
+      riskScore: riskResult?.riskLevel || existing.riskScore,
+      customerFeedbackStatus: data.customerFeedbackStatus || existing.customerFeedbackStatus,
+      technicalNotes: data.technicalNotes !== undefined ? data.technicalNotes : existing.technicalNotes,
+      approvedBy: data.approvedBy || existing.approvedBy,
+      photos: data.photos !== undefined ? data.photos : existing.photos
+    };
+
+    const updated = concessions.map(c => c.id === id ? updatedConcession : c).sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    setConcessions(updated);
+    storageService.saveConcessions(updated);
+    supabaseService.saveConcession(updatedConcession);
+
+    const updatedCustomers = customers.map(c => {
+      const { overallToleranceScore, toleranceRatings } = qualityService.calculateCustomerTolerance(
+        c,
+        complaints,
+        updated,
+        defects
+      );
+      return {
+        ...c,
+        overallToleranceScore,
+        toleranceRatings
+      };
+    });
+    setCustomers(updatedCustomers);
+    storageService.saveCustomers(updatedCustomers);
+
+    showToast(`Concessão ${updatedConcession.code} atualizada com sucesso!`, 'success');
+    return updatedConcession;
+  }, [canEdit, concessions, customers, defects, complaints, settings, showToast]);
 
   const deleteConcession = useCallback(async (id: string): Promise<boolean> => {
     if (!canDelete) {
@@ -592,6 +689,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const addComplaint = useCallback((data: {
     customerId: string;
+    opNumber?: string;
     date?: string;
     lotNumber?: string;
     bales?: string[];
@@ -625,6 +723,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       code: `REC-${year}-${Math.floor(100 + Math.random() * 900)}`,
       customerId: data.customerId,
       customerName,
+      opNumber: data.opNumber?.trim() || (data.lotNumber ? data.lotNumber.replace(/^OP\s*/i, '') : undefined),
       date: entryDate,
       lotNumber: resolvedLotOrBale,
       bales: baleList,
@@ -934,6 +1033,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
         openAiDrawer,
         closeAiDrawer,
         addConcession,
+        updateConcession,
         deleteConcession,
         addCustomer,
         addDefect,

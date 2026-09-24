@@ -60,6 +60,11 @@ export const CustomerComplaintHistory: React.FC<Props> = ({ customer, complaints
                     <span className="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
                       {item.code}
                     </span>
+                    {item.opNumber && (
+                      <span className="px-2 py-0.5 rounded text-xs font-mono font-bold bg-cyan-950/60 text-cyan-300 border border-cyan-500/30" title="Ordem de Produção">
+                        OP: {item.opNumber}
+                      </span>
+                    )}
                     {item.bales && item.bales.length > 0 ? (
                       <span className="px-2 py-0.5 rounded text-xs font-mono font-medium bg-rose-500/10 text-rose-300 border border-rose-500/25" title={`Fardos: ${item.bales.join(', ')}`}>
                         📦 {item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 4).join(', ')}{item.bales.length > 4 ? ` (+${item.bales.length - 4})` : ''}

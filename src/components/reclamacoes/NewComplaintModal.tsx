@@ -21,6 +21,7 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
   const { customers, defects, addComplaint } = useQuality();
 
   const [customerId, setCustomerId] = useState(defaultCustomerId || '');
+  const [opNumber, setOpNumber] = useState('');
   const [date, setDate] = useState('');
   const [defectTypeId, setDefectTypeId] = useState('');
   const [bales, setBales] = useState<string[]>([]);
@@ -39,6 +40,7 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
   React.useEffect(() => {
     if (isOpen) {
       setCustomerId(defaultCustomerId || '');
+      setOpNumber('');
       setDate('');
       setDefectTypeId('');
       setBales([]);
@@ -61,6 +63,7 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
 
     addComplaint({
       customerId,
+      opNumber: opNumber.trim() || undefined,
       date,
       bales,
       defectTypeId,
@@ -159,7 +162,21 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Número da OP */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                Número da OP
+              </label>
+              <input
+                type="text"
+                value={opNumber}
+                onChange={e => setOpNumber(e.target.value)}
+                placeholder="Ex: 00.110.771/01.05"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-rose-500/50 font-mono"
+              />
+            </div>
+
             {/* Data da Reclamação */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
@@ -186,7 +203,7 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
             {/* Quantity Affected in Kg */}
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Peso / Qtd Reclamada (Kg) *
+                Peso Reclamado (Kg) *
               </label>
               <input
                 type="number"
@@ -195,7 +212,7 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
                 value={quantityAffected}
                 onChange={e => setQuantityAffected(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
                 placeholder="Ex: 500"
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none font-mono"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-rose-500/50 font-mono"
                 required
               />
             </div>
@@ -208,7 +225,7 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
               <select
                 value={severity}
                 onChange={e => setSeverity(e.target.value as DefectSeverity)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-rose-500/50"
               >
                 <option value="severa">Severa (Devolução)</option>
                 <option value="moderada">Moderada (Retenção)</option>
