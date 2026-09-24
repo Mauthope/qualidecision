@@ -864,14 +864,21 @@ export const aiAssistantService = {
       }
       suggestedPrompts.push(`Ver histórico de queixas de ${activeCustomer.name.split(' ')[0]}`);
 
+      const compsWithPhotos = customerComplaintsForDefect.filter(c => c.photos && c.photos.length > 0);
+      const concsWithPhotos = customerConcessionsForDefect.filter(c => c.photos && c.photos.length > 0);
+
       return {
         id: messageId,
         sender: 'assistant',
         text,
         timestamp,
         customerCard: activeCustomer,
-        complaintCards: customerComplaintsForDefect.slice(0, 2),
-        concessionCards: customerConcessionsForDefect.slice(0, 2),
+        complaintCards: compsWithPhotos.length > 0
+          ? [...compsWithPhotos, ...customerComplaintsForDefect.filter(c => !c.photos || c.photos.length === 0)].slice(0, 3)
+          : customerComplaintsForDefect.slice(0, 2),
+        concessionCards: concsWithPhotos.length > 0
+          ? [...concsWithPhotos, ...customerConcessionsForDefect.filter(c => !c.photos || c.photos.length === 0)].slice(0, 3)
+          : customerConcessionsForDefect.slice(0, 2),
         riskRecommendation: riskResult,
         suggestedPrompts,
         actionButton: {
@@ -918,14 +925,21 @@ export const aiAssistantService = {
       text += `💡 **Qual desvio você gostaria de simular para ${activeCustomer.name}?**\n` +
         `Informe o defeito e quantidade (ex: *"Posso mandar 5.000 sacos com vinco?"* ou *"E se for borrão de impressão?"*).`;
 
+      const compsWithPhotos = clientComplaints.filter(c => c.photos && c.photos.length > 0);
+      const concsWithPhotos = clientConcessions.filter(c => c.photos && c.photos.length > 0);
+
       return {
         id: messageId,
         sender: 'assistant',
         text,
         timestamp,
         customerCard: activeCustomer,
-        complaintCards: clientComplaints.slice(0, 3),
-        concessionCards: clientConcessions.slice(0, 2),
+        complaintCards: compsWithPhotos.length > 0
+          ? [...compsWithPhotos, ...clientComplaints.filter(c => !c.photos || c.photos.length === 0)].slice(0, 3)
+          : clientComplaints.slice(0, 3),
+        concessionCards: concsWithPhotos.length > 0
+          ? [...concsWithPhotos, ...clientConcessions.filter(c => !c.photos || c.photos.length === 0)].slice(0, 3)
+          : clientConcessions.slice(0, 2),
         suggestedPrompts: [
           `Simular envio com Vinco para ${activeCustomer.name.split(' ')[0]}`,
           `Simular envio com Borrão para ${activeCustomer.name.split(' ')[0]}`,
@@ -1072,6 +1086,7 @@ export const aiAssistantService = {
     }
 
     // 3. Customer query - deep sweep of complaints, tolerance glimpse, machine care, and photos
+    // 3. Customer query - Engenharia Visual: direto ao ponto, fatos reais, zero alucinação e fotos
     if (activeCustomer) {
       const custComplaints = complaints.filter(
         c => c.customerId === activeCustomer!.id || normalizeText(c.customerName).includes(normalizeText(activeCustomer!.name))
@@ -1081,130 +1096,116 @@ export const aiAssistantService = {
         c => c.customerId === activeCustomer!.id || normalizeText(c.customerName).includes(normalizeText(activeCustomer!.name))
       );
 
-      // Determine ranking
-      let rankingName = '⭐ Ranking A (Crítico / Rigor Máximo)';
-      let rankingDescription = 'Linha de envase de alta sensibilidade e rigor operacional. Requer tolerância zero a falhas estruturais, rasgos, estanqueidade ou linner.';
+      // Ranking visual
+      let rankingName = '⭐ RANKING A (MÁXIMO RIGOR)';
       if (activeCustomer.overallToleranceScore > 75 && custComplaints.length < 2) {
-        rankingName = '🥉 Ranking C (Padrão Industrial)';
-        rankingDescription = 'Cliente com envase convencional. Foco primordial na integridade do tecido e peso nominal.';
+        rankingName = '🥉 RANKING C (CONVENCIONAL)';
       } else if (activeCustomer.overallToleranceScore > 60 && custComplaints.length < 5) {
-        rankingName = '🥈 Ranking B (Atenção Redobrada / Rigor Alto)';
-        rankingDescription = 'Inspeção rigorosa no recebimento, alta sensibilidade a desvios visuais, alinhamento e costura.';
+        rankingName = '🥈 RANKING B (ATENÇÃO REDOBRADA)';
       }
 
-      let text = `🏭 **Orientações Técnicas de Chão de Fábrica — Sensei**\n\n`;
-      text += `### **${activeCustomer.name}** (${activeCustomer.code || 'N/A'})\n\n`;
-      text += `• **Nível de Exigência:** **${rankingName}** (Score: ${activeCustomer.overallToleranceScore}/100)\n`;
-      text += `• **Segmento:** ${activeCustomer.segment || 'Industrial / Agronegócio'}\n`;
-      text += `• **Perfil Operacional:** ${rankingDescription}\n\n`;
+      let text = `🏭 **CLIENTE:** **${activeCustomer.name}** • Cód: **${activeCustomer.code || 'N/A'}** | ⚠️ **${rankingName}** (Tolerância: **${activeCustomer.overallToleranceScore}/100**)\n\n`;
 
-      // 1. RECLAMAÇÕES SAC ESPECÍFICAS
+      // 1. RECLAMAÇÕES REAIS NO SAC (ESTRITAMENTE O QUE CONSTA NO BANCO)
       if (custComplaints.length > 0) {
-        text += `🚨 **Varredura Detalhada de Reclamações SAC (${custComplaints.length} apontamentos no ERP):**\n\n`;
-        custComplaints.forEach((c, idx) => {
+        text += `🚨 **HISTÓRICO REAL DE RECLAMAÇÕES SAC (${custComplaints.length} no ERP):**\n`;
+        custComplaints.forEach((c) => {
           const dateStr = c.date ? new Date(c.date).toLocaleDateString('pt-BR') : 'Data não informada';
-          text += `**${idx + 1}. [${c.code}]** Data: **${dateStr}** | Defeito: **${c.defectTypeName}** (Gravidade: **${c.severity.toUpperCase()}**)\n`;
-          if (c.opNumber || c.lotNumber) {
-            text += `  • **Ordem de Produção (OP):** \`${c.opNumber || c.lotNumber}\` | **Volume Afetado:** ${c.quantityAffected} kg\n`;
-          }
+          const opText = c.opNumber || c.lotNumber ? ` • OP: \`${c.opNumber || c.lotNumber}\`` : '';
+          text += `• ❌ **[${c.code}]**${opText} | 📅 ${dateStr}\n`;
+          text += `  ↳ **Defeito:** ${c.defectTypeName} (${c.quantityAffected || 1} kg) • Severidade: ${c.severity.toUpperCase()}\n`;
           if (c.description) {
-            text += `  • **Laudo Técnico ERP:** *"${c.description}"*\n`;
+            text += `  ↳ *"${c.description}"*\n`;
           }
-          if (c.rootCause || c.correctiveAction) {
-            text += `  • **Causa & Ação:** ${c.rootCause || 'Em análise'} • ${c.correctiveAction || 'Ajuste de processo'}\n`;
-          }
-          if (c.photos && c.photos.length > 0) {
-            text += `  • 📷 **Fotos Anexadas:** ${c.photos.length} evidência(s) fotográfica(s) disponível(is) no card abaixo.\n`;
-          }
-          text += `\n`;
         });
+        text += `\n`;
       } else {
-        text += `✅ **Histórico SAC Impecável:** Nenhum apontamento recente de não-conformidade registrado no ERP para este cliente.\n\n`;
+        text += `🚨 **HISTÓRICO REAL DE RECLAMAÇÕES SAC:**\n`;
+        text += `• ✅ **ZERO RECLAMAÇÕES NO SAC:** Este cliente não possui histórico de não-conformidades registradas no sistema.\n\n`;
       }
 
-      // 2. VISLUMBRE DE ENVIOS E TOLERÂNCIA (SEM TABELAS OU VALORES MONETÁRIOS)
-      text += `🛡️ **Vislumbre Operacional de Tolerância & Envios:**\n`;
+      // 2. VISLUMBRE DE TOLERÂNCIA (O QUE ELE ACEITA)
+      text += `🛡️ **VISLUMBRE DE TOLERÂNCIA (O QUE ELE ACEITA):**\n`;
       const acceptedDefects = Array.from(new Set(custConcessions.map(c => c.defectTypeName).filter(Boolean)));
       if (acceptedDefects.length > 0) {
-        text += `O cliente possui histórico de tolerar um leve desvio de **${acceptedDefects.join(', ')}**, mas **mostre ao líder e à inspeção da qualidade qualquer desvio para que eles avaliem antes de liberar**.\n\n`;
+        text += `• 💡 **Flexibilidade Comprovada:** O cliente aceita um leve desvio de **${acceptedDefects.slice(0, 3).join(', ')}** sob concessão.\n`;
       } else {
-        const ratings = activeCustomer.toleranceRatings || {};
-        const toleratedList = Object.entries(ratings)
-          .filter(([_, val]: any) => val?.level === 'alta' || val?.level === 'moderada')
-          .map(([defId, val]: any) => {
-            const dObj = defects.find(d => d.id === defId);
-            return dObj ? dObj.name : defId.replace('def-', '').replace(/-/g, ' ');
-          });
-
-        if (toleratedList.length > 0) {
-          const sample = toleratedList.slice(0, 2).join(' e ');
-          text += `O cliente aceita com ressalvas leves desvios pontuais (como pequenas variações em ${sample}), desde que não afetem a estanqueidade ou resistência estrutural da embalagem. Porém, **mostre ao líder e à inspeção da qualidade qualquer desvio para que eles avaliem antes de prosseguir**, pois falhas de linner ou rasgos causam perda imediata no envase.\n\n`;
-        } else {
-          text += `O cliente possui tolerância restrita e perfil de altíssimo rigor técnico. **Mostre imediatamente ao líder e à inspeção da qualidade qualquer desvio identificado** para bloqueio preventivo do lote.\n\n`;
-        }
+        text += `• 💡 **Flexibilidade:** Aceita desvios estéticos leves pontuais desde que não afetem a integridade e resistência.\n`;
       }
+      text += `• ⚠️ **Regra Operacional:** Qualquer desvio fora do padrão deve ser mostrado ao **líder de turno e à qualidade** antes de prosseguir.\n\n`;
 
-      // 3. CUIDADOS PRÁTICOS NA MÁQUINA (DIRECIONADOS ÀS QUEIXAS REAIS)
-      text += `📋 **Sequência Obrigatória de Cuidados Operacionais na Máquina:**\n\n`;
+      // 3. CUIDADOS NA MÁQUINA (DIRETO AO PONTO - O QUE O OPERADOR DEVE FAZER)
+      text += `📋 **CUIDADOS NA MÁQUINA (BATER O OLHO):**\n`;
       const defectTypesLower = custComplaints.map(c => normalizeText(c.defectTypeName || ''));
       const hasLinner = defectTypesLower.some(d => d.includes('linner') || d.includes('liner'));
       const hasRasgos = defectTypesLower.some(d => d.includes('rasg') || d.includes('furo') || d.includes('corte'));
-      const hasImpressao = defectTypesLower.some(d => d.includes('impress') || d.includes('tinta') || d.includes('borr') || d.includes('desencaixe'));
-      const hasSolda = defectTypesLower.some(d => d.includes('solda') || d.includes('valvul'));
-      const hasCostura = defectTypesLower.some(d => d.includes('costur') || d.includes('ponto'));
-
-      let stepNum = 1;
-
-      if (hasLinner || activeCustomer.segment?.toLowerCase().includes('bag')) {
-        text += `${stepNum++}. **🧴 Cuidados Críticos com Linner (Área Limpa & Acabamento):**\n`;
-        text += `   - Inspecionar minuciosamente a mesa de acabamento e os braços metálicos de inserção para garantir ausência total de rebarbas cortantes, cantos vivos ou parafusos salientes.\n`;
-        text += `   - Conferir a solda de fundo do linner de PE antes da montagem e vestir o Big Bag sem puxamento brusco pelas extremidades para não causar microfissuras que rasgam no envase.\n`;
-        text += `   - Manusear sempre com luvas limpas adequadas para Área Limpa.\n\n`;
-      }
-
-      if (hasRasgos) {
-        text += `${stepNum++}. **✂️ Prevenção Contra Rasgos e Cortes no Tecido:**\n`;
-        text += `   - Verificar e limpar as facas térmicas e ultrassom de corte para assegurar que a borda fique 100% selada, sem pontas picotadas que propaguem rasgos na trama.\n`;
-        text += `   - Controlar a tensão dos roletes de arraste e guias do setor de acabamento, evitando atrito excessivo ou tracionamento em ângulo que possa beliscar o tecido tubular.\n`;
-        text += `   - Segregar imediatamente qualquer embalagem que apresentar fios rompidos ou desfiamento na lateral.\n\n`;
-      }
-
-      if (hasImpressao) {
-        text += `${stepNum++}. **🎨 Controle de Impressão & Tintas:**\n`;
-        text += `   - Monitorar a viscosidade da tinta no copo Ford a cada 60 minutos e conferir registro de clichê no início do lote.\n`;
-        text += `   - Realizar teste de fita adesiva nos primeiros sacos para garantir aderência total e legibilidade de código de barras.\n\n`;
-      }
+      const hasImpressao = defectTypesLower.some(d => d.includes('impress') || d.includes('tinta') || d.includes('borr') || d.includes('desencaixe') || d.includes('cor'));
+      const hasSolda = defectTypesLower.some(d => d.includes('solda') || d.includes('valvul') || d.includes('tarja'));
+      const hasCostura = defectTypesLower.some(d => d.includes('costur') || d.includes('ponto') || d.includes('alca'));
+      const hasRefilada = defectTypesLower.some(d => d.includes('refilad') || d.includes('lamina') || d.includes('desfia'));
 
       if (hasSolda) {
-        text += `${stepNum++}. **🔥 Solda Valvulada & Estanqueidade:**\n`;
-        text += `   - Calibrar temperatura e pressão da sapata de solda conforme a ficha técnica da sacaria.\n`;
-        text += `   - Realizar teste destrutivo manual a cada 500 unidades e teste pneumático de válvula.\n\n`;
+        text += `• 🛑 **Atenção à Solda & Válvula:** Calibrar temperatura/pressão da sapata. Realizar teste destrutivo de fundo e abertura de válvula a cada 500 sacos.\n`;
       }
-
+      if (hasRefilada) {
+        text += `• 🛑 **Atenção ao Refilamento:** Checar fio da lâmina de corte lateral. Proibido liberar fita com rebarba ou desfiando na sanfona.\n`;
+      }
+      if (hasImpressao) {
+        text += `• 🛑 **Atenção à Impressão:** Monitorar viscosidade no copo Ford a cada hora. Fazer teste de fita adesiva nos primeiros sacos do lote.\n`;
+      }
       if (hasCostura) {
-        text += `${stepNum++}. **🧵 Costura & Bainha:**\n`;
-        text += `   - Conferir agulha a cada troca de turno (substituir se houver rebarba ou ponta cega).\n`;
-        text += `   - Garantir ponto uniforme sem pontas soltas na bainha e com a linha na tensão regulada.\n\n`;
+        text += `• 🛑 **Atenção à Costura:** Trocar agulha com rebarba e conferir tensão da linha. Testar tração da costura a cada 100 unidades.\n`;
+      }
+      if (hasLinner) {
+        text += `• 🛑 **Atenção ao Linner:** Limpar bancada eliminando cantos vivos ou parafusos. Vestir sem puxão brusco para não microfissurar.\n`;
+      }
+      if (hasRasgos) {
+        text += `• 🛑 **Atenção a Rasgos/Cortes:** Checar facas térmicas e roletes de arraste. Borda deve estar 100% selada sem picotes.\n`;
+      }
+      if (!hasSolda && !hasRefilada && !hasImpressao && !hasCostura && !hasLinner && !hasRasgos) {
+        text += `• 🛑 **Atenção Operacional:** Manter inspeção visual contínua na saída da linha. Qualquer anomalia em 3 sacos seguidos exige parada.\n`;
       }
 
-      // Step padrão final
-      text += `${stepNum++}. **📦 Enfardamento & Identificação Rastreável:**\n`;
-      text += `   - Realizar amarração firme sem vincar excessivamente ou deformar as embalagens.\n`;
-      text += `   - Fixar etiqueta externa com identificação legível da OP, data, turno e operador para assegurar rastreabilidade total.\n\n`;
+      text += `• 🔍 **Inspeção na Linha:** Realizar teste visual e dimensional amostral a cada início de fardo.\n`;
+      text += `• 📦 **Enfardamento:** Não amarrar fardos com tensão excessiva que amasse a sacaria. Fixar etiqueta externa com OP legível.\n\n`;
 
-      // 4. EVIDÊNCIAS FOTOGRÁFICAS
-      const complaintsWithPhotos = custComplaints.filter(c => c.photos && c.photos.length > 0);
-      if (complaintsWithPhotos.length > 0) {
-        text += `📷 **Evidências Fotográficas do SAC Anexadas:**\n`;
-        text += `Foram localizadas evidências fotográficas das reclamações registradas no ERP para este cliente. Confira as imagens ampliadas logo abaixo para comparação visual imediata com a produção na linha.\n`;
+      // 4. COLETA INTELIGENTE DE FOTOS DE EVIDÊNCIA
+      const compsWithPhotos = custComplaints.filter(c => c.photos && c.photos.length > 0);
+      const concsWithPhotos = custConcessions.filter(c => c.photos && c.photos.length > 0);
+
+      let finalPhotosCards: Complaint[] = [];
+      let finalConcessionCards: ConcessionShipment[] = [];
+
+      if (compsWithPhotos.length > 0) {
+        finalPhotosCards = compsWithPhotos;
+      }
+      if (concsWithPhotos.length > 0) {
+        finalConcessionCards = concsWithPhotos.slice(0, 3);
+      }
+
+      // Se o cliente não tem fotos, mas reclamou de defeitos específicos, puxar fotos da fábrica desse mesmo defeito para orientar o operador visualmente
+      if (finalPhotosCards.length === 0 && finalConcessionCards.length === 0 && custComplaints.length > 0) {
+        const defectIds = custComplaints.map(c => c.defectTypeId);
+        const refCompsWithPhotos = complaints.filter(c => defectIds.includes(c.defectTypeId) && c.photos && c.photos.length > 0);
+        const refConcsWithPhotos = (concessions || []).filter(c => defectIds.includes(c.defectTypeId) && c.photos && c.photos.length > 0);
+
+        if (refCompsWithPhotos.length > 0) {
+          finalPhotosCards = refCompsWithPhotos.slice(0, 2);
+        } else if (refConcsWithPhotos.length > 0) {
+          finalConcessionCards = refConcsWithPhotos.slice(0, 2);
+        }
+      }
+
+      const totalPhotos = finalPhotosCards.reduce((acc, c) => acc + (c.photos?.length || 0), 0) +
+                          finalConcessionCards.reduce((acc, c) => acc + (c.photos?.length || 0), 0);
+
+      if (totalPhotos > 0) {
+        text += `📷 **EVIDÊNCIAS FOTOGRÁFICAS (${totalPhotos} fotos disponíveis):**\n`;
+        text += `Fotos reais de inspeção disponíveis nos cards abaixo (toque para ampliar em tela cheia na bancada).`;
       } else {
-        text += `📷 **Evidências Fotográficas:**\n`;
-        text += `*(Nenhuma foto anexada no laudo do ERP para estes apontamentos até o momento).*\n`;
+        text += `📷 **EVIDÊNCIAS FOTOGRÁFICAS:**\n`;
+        text += `*(Sem fotos anexadas nos laudos deste cliente até o momento).*`;
       }
-
-      const displayCards = complaintsWithPhotos.length > 0
-        ? complaintsWithPhotos
-        : (custComplaints.length > 0 ? custComplaints.slice(0, 3) : undefined);
 
       return {
         id: messageId,
@@ -1212,10 +1213,11 @@ export const aiAssistantService = {
         text,
         timestamp,
         customerCard: activeCustomer,
-        complaintCards: displayCards,
+        complaintCards: finalPhotosCards.length > 0 ? finalPhotosCards : (custComplaints.length > 0 ? custComplaints.slice(0, 2) : undefined),
+        concessionCards: finalConcessionCards.length > 0 ? finalConcessionCards : undefined,
         suggestedPrompts: [
-          `Como evitar problemas no linner?`,
           `Quais os cuidados para a Copacol?`,
+          `Quais os cuidados para a Bunge?`,
           `Defeitos mais reclamados no SAC`
         ]
       };

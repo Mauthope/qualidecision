@@ -264,23 +264,42 @@ export async function POST(req: Request) {
 
     // Diretrizes da persona especializada
     const systemPrompt = isShopFloor
-      ? `Você é o Sensei, o Assistente Especialista de Qualidade e Prevenção Operacional do Chão de Fábrica da Rafitec / Qualidecision.
-Seu público-alvo são os operadores de máquinas, revisores, líderes de turno e inspetores de qualidade no chão de fábrica (extrusão, tecelagem, laminação, impressão, corte, costura, solda valvulada e enfardamento/paletização).
+      ? `Você é o Sensei, o Assistente Especialista de Qualidade e Prevenção Operacional do Chão de Fábrica da Rafitec / Qualidecision (Desenvolvido por Mauricio Grigol).
+Seu público-alvo são os operadores de máquinas, revisores, líderes de turno e inspetores de qualidade no chão de fábrica.
 
-OBJETIVO PRINCIPAL:
-Orientar os operadores sobre cuidados operacionais cirúrgicos na máquina, prevenção de não conformidades, requisitos técnicos e histórico de reclamações SAC dos clientes da Rafitec.
+FILOSOFIA OBRIGATÓRIA: ENGENHARIA VISUAL DIRETA AO PONTO (BATER O OLHO E ACHAR A RESPOSTA).
+Operadores no chão de fábrica NÃO têm tempo para ler textos longos ou parágrafos complexos. Seja cirúrgico, estruturado, visual e focado na máquina.
 
-DIRETRIZES E REGRAS ESTRITAS:
-1. Responda em português brasileiro com tom profissional, técnico, direto e focado no chão de fábrica. Assine e se identifique como Sensei.
-2. RESTRITO À QUALIDADE E SAC: Responda apenas sobre cuidados de fabricação, prevenção de defeitos e histórico de queixas SAC dos clientes.
-3. QUANDO O USUÁRIO PERGUNTAR SOBRE CUIDADOS DE UM CLIENTE (Ex: "Quais os cuidados para o cliente Aurora?"):
-   - 🏭 **Perfil & Ranking de Exigência:** Apresente o cliente, código ERP, segmento e nível de rigor (Ranking A - Crítico para rigor máximo como Aurora, Copacol, Bunge, Alisul; Ranking B; Ranking C).
-   - 🚨 **Varredura Completa de Reclamações SAC:** Aponte EXATAMENTE quais foram as reclamações registradas no SAC para o cliente no ERP (mencione código REC, data, tipo de defeito, gravidade, número da OP e o relato do laudo).
-   - 🛡️ **Vislumbre Operacional de Tolerância & Envios (SEM TABELAS OU VALORES):** Olhe para os envios e concessões do cliente, mas NÃO traga tabelas técnicas nem valores em R$ ou volumes totais. Traga apenas um vislumbre e orientação clara sobre flexibilidade. Exemplo padrão: "O cliente possui histórico de tolerar um leve desvio de [ex: desencaixe de impressão / pequena variação de tonalidade / etc.], mas mostre ao líder e à inspeção da qualidade qualquer desvio para que eles avaliem antes de prosseguir."
-   - 📋 **Sequência Obrigatória de Cuidados Operacionais na Máquina:** Detalhe cuidados práticos e específicos na máquina direcionados EXATAMENTE para evitar que os defeitos que o cliente já reclamou se repitam (ex: se o cliente reclamou de linner rasgando na área limpa, dê cuidados cirúrgicos na mesa de montagem, ausência de rebarbas, teste de solda do linner de PE e manuseio sem tracionamento brusco; se reclamou de rasgos no Big Bag, dê cuidados na lâmina de corte, roletes e costura).
-   - 📷 **Fotos de Reclamações:** Se houver evidências fotográficas anexadas na reclamação no ERP, informe ao operador que as fotos reais do SAC estão anexadas abaixo na resposta para consulta e inspeção visual imediata na bancada.
-4. PROIBIDO APROVAR CONCESSÕES PELO CHÃO DE FÁBRICA: Deixe claro que qualquer desvio deve ser sempre mostrado e avaliado pelo líder de turno e inspeção da qualidade.
-5. NO FINAL DA RESPOSTA, inclua exatamente uma linha com 2 a 3 sugestões de perguntas subsequentes no formato:
+REGRAS ESTRITAS DE INTEGRIDADE (ZERO ALUCINAÇÃO):
+1. PROIBIDO INVENTAR: Utilize APENAS e EXCLUSIVAMENTE os dados reais presentes no [CLIENTE EM CONTEXTO DETALHADO] ou no histórico oficial do ERP.
+2. Se o cliente possui reclamações listadas nos dados, mencione APENAS aquelas ocorrências reais (com o código REC, OP e laudo reais).
+3. Se o cliente NÃO possui reclamações listadas nos dados (0 queixas), NUNCA invente nada! Diga claramente: "✅ ZERO RECLAMAÇÕES NO SAC: Este cliente não possui histórico de não-conformidades registradas no sistema."
+4. EVIDÊNCIAS FOTOGRÁFICAS: Sempre informe se as fotos reais de evidência estão disponíveis e anexadas nos cards abaixo da mensagem para conferência imediata na bancada.
+5. PROIBIDO APROVAR CONCESSÕES PELO CHÃO DE FÁBRICA: Deixe claro que qualquer desvio deve ser sempre mostrado e avaliado pelo líder de turno e inspeção da qualidade antes de prosseguir.
+
+ESTRUTURA VISUAL OBRIGATÓRIA DA RESPOSTA (UTILIZE EXATAMENTE ESTES BLOCOS VISUAIS CURTOS):
+
+🏭 **CLIENTE:** [Nome do Cliente] • Cód: **[Código ERP]** | ⚠️ **RANKING [A / B / C]** (Tolerância: **[X]/100**)
+
+🚨 **HISTÓRICO REAL DE RECLAMAÇÕES SAC:**
+(Se houver queixas reais nos dados):
+• ❌ **[REC-XXXX]** OP: \`[OP]\` | 📅 [DATA]
+  ↳ **Defeito:** [Defeito] ([Qtd] kg) • *"[Laudo real do ERP]"*
+(Se NÃO houver queixas):
+• ✅ **ZERO RECLAMAÇÕES NO SAC:** Nenhuma ocorrência registrada no ERP para este cliente.
+
+🛡️ **VISLUMBRE DE TOLERÂNCIA (O QUE ELE ACEITA):**
+• 💡 **Flexibilidade Comprovada:** [Desvios aceitos com base nas concessões ou tolerância real, sem tabelas nem R$].
+• ⚠️ **Regra Operacional:** Qualquer desvio fora do padrão deve ser mostrado ao **líder de turno e à inspeção de qualidade** antes de liberar.
+
+📋 **CUIDADOS NA MÁQUINA (BATER O OLHO):**
+• 🛑 **Atenção Crítica:** [Ação preventiva direta na máquina focada em evitar que o defeito real se repita]
+• 🔍 **Inspeção na Linha:** [Frequência e ponto exato de checagem do operador]
+• 📦 **Enfardamento:** [Cuidado com amarração e identificação da OP]
+
+📷 **EVIDÊNCIAS FOTOGRÁFICAS:**
+Fotos reais de inspeção/SAC disponíveis nos cards abaixo (toque para ampliar em tela cheia na bancada).
+
 SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`
       : `Você é o Sensei, o Diretor/Engenheiro Chefe de Qualidade e Decisão Industrial da Rafitec / Qualidecision.
 Sua especialidade é embalagens industriais de polipropileno (sacaria convencional, sacaria valvulada, Big Bags / FIBC, tecidos e fitas).
@@ -363,17 +382,36 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
           groundingContext += `  • [${c.code}] ${c.date} | Cliente: ${c.customerName} | Desvio: ${c.defectTypeName} (${c.severity}) | Qtd: ${c.quantity} un | Fardos: ${c.bales?.join(', ') || c.lotNumber || 'N/A'} | Scrap Salvo: R$ ${c.totalSavedValue.toFixed(2)} | Status: ${c.customerFeedbackStatus}\n`;
         });
       }
+      // Agrupamento dinâmico real dos top clientes reclamantes e top defeitos
+      const compByCust: Record<string, number> = {};
+      const compByDefect: Record<string, number> = {};
+      complaints.forEach(c => {
+        if (c.customerName) compByCust[c.customerName] = (compByCust[c.customerName] || 0) + 1;
+        if (c.defectTypeName) compByDefect[c.defectTypeName] = (compByDefect[c.defectTypeName] || 0) + 1;
+      });
+      const topCustList = Object.entries(compByCust).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([n, q]) => `${n} (${q})`).join(', ');
+      const topDefList = Object.entries(compByDefect).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([n, q]) => `${n} (${q})`).join(', ');
+
+      const concByCust: Record<string, number> = {};
+      const concByDefect: Record<string, number> = {};
+      concessions.forEach(c => {
+        if (c.customerName) concByCust[c.customerName] = (concByCust[c.customerName] || 0) + 1;
+        if (c.defectTypeName) concByDefect[c.defectTypeName] = (concByDefect[c.defectTypeName] || 0) + 1;
+      });
+      const topConcCustList = Object.entries(concByCust).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([n, q]) => `${n} (${q})`).join(', ');
+      const topConcDefList = Object.entries(concByDefect).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([n, q]) => `${n} (${q})`).join(', ');
+
       groundingContext += `- Ano Base Consolidado (2025): ${conc2025.length} concessões, ${conc2025.reduce((acc, c) => acc + (c.quantity || 0), 0).toLocaleString('pt-BR')} unidades, R$ ${conc2025.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0).toFixed(2)} economizados.\n`;
-      groundingContext += `  Top Clientes 2025: Copacol (12 envios), Bunge (9 envios), Aurora (8 envios), Alisul (7 envios).\n`;
-      groundingContext += `  Top Desvios 2025: Vinco (28 lotes), Borrão de impressão (24 lotes), Tonalidade (18 lotes).\n\n`;
+      if (topConcCustList) groundingContext += `  Top Clientes com Concessões: ${topConcCustList}.\n`;
+      if (topConcDefList) groundingContext += `  Top Desvios Liberados: ${topConcDefList}.\n\n`;
 
       groundingContext += `[HISTÓRICO DE RECLAMAÇÕES SAC]:\n`;
       groundingContext += `- Total Geral de Queixas: ${complaints.length} reclamações (${complaints.reduce((acc, c) => acc + (c.quantityAffected || 0), 0).toLocaleString('pt-BR')} kg afetados)\n`;
       groundingContext += `- Ocorrências em 2025: ${comp2025.length} queixas\n`;
       groundingContext += `- Ocorrências em 2024: ${comp2024.length} queixas\n`;
       groundingContext += `- Severidade Geral: ${complaints.filter(c => c.severity === 'leve').length} Leves, ${complaints.filter(c => c.severity === 'moderada').length} Moderadas, ${complaints.filter(c => c.severity === 'severa').length} Severas (críticas)\n`;
-      groundingContext += `- Top Defeitos Reclamados: Refilada (13), Falhas de impressão (11), Solda fraca (10), Raspado (9), Falta de embalagem (6)\n`;
-      groundingContext += `- Top Clientes Reclamantes: Alisul (8), Copacol (7), Bunge (6), Aurora (6), JBS (5)\n\n`;
+      if (topDefList) groundingContext += `- Top Defeitos Reclamados: ${topDefList}\n`;
+      if (topCustList) groundingContext += `- Top Clientes Reclamantes: ${topCustList}\n\n`;
 
       if (activeCustomer) {
         const custComplaints = complaints.filter(c => c.customerId === activeCustomer!.id);
@@ -533,7 +571,8 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
           history,
           customers,
           defects,
-          complaints
+          complaints,
+          concessions
         );
         return NextResponse.json({
           ...localResponse,
@@ -616,22 +655,62 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
       };
     }
 
-    let attachedComplaints = undefined;
+    let attachedComplaints: Complaint[] | undefined = undefined;
+    let attachedConcessions: ConcessionShipment[] | undefined = undefined;
+
     if (activeCustomer) {
       const custComps = complaints.filter(
         c => c.customerId === activeCustomer!.id || (c.customerName && activeCustomer && c.customerName.toLowerCase().includes(activeCustomer.name.toLowerCase()))
       );
-      if (custComps.length > 0) {
-        const withPhotos = custComps.filter(c => c.photos && c.photos.length > 0);
-        attachedComplaints = withPhotos.length > 0 ? withPhotos : custComps.slice(0, 3);
+      const custConcs = concessions.filter(
+        c => c.customerId === activeCustomer!.id || (c.customerName && activeCustomer && c.customerName.toLowerCase().includes(activeCustomer.name.toLowerCase()))
+      );
+
+      const compsWithPhotos = custComps.filter(c => c.photos && c.photos.length > 0);
+      const concsWithPhotos = custConcs.filter(c => c.photos && c.photos.length > 0);
+
+      if (compsWithPhotos.length > 0) {
+        attachedComplaints = compsWithPhotos;
+      } else if (custComps.length > 0) {
+        attachedComplaints = custComps.slice(0, 3);
+      }
+
+      if (concsWithPhotos.length > 0) {
+        attachedConcessions = concsWithPhotos.slice(0, 3);
+      }
+
+      // Se nem as queixas nem as concessões do cliente possuem fotos, mas o cliente reclamou de defeitos específicos,
+      // buscar fotos de referência da fábrica desse mesmo defeito para exibir visualmente na bancada
+      const totalPhotos = (attachedComplaints?.reduce((acc, c) => acc + (c.photos?.length || 0), 0) || 0) +
+                          (attachedConcessions?.reduce((acc, c) => acc + (c.photos?.length || 0), 0) || 0);
+
+      if (totalPhotos === 0 && custComps.length > 0) {
+        const defectIds = Array.from(new Set(custComps.map(c => c.defectTypeId)));
+        const refCompsWithPhotos = complaints.filter(c => defectIds.includes(c.defectTypeId) && c.photos && c.photos.length > 0);
+        const refConcsWithPhotos = concessions.filter(c => defectIds.includes(c.defectTypeId) && c.photos && c.photos.length > 0);
+
+        if (refCompsWithPhotos.length > 0) {
+          attachedComplaints = (attachedComplaints || []).concat(refCompsWithPhotos.slice(0, 2));
+        } else if (refConcsWithPhotos.length > 0) {
+          attachedConcessions = refConcsWithPhotos.slice(0, 3);
+        }
       }
     } else if (activeDefect) {
       const defComps = complaints.filter(
         c => c.defectTypeId === activeDefect!.id || (c.defectTypeName && c.defectTypeName.toLowerCase().includes(activeDefect!.name.toLowerCase()))
       );
-      const withPhotos = defComps.filter(c => c.photos && c.photos.length > 0);
-      if (withPhotos.length > 0) {
-        attachedComplaints = withPhotos.slice(0, 2);
+      const defConcs = concessions.filter(
+        c => c.defectTypeId === activeDefect!.id || (c.defectTypeName && c.defectTypeName.toLowerCase().includes(activeDefect!.name.toLowerCase()))
+      );
+
+      const compsWithPhotos = defComps.filter(c => c.photos && c.photos.length > 0);
+      const concsWithPhotos = defConcs.filter(c => c.photos && c.photos.length > 0);
+
+      if (compsWithPhotos.length > 0) {
+        attachedComplaints = compsWithPhotos.slice(0, 3);
+      }
+      if (concsWithPhotos.length > 0) {
+        attachedConcessions = concsWithPhotos.slice(0, 3);
       }
     }
 
@@ -642,6 +721,7 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
       timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
       customerCard: activeCustomer,
       complaintCards: attachedComplaints,
+      concessionCards: attachedConcessions,
       riskRecommendation: isShopFloor ? undefined : (calculatedRisk || undefined),
       suggestedPrompts,
       actionButton,

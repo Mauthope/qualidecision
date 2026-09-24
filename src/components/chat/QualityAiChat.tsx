@@ -282,19 +282,61 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                 >
                   <div className="whitespace-pre-line space-y-1">
                     {msg.text.split('\n').map((line, lIdx) => {
-                      const parts = line.split(/(\*\*.*?\*\*)/g);
-                      const isBullet = line.trim().startsWith('•') || line.trim().startsWith('-');
-                      const isNumbered = /^\d+\.\s/.test(line.trim());
+                      const trimmed = line.trim();
+                      const parts = line.split(/(\*\*.*?\*\*|`.*?`)/g);
+                      const isBullet = trimmed.startsWith('•') || trimmed.startsWith('-');
+                      const isNumbered = /^\d+\.\s/.test(trimmed);
+
+                      // Visual callout highlights
+                      const isClientSection = trimmed.startsWith('🏭');
+                      const isAlertSection = trimmed.startsWith('🚨');
+                      const isShieldSection = trimmed.startsWith('🛡️');
+                      const isChecklistSection = trimmed.startsWith('📋');
+                      const isCameraSection = trimmed.startsWith('📷');
+                      const isComplaintItem = trimmed.startsWith('• ❌') || trimmed.startsWith('❌');
+                      const isSuccessItem = trimmed.startsWith('• ✅') || trimmed.startsWith('✅');
+                      const isChecklistItem = trimmed.startsWith('• 🛑') || trimmed.startsWith('• 🔍') || trimmed.startsWith('• 📦');
+
+                      let calloutClasses = '';
+                      if (isClientSection) {
+                        calloutClasses = 'border-l-4 border-cyan-400 bg-gradient-to-r from-cyan-950/50 to-transparent text-cyan-100 p-2.5 rounded-r-xl my-1.5 shadow-sm font-semibold';
+                      } else if (isAlertSection) {
+                        calloutClasses = 'border-l-4 border-rose-500 bg-gradient-to-r from-rose-950/40 to-transparent text-rose-100 p-2 rounded-r-lg my-1.5 shadow-sm font-bold text-xs uppercase tracking-wide';
+                      } else if (isShieldSection) {
+                        calloutClasses = 'border-l-4 border-cyan-500 bg-gradient-to-r from-cyan-950/40 to-transparent text-cyan-100 p-2 rounded-r-lg my-1.5 shadow-sm font-bold text-xs uppercase tracking-wide';
+                      } else if (isChecklistSection) {
+                        calloutClasses = 'border-l-4 border-emerald-500 bg-gradient-to-r from-emerald-950/40 to-transparent text-emerald-100 p-2 rounded-r-lg my-1.5 shadow-sm font-bold text-xs uppercase tracking-wide';
+                      } else if (isCameraSection) {
+                        calloutClasses = 'border-l-4 border-purple-500 bg-gradient-to-r from-purple-950/40 to-transparent text-purple-100 p-2 rounded-r-lg my-1.5 shadow-sm font-bold text-xs uppercase tracking-wide';
+                      } else if (isComplaintItem) {
+                        calloutClasses = 'p-2 rounded-lg bg-rose-950/30 border border-rose-800/40 text-rose-200 my-1 shadow-sm text-xs';
+                      } else if (isSuccessItem) {
+                        calloutClasses = 'p-2 rounded-lg bg-emerald-950/30 border border-emerald-800/40 text-emerald-200 my-1 shadow-sm text-xs font-semibold';
+                      } else if (isChecklistItem) {
+                        calloutClasses = 'p-2 rounded-lg bg-slate-900/80 border border-slate-800 text-slate-200 my-1 shadow-sm text-xs';
+                      }
                       
                       return (
-                        <p key={lIdx} className={`${isBullet ? 'ml-3 my-0.5' : isNumbered ? 'ml-1 my-1' : 'my-1'}`}>
-                          {parts.map((part, pIdx) => {
-                            if (part.startsWith('**') && part.endsWith('**')) {
-                              return <strong key={pIdx} className="font-bold text-cyan-200">{part.slice(2, -2)}</strong>;
-                            }
-                            return part;
-                          })}
-                        </p>
+                        <div
+                          key={lIdx}
+                          className={`${calloutClasses} ${isBullet && !isComplaintItem && !isSuccessItem && !isChecklistItem ? 'ml-3 my-0.5' : isNumbered ? 'ml-1 my-1' : 'my-0.5'}`}
+                        >
+                          <p>
+                            {parts.map((part, pIdx) => {
+                              if (part.startsWith('**') && part.endsWith('**')) {
+                                return <strong key={pIdx} className="font-bold text-cyan-200">{part.slice(2, -2)}</strong>;
+                              }
+                              if (part.startsWith('`') && part.endsWith('`')) {
+                                return (
+                                  <code key={pIdx} className="px-1.5 py-0.5 rounded font-mono font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-800/50 text-[11px]">
+                                    {part.slice(1, -1)}
+                                  </code>
+                                );
+                              }
+                              return part;
+                            })}
+                          </p>
+                        </div>
                       );
                     })}
                   </div>
@@ -469,14 +511,22 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                 {/* Attached Concession Cards */}
                 {msg.concessionCards && msg.concessionCards.length > 0 && (
                   <div className="space-y-2 pt-1">
-                    <div className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
+                    <div className="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
                       <TrendingUp className="w-4 h-4 text-cyan-400" />
-                      Envios Expedidos com Concessão Registrada:
+                      Envios Expedidos com Concessão Registrada ({msg.concessionCards.length}):
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                       {msg.concessionCards.map(c => (
-                        <div key={c.id} className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs flex flex-col justify-between space-y-2">
+                        <div key={c.id} className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs flex flex-col justify-between space-y-2.5 shadow-md">
                           <div>
+                            <div className="flex items-center justify-between text-xs border-b border-slate-800 pb-1.5 mb-1.5">
+                              <span className="font-mono font-bold text-cyan-400 text-[11px]">{c.code}</span>
+                              {c.opNumber && (
+                                <span className="text-[10px] font-mono text-cyan-300 px-1.5 py-0.5 rounded bg-cyan-950/70 border border-cyan-800/40">
+                                  OP: {c.opNumber}
+                                </span>
+                              )}
+                            </div>
                             <div className="font-bold text-slate-200">{c.customerName}</div>
                             <div className="text-[11px] text-slate-400 mt-0.5">
                               {c.bales && c.bales.length > 0 ? (
@@ -485,10 +535,53 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                                 <span>{c.lotNumber}</span>
                               )} • {c.defectTypeName} ({c.quantity.toLocaleString('pt-BR')} un)
                             </div>
+                            {c.technicalNotes && (
+                              <p className="text-[11px] text-slate-300 italic bg-black/40 p-2 rounded-lg border border-slate-800/80 mt-1.5">
+                                "{c.technicalNotes}"
+                              </p>
+                            )}
                           </div>
+
+                          {/* Concession Photos Gallery */}
+                          {c.photos && c.photos.length > 0 && (
+                            <div className="space-y-1 pt-1">
+                              <div className="text-[10px] text-slate-400 font-semibold flex items-center gap-1">
+                                <Eye className="w-3 h-3 text-cyan-400" />
+                                Fotos da liberação:
+                              </div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {c.photos.map(photo => (
+                                  <div
+                                    key={photo.id}
+                                    onClick={() => {
+                                      setActivePhoto(photo);
+                                      const opText = c.opNumber ? ` (OP ${c.opNumber})` : '';
+                                      setActivePhotoTitle(`${c.customerName} - [${c.code}] ${c.defectTypeName}${opText}`);
+                                    }}
+                                    className="relative group cursor-pointer w-20 h-16 rounded-lg overflow-hidden border border-slate-700 hover:border-cyan-400 transition-all shadow-md bg-black"
+                                  >
+                                    <img
+                                      src={photo.url}
+                                      alt={photo.caption || 'Foto da concessão'}
+                                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
+                                    />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
+                                      <Eye className="w-4 h-4 text-cyan-300" />
+                                    </div>
+                                    {photo.caption && (
+                                      <div className="absolute bottom-0 inset-x-0 bg-black/70 px-1 py-0.5 text-[8px] text-slate-200 truncate">
+                                        {photo.caption}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
                           <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
                             <span className="text-[10px] text-emerald-400 font-semibold">Refugo Evitado:</span>
-                            <span className="font-mono font-bold text-cyan-400 text-sm">
+                            <span className="font-mono font-bold text-cyan-400 text-xs">
                               R$ {c.totalSavedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </span>
                           </div>

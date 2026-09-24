@@ -140,11 +140,14 @@ export default function ChaoDeFabricaPage() {
         code: c.code,
         customerId: c.customerId,
         customerName: c.customerName,
+        customerNumber: c.customerNumber,
+        opNumber: c.opNumber || (c as any).op_number || c.lotNumber,
         defectTypeName: c.defectTypeName,
         severity: c.severity,
         quantity: c.quantity,
         date: c.date,
         customerFeedbackStatus: c.customerFeedbackStatus,
+        technicalNotes: c.technicalNotes,
         photos: c.photos || []
       }));
 
@@ -329,39 +332,58 @@ export default function ChaoDeFabricaPage() {
                     <div className="whitespace-pre-line space-y-1">
                       {msg.text.split('\n').map((line, lIdx) => {
                         const trimmed = line.trim();
-                        const parts = line.split(/(\*\*.*?\*\*)/g);
+                        const parts = line.split(/(\*\*.*?\*\*|`.*?`)/g);
                         const isBullet = trimmed.startsWith('•') || trimmed.startsWith('-');
                         const isNumbered = /^\d+\.\s/.test(trimmed);
 
-                        // Callout styling for sections
+                        // Callout styling for sections (Engenharia Visual)
+                        const isClientSection = trimmed.startsWith('🏭');
                         const isAlertSection = trimmed.startsWith('🚨');
                         const isShieldSection = trimmed.startsWith('🛡️');
                         const isChecklistSection = trimmed.startsWith('📋');
                         const isCameraSection = trimmed.startsWith('📷');
+                        const isComplaintItem = trimmed.startsWith('• ❌') || trimmed.startsWith('❌');
+                        const isSuccessItem = trimmed.startsWith('• ✅') || trimmed.startsWith('✅');
+                        const isChecklistItem = trimmed.startsWith('• 🛑') || trimmed.startsWith('• 🔍') || trimmed.startsWith('• 📦');
 
                         let calloutClasses = '';
-                        if (isAlertSection) {
-                          calloutClasses = 'border-l-4 border-rose-500 bg-rose-950/20 text-rose-100 p-2.5 rounded-r-xl my-2 shadow-sm';
+                        if (isClientSection) {
+                          calloutClasses = 'border-l-4 border-cyan-400 bg-gradient-to-r from-cyan-950/50 to-transparent text-cyan-100 p-3 rounded-r-2xl my-2 shadow-md';
+                        } else if (isAlertSection) {
+                          calloutClasses = 'border-l-4 border-rose-500 bg-gradient-to-r from-rose-950/40 to-transparent text-rose-100 p-2.5 rounded-r-xl my-2 shadow-sm font-bold text-xs uppercase tracking-wide';
                         } else if (isShieldSection) {
-                          calloutClasses = 'border-l-4 border-cyan-500 bg-cyan-950/20 text-cyan-100 p-2.5 rounded-r-xl my-2 shadow-sm';
+                          calloutClasses = 'border-l-4 border-cyan-500 bg-gradient-to-r from-cyan-950/40 to-transparent text-cyan-100 p-2.5 rounded-r-xl my-2 shadow-sm font-bold text-xs uppercase tracking-wide';
                         } else if (isChecklistSection) {
-                          calloutClasses = 'border-l-4 border-emerald-500 bg-emerald-950/20 text-emerald-100 p-2.5 rounded-r-xl my-2 shadow-sm';
+                          calloutClasses = 'border-l-4 border-emerald-500 bg-gradient-to-r from-emerald-950/40 to-transparent text-emerald-100 p-2.5 rounded-r-xl my-2 shadow-sm font-bold text-xs uppercase tracking-wide';
                         } else if (isCameraSection) {
-                          calloutClasses = 'border-l-4 border-purple-500 bg-purple-950/20 text-purple-100 p-2.5 rounded-r-xl my-2 shadow-sm';
+                          calloutClasses = 'border-l-4 border-purple-500 bg-gradient-to-r from-purple-950/40 to-transparent text-purple-100 p-2.5 rounded-r-xl my-2 shadow-sm font-bold text-xs uppercase tracking-wide';
+                        } else if (isComplaintItem) {
+                          calloutClasses = 'p-2.5 rounded-xl bg-rose-950/30 border border-rose-800/40 text-rose-200 my-1.5 shadow-sm text-xs';
+                        } else if (isSuccessItem) {
+                          calloutClasses = 'p-2.5 rounded-xl bg-emerald-950/30 border border-emerald-800/40 text-emerald-200 my-1.5 shadow-sm text-xs font-semibold';
+                        } else if (isChecklistItem) {
+                          calloutClasses = 'p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-slate-200 my-1 shadow-sm text-xs';
                         }
 
                         return (
                           <div
                             key={lIdx}
-                            className={`${calloutClasses} ${isBullet ? 'ml-3 my-0.5' : isNumbered ? 'ml-1 my-1' : 'my-0.5'}`}
+                            className={`${calloutClasses} ${isBullet && !isComplaintItem && !isSuccessItem && !isChecklistItem ? 'ml-3 my-0.5' : isNumbered ? 'ml-1 my-1' : 'my-0.5'}`}
                           >
                             <p>
                               {parts.map((part, pIdx) => {
                                 if (part.startsWith('**') && part.endsWith('**')) {
                                   return (
-                                    <strong key={pIdx} className="font-bold text-cyan-200">
+                                    <strong key={pIdx} className="font-bold text-white">
                                       {part.slice(2, -2)}
                                     </strong>
+                                  );
+                                }
+                                if (part.startsWith('`') && part.endsWith('`')) {
+                                  return (
+                                    <code key={pIdx} className="px-1.5 py-0.5 rounded font-mono font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-800/50 text-[11px]">
+                                      {part.slice(1, -1)}
+                                    </code>
                                   );
                                 }
                                 return part;
@@ -495,6 +517,93 @@ export default function ChaoDeFabricaPage() {
                                       <img
                                         src={photo.url}
                                         alt={photo.caption || 'Foto da não conformidade'}
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
+                                      />
+                                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
+                                        <Eye className="w-5 h-5 text-cyan-300" />
+                                      </div>
+                                      {photo.caption && (
+                                        <div className="absolute bottom-0 inset-x-0 bg-black/70 px-1.5 py-0.5 text-[9px] text-slate-200 truncate">
+                                          {photo.caption}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Attached Concession Cards (Photos and Details from Shop Floor) */}
+                  {msg.concessionCards && msg.concessionCards.length > 0 && (
+                    <div className="space-y-3 pt-1">
+                      <div className="text-xs font-bold text-cyan-300 flex items-center gap-2">
+                        <Camera className="w-4 h-4 text-cyan-400" />
+                        Evidências Fotográficas e Registros de Inspeção / Concessão ({msg.concessionCards.length}):
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {msg.concessionCards.map(concession => (
+                          <div
+                            key={concession.id}
+                            className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition-all space-y-2.5 shadow-md"
+                          >
+                            <div className="flex items-center justify-between text-xs border-b border-slate-800 pb-2">
+                              <span className="font-mono font-bold text-cyan-400 px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20">
+                                {concession.code}
+                              </span>
+                              {concession.opNumber && (
+                                <span className="text-[11px] font-mono text-cyan-300 px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-800/40">
+                                  OP: {concession.opNumber}
+                                </span>
+                              )}
+                              <span className="text-[11px] text-slate-400">
+                                {new Date(concession.date).toLocaleDateString('pt-BR')}
+                              </span>
+                            </div>
+
+                            <div className="text-xs text-white font-bold flex items-center justify-between">
+                              <span>{concession.defectTypeName}</span>
+                              <span className="text-[10px] font-semibold text-emerald-300 uppercase px-1.5 py-0.5 rounded bg-emerald-500/15">
+                                {concession.customerFeedbackStatus === 'aceito_sem_ressalvas'
+                                  ? 'Aceito sem Ressalvas'
+                                  : concession.customerFeedbackStatus === 'aceito_com_observacao'
+                                  ? 'Aceito com Observação'
+                                  : 'Concessão Aprovada'}
+                              </span>
+                            </div>
+
+                            {concession.technicalNotes && (
+                              <p className="text-[11px] text-slate-300 italic bg-black/40 p-2.5 rounded-xl border border-slate-800/80 leading-relaxed">
+                                "{concession.technicalNotes}"
+                              </p>
+                            )}
+
+                            {/* Photos Gallery */}
+                            {concession.photos && concession.photos.length > 0 && (
+                              <div className="space-y-1.5 pt-1">
+                                <div className="text-[10px] text-slate-400 font-semibold flex items-center gap-1">
+                                  <Eye className="w-3 h-3 text-cyan-400" />
+                                  Clique na foto para ampliar em tela cheia:
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {concession.photos.map(photo => (
+                                    <div
+                                      key={photo.id}
+                                      onClick={() => {
+                                        setActivePhoto(photo);
+                                        const opText = concession.opNumber ? ` (OP ${concession.opNumber})` : '';
+                                        setActivePhotoTitle(`${concession.customerName} - [${concession.code}] ${concession.defectTypeName}${opText}`);
+                                      }}
+                                      className="relative group cursor-pointer w-28 sm:w-32 h-20 sm:h-24 rounded-xl overflow-hidden border border-slate-700 hover:border-cyan-400 transition-all shadow-md bg-black"
+                                    >
+                                      <img
+                                        src={photo.url}
+                                        alt={photo.caption || 'Foto da concessão'}
                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
                                       />
                                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">

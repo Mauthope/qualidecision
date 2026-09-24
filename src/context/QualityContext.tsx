@@ -998,19 +998,22 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       const localGeminiKey = storageService.getGeminiApiKey();
 
-      // Otimiza o payload removendo fotos base64 pesadas e mantendo metadados essenciais
+      // Otimiza o payload mantendo metadados essenciais e referências de fotos
       const lightComplaints = complaints.map(c => ({
         id: c.id,
         code: c.code,
         customerId: c.customerId,
         customerName: c.customerName,
+        customerNumber: c.customerNumber,
         defectTypeId: c.defectTypeId,
         defectTypeName: c.defectTypeName,
         date: c.date,
         severity: c.severity,
         quantityAffected: c.quantityAffected,
         status: c.status,
-        description: c.description
+        description: c.description,
+        opNumber: c.opNumber || (c as any).op_number || c.lotNumber,
+        photos: c.photos || []
       }));
 
       const lightConcessions = concessions.map(c => ({
@@ -1018,6 +1021,8 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
         code: c.code,
         customerId: c.customerId,
         customerName: c.customerName,
+        customerNumber: c.customerNumber,
+        opNumber: c.opNumber || (c as any).op_number || c.lotNumber,
         defectTypeId: c.defectTypeId,
         defectTypeName: c.defectTypeName,
         date: c.date,
@@ -1025,8 +1030,10 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
         quantity: c.quantity,
         totalSavedValue: c.totalSavedValue,
         customerFeedbackStatus: c.customerFeedbackStatus,
+        technicalNotes: c.technicalNotes,
         lotNumber: c.lotNumber,
-        bales: c.bales
+        bales: c.bales,
+        photos: c.photos || []
       }));
 
       const response = await fetch('/api/ai/chat', {
