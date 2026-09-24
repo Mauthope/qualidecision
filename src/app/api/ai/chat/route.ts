@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { aiAssistantService } from '@/services/aiAssistantService';
+import { aiAssistantService, matchesCustomer } from '@/services/aiAssistantService';
 import { qualityService } from '@/services/qualityService';
 import { Customer, DefectType, Complaint, ConcessionShipment, AiChatMessage, RiskEvaluationResult } from '@/types';
 
@@ -339,8 +339,8 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
       groundingContext += `- Severidade Geral: ${complaints.filter(c => c.severity === 'leve').length} Leves, ${complaints.filter(c => c.severity === 'moderada').length} Moderadas, ${complaints.filter(c => c.severity === 'severa').length} Severas (críticas)\n\n`;
 
       if (activeCustomer) {
-        const custComplaints = complaints.filter(c => c.customerId === activeCustomer!.id || (c.customerName && activeCustomer && c.customerName.toLowerCase().includes(activeCustomer.name.toLowerCase())));
-        const custConcessions = concessions.filter(c => c.customerId === activeCustomer!.id || (c.customerName && activeCustomer && c.customerName.toLowerCase().includes(activeCustomer.name.toLowerCase())));
+        const custComplaints = complaints.filter(c => matchesCustomer(c, activeCustomer!));
+        const custConcessions = concessions.filter(c => matchesCustomer(c, activeCustomer!));
         const acceptedDefectNames = Array.from(new Set(custConcessions.map(c => c.defectTypeName).filter(Boolean)));
 
         groundingContext += `[CLIENTE EM CONTEXTO DETALHADO]: ${activeCustomer.name} (Código ERP: ${activeCustomer.code || 'N/A'})\n`;
@@ -414,8 +414,8 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
       if (topCustList) groundingContext += `- Top Clientes Reclamantes: ${topCustList}\n\n`;
 
       if (activeCustomer) {
-        const custComplaints = complaints.filter(c => c.customerId === activeCustomer!.id);
-        const custConcessions = concessions.filter(c => c.customerId === activeCustomer!.id);
+        const custComplaints = complaints.filter(c => matchesCustomer(c, activeCustomer!));
+        const custConcessions = concessions.filter(c => matchesCustomer(c, activeCustomer!));
         groundingContext += `[CLIENTE EM CONTEXTO]: ${activeCustomer.name} (${activeCustomer.code})\n`;
         groundingContext += `- Segmento: ${activeCustomer.segment || 'Geral'}\n`;
         groundingContext += `- Score de Tolerância Geral: ${activeCustomer.overallToleranceScore}/100\n`;
@@ -659,12 +659,8 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
     let attachedConcessions: ConcessionShipment[] | undefined = undefined;
 
     if (activeCustomer) {
-      const custComps = complaints.filter(
-        c => c.customerId === activeCustomer!.id || (c.customerName && activeCustomer && c.customerName.toLowerCase().includes(activeCustomer.name.toLowerCase()))
-      );
-      const custConcs = concessions.filter(
-        c => c.customerId === activeCustomer!.id || (c.customerName && activeCustomer && c.customerName.toLowerCase().includes(activeCustomer.name.toLowerCase()))
-      );
+      const custComps = complaints.filter(c => matchesCustomer(c, activeCustomer!));
+      const custConcs = concessions.filter(c => matchesCustomer(c, activeCustomer!));
 
       const compsWithPhotos = custComps.filter(c => c.photos && c.photos.length > 0);
       const concsWithPhotos = custConcs.filter(c => c.photos && c.photos.length > 0);

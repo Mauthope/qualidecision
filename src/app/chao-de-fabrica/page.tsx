@@ -131,7 +131,12 @@ export default function ChaoDeFabricaPage() {
         rootCause: c.rootCause,
         correctiveAction: c.correctiveAction,
         opNumber: c.opNumber || (c as any).op_number || c.lotNumber,
-        photos: c.photos || []
+        photos: (c.photos || []).map(p => ({
+          id: p.id,
+          caption: p.caption,
+          defectLocation: p.defectLocation,
+          url: p.url && !p.url.startsWith('data:') ? p.url : ''
+        }))
       }));
 
       // Concessions payload for operational glimpse
@@ -148,7 +153,12 @@ export default function ChaoDeFabricaPage() {
         date: c.date,
         customerFeedbackStatus: c.customerFeedbackStatus,
         technicalNotes: c.technicalNotes,
-        photos: c.photos || []
+        photos: (c.photos || []).map(p => ({
+          id: p.id,
+          caption: p.caption,
+          defectLocation: p.defectLocation,
+          url: p.url && !p.url.startsWith('data:') ? p.url : ''
+        }))
       }));
 
       const res = await fetch('/api/ai/chat', {
@@ -168,6 +178,21 @@ export default function ChaoDeFabricaPage() {
 
       if (res.ok) {
         const aiResponse: AiChatMessage = await res.json();
+
+        // Re-hidrata os cards de evidências com as fotos completas (incluindo base64) do estado local
+        if (aiResponse.complaintCards && aiResponse.complaintCards.length > 0) {
+          aiResponse.complaintCards = aiResponse.complaintCards.map(cc => {
+            const fullComp = complaints.find(comp => comp.id === cc.id);
+            return fullComp && fullComp.photos && fullComp.photos.length > 0 ? { ...cc, photos: fullComp.photos } : cc;
+          });
+        }
+        if (aiResponse.concessionCards && aiResponse.concessionCards.length > 0) {
+          aiResponse.concessionCards = aiResponse.concessionCards.map(cc => {
+            const fullConc = concessions.find(conc => conc.id === cc.id);
+            return fullConc && fullConc.photos && fullConc.photos.length > 0 ? { ...cc, photos: fullConc.photos } : cc;
+          });
+        }
+
         setMessages(prev => [...prev, aiResponse]);
       } else {
         // Fallback directly to specialized local Sensei engine

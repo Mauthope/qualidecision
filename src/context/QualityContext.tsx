@@ -998,7 +998,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       const localGeminiKey = storageService.getGeminiApiKey();
 
-      // Otimiza o payload mantendo metadados essenciais e referências de fotos
+      // Otimiza o payload mantendo metadados essenciais e referências leves de fotos (sem base64 para evitar HTTP 413)
       const lightComplaints = complaints.map(c => ({
         id: c.id,
         code: c.code,
@@ -1013,7 +1013,12 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
         status: c.status,
         description: c.description,
         opNumber: c.opNumber || (c as any).op_number || c.lotNumber,
-        photos: c.photos || []
+        photos: (c.photos || []).map(p => ({
+          id: p.id,
+          caption: p.caption,
+          defectLocation: p.defectLocation,
+          url: p.url && !p.url.startsWith('data:') ? p.url : ''
+        }))
       }));
 
       const lightConcessions = concessions.map(c => ({
@@ -1033,7 +1038,12 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
         technicalNotes: c.technicalNotes,
         lotNumber: c.lotNumber,
         bales: c.bales,
-        photos: c.photos || []
+        photos: (c.photos || []).map(p => ({
+          id: p.id,
+          caption: p.caption,
+          defectLocation: p.defectLocation,
+          url: p.url && !p.url.startsWith('data:') ? p.url : ''
+        }))
       }));
 
       const response = await fetch('/api/ai/chat', {
@@ -1052,6 +1062,21 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       if (response.ok) {
         const aiResponse: AiChatMessage = await response.json();
+
+        // Re-hidrata os cards de evidências com as fotos completas (incluindo base64) do estado local
+        if (aiResponse.complaintCards && aiResponse.complaintCards.length > 0) {
+          aiResponse.complaintCards = aiResponse.complaintCards.map(cc => {
+            const fullComp = complaints.find(comp => comp.id === cc.id);
+            return fullComp && fullComp.photos && fullComp.photos.length > 0 ? { ...cc, photos: fullComp.photos } : cc;
+          });
+        }
+        if (aiResponse.concessionCards && aiResponse.concessionCards.length > 0) {
+          aiResponse.concessionCards = aiResponse.concessionCards.map(cc => {
+            const fullConc = concessions.find(conc => conc.id === cc.id);
+            return fullConc && fullConc.photos && fullConc.photos.length > 0 ? { ...cc, photos: fullConc.photos } : cc;
+          });
+        }
+
         const updatedHistory = [...newHistory, aiResponse];
         setChatMessages(updatedHistory);
         storageService.saveChatMessages(updatedHistory);

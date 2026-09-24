@@ -25,6 +25,38 @@ const DEFECT_SYNONYMS: Record<string, string[]> = {
   laminacao: ['laminacao', 'delaminacao', 'filme solto', 'bolha']
 };
 
+export function matchesCustomer(
+  record: { customerId?: string; customer_id?: string; customerName?: string; customer_name?: string; customerNumber?: string; customer_number?: string },
+  customer?: Customer
+): boolean {
+  if (!customer) return false;
+  const cId = record.customerId || record.customer_id;
+  if (cId && cId === customer.id) return true;
+
+  const cNum = record.customerNumber || record.customer_number;
+  if (cNum && customer.code && String(cNum).trim() === String(customer.code).trim()) return true;
+
+  const recName = normalizeText(record.customerName || record.customer_name || '');
+  const custName = normalizeText(customer.name || '');
+  if (!recName || !custName) return false;
+
+  // Direct containment in either direction
+  if (recName.includes(custName) || custName.includes(recName)) return true;
+
+  // Extract primary corporate brand/name tokens (e.g. "alisul", "copacol", "bunge", "aurora", "jbs")
+  const stopWords = ['agro', 'alimentos', 'brasil', 'industria', 'comercio', 'cooperativa', 'ltda', 's/a', 'nutricao', 'estoque', 'sa', 'me', 'epp', 'embalagens'];
+  const getBrandTokens = (name: string) => name.split(/[\s\-–—/]+/).filter(w => w.length >= 3 && !stopWords.includes(w));
+  
+  const custTokens = getBrandTokens(custName);
+  const recTokens = getBrandTokens(recName);
+
+  if (custTokens.length > 0 && recTokens.length > 0) {
+    if (custTokens.some(ct => recTokens.includes(ct))) return true;
+  }
+
+  return false;
+}
+
 interface ConversationContext {
   lastCustomer?: Customer;
   lastDefect?: DefectType;
@@ -33,6 +65,7 @@ interface ConversationContext {
 }
 
 export const aiAssistantService = {
+  matchesCustomer,
   extractContextFromHistory(
     history: AiChatMessage[],
     customers: Customer[],
@@ -192,7 +225,7 @@ export const aiAssistantService = {
 
     // 1. If user asked specifically for a customer's shipments
     if (activeCustomer) {
-      const custConcessions = concessions.filter(c => c.customerId === activeCustomer.id || normalizeText(c.customerName).includes(normalizeText(activeCustomer.name)));
+      const custConcessions = concessions.filter(c => matchesCustomer(c, activeCustomer));
       const filteredByYear = targetYear ? custConcessions.filter(c => c.date?.startsWith(targetYear)) : custConcessions;
 
       const totalLots = filteredByYear.length;
@@ -437,7 +470,7 @@ export const aiAssistantService = {
 
     // 1. If specific customer complaints
     if (activeCustomer) {
-      const custComplaints = complaints.filter(c => c.customerId === activeCustomer.id || normalizeText(c.customerName).includes(normalizeText(activeCustomer.name)));
+      const custComplaints = complaints.filter(c => matchesCustomer(c, activeCustomer));
       const filtered = targetYear ? custComplaints.filter(c => c.date?.startsWith(targetYear)) : custComplaints;
 
       const totalComp = filtered.length;
@@ -896,8 +929,8 @@ export const aiAssistantService = {
 
     // INTENT 5: Customer Identified, but Defect is missing
     if (activeCustomer && !activeDefect) {
-      const clientComplaints = complaints.filter(c => c.customerId === activeCustomer!.id);
-      const clientConcessions = concessions.filter(c => c.customerId === activeCustomer!.id);
+      const clientComplaints = complaints.filter(c => matchesCustomer(c, activeCustomer));
+      const clientConcessions = concessions.filter(c => matchesCustomer(c, activeCustomer));
 
       // Top defects complained vs tolerated
       const toleratedDefects = Object.entries(activeCustomer.toleranceRatings || {})
@@ -1089,11 +1122,11 @@ export const aiAssistantService = {
     // 3. Customer query - Engenharia Visual: direto ao ponto, fatos reais, zero alucinação e fotos
     if (activeCustomer) {
       const custComplaints = complaints.filter(
-        c => c.customerId === activeCustomer!.id || normalizeText(c.customerName).includes(normalizeText(activeCustomer!.name))
+        c => matchesCustomer(c, activeCustomer!)
       );
 
       const custConcessions = (concessions || []).filter(
-        c => c.customerId === activeCustomer!.id || normalizeText(c.customerName).includes(normalizeText(activeCustomer!.name))
+        c => matchesCustomer(c, activeCustomer!)
       );
 
       // Ranking visual
