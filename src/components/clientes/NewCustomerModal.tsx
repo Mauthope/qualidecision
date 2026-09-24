@@ -22,7 +22,7 @@ export const NewCustomerModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
   const { customers, addCustomer } = useQuality();
 
   const [name, setName] = useState('');
-  const [code, setCode] = useState(`CLI-${String(customers.length + 1).padStart(3, '0')}`);
+  const [code, setCode] = useState('');
   const [location, setLocation] = useState('');
   const [segment, setSegment] = useState('Agroindústria / Grãos & Cereais');
   const [initialProfile, setInitialProfile] = useState<'padrao' | 'exigente' | 'flexivel'>('padrao');
@@ -33,9 +33,11 @@ export const NewCustomerModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
     e.preventDefault();
     if (!name.trim()) return;
 
+    const finalCode = code.trim() || `CLI-${String(customers.length + 1).padStart(3, '0')}`;
+
     const created = addCustomer({
       name: name.trim(),
-      code: code.trim(),
+      code: finalCode,
       segment: segment.trim(),
       location: location.trim() || undefined,
       initialProfile
@@ -96,14 +98,17 @@ export const NewCustomerModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Código do Cliente (ERP / Interno)
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+                <span>Número / Código do Cliente (ERP) *</span>
+                <span className="text-[10px] text-cyan-400 font-mono">Código no ERP</span>
               </label>
               <input
                 type="text"
+                required
+                placeholder="Ex: 10425 ou 113108"
                 value={code}
                 onChange={e => setCode(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-mono text-cyan-300 focus:outline-none focus:border-cyan-500/50"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-mono text-cyan-300 placeholder-slate-600 focus:outline-none focus:border-cyan-500/50"
               />
             </div>
 

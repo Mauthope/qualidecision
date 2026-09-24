@@ -28,7 +28,6 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
   const { customers, defects, addConcession, evaluateRisk, settings } = useQuality();
 
   const [customerId, setCustomerId] = useState(initialData?.customerId || defaultCustomerId || '');
-  const [customerNumber, setCustomerNumber] = useState('');
   const [date, setDate] = useState('');
   const [opNumber, setOpNumber] = useState('');
   const [defectTypeId, setDefectTypeId] = useState(initialData?.defectTypeId || '');
@@ -47,7 +46,6 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
   React.useEffect(() => {
     if (isOpen) {
       setCustomerId(initialData?.customerId || defaultCustomerId || '');
-      setCustomerNumber('');
       setDate('');
       setOpNumber('');
       setDefectTypeId(initialData?.defectTypeId || '');
@@ -85,7 +83,7 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
 
     addConcession({
       customerId,
-      customerNumber: customerNumber.trim() || selectedCustomer?.code,
+      customerNumber: selectedCustomer?.code || undefined,
       opNumber: opNumber.trim(),
       date,
       bales,
@@ -185,8 +183,8 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
             </div>
           </div>
 
-          {/* Identificadores: Data do Envio, Número Cliente, Número OP */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Identificadores: Data do Envio e Número OP */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Data do Envio */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
@@ -207,20 +205,6 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
                 value={date}
                 onChange={e => setDate(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-500/50 [color-scheme:dark]"
-              />
-            </div>
-
-            {/* Customer Number / Code */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Número do Cliente
-              </label>
-              <input
-                type="text"
-                value={customerNumber}
-                onChange={e => setCustomerNumber(e.target.value)}
-                placeholder={selectedCustomer?.code ? `Ex: ${selectedCustomer.code}` : "Informe o código..."}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-500/50 font-mono"
               />
             </div>
 

@@ -35,7 +35,6 @@ export const EditConcessionModal: React.FC<Props> = ({ isOpen, onClose, concessi
   const { customers, defects, updateConcession, evaluateRisk, settings } = useQuality();
 
   const [customerId, setCustomerId] = useState('');
-  const [customerNumber, setCustomerNumber] = useState('');
   const [date, setDate] = useState('');
   const [opNumber, setOpNumber] = useState('');
   const [defectTypeId, setDefectTypeId] = useState('');
@@ -56,7 +55,6 @@ export const EditConcessionModal: React.FC<Props> = ({ isOpen, onClose, concessi
   useEffect(() => {
     if (isOpen && concession) {
       setCustomerId(concession.customerId || '');
-      setCustomerNumber(concession.customerNumber || '');
       setDate(concession.date || '');
       setOpNumber(concession.opNumber || '');
       setDefectTypeId(concession.defectTypeId || '');
@@ -92,9 +90,13 @@ export const EditConcessionModal: React.FC<Props> = ({ isOpen, onClose, concessi
       return;
     }
 
+    const selectedCustomer = customers.find(c => c.id === customerId);
+    // Preserva rigorosamente o número real já registrado no envio. Se não houver, usa o código do cliente selecionado.
+    const preservedCustomerNumber = concession.customerNumber || selectedCustomer?.code;
+
     updateConcession(concession.id, {
       customerId,
-      customerNumber: customerNumber.trim() || selectedCustomer?.code,
+      customerNumber: preservedCustomerNumber,
       opNumber: opNumber.trim(),
       date,
       bales,
@@ -144,48 +146,28 @@ export const EditConcessionModal: React.FC<Props> = ({ isOpen, onClose, concessi
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1 text-sm">
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Customer with Search Input */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-semibold text-slate-300">
-                  Cliente Destinatário *
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setIsCustomerModalOpen(true)}
-                  className="text-[11px] text-cyan-400 hover:text-cyan-300 flex items-center gap-1 hover:underline cursor-pointer"
-                >
-                  <UserPlus className="w-3 h-3" />
-                  <span>Novo Cliente</span>
-                </button>
-              </div>
-              <SearchableCustomerSelect
-                customers={customers}
-                selectedCustomerId={customerId}
-                onSelectCustomer={(id) => {
-                  setCustomerId(id);
-                  const cust = customers.find(c => c.id === id);
-                  if (cust?.code) setCustomerNumber(cust.code);
-                }}
-                placeholder="Pesquisar cliente por nome ou código..."
-                required
-              />
-            </div>
-
-            {/* Customer Code / Number */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Código / N° do Cliente (ERP)
+          {/* Customer with Search Input */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold text-slate-300">
+                Cliente Destinatário *
               </label>
-              <input
-                type="text"
-                placeholder="Ex: CLI-042 ou 10425"
-                value={customerNumber}
-                onChange={e => setCustomerNumber(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
-              />
+              <button
+                type="button"
+                onClick={() => setIsCustomerModalOpen(true)}
+                className="text-[11px] text-cyan-400 hover:text-cyan-300 flex items-center gap-1 hover:underline cursor-pointer"
+              >
+                <UserPlus className="w-3 h-3" />
+                <span>Novo Cliente</span>
+              </button>
             </div>
+            <SearchableCustomerSelect
+              customers={customers}
+              selectedCustomerId={customerId}
+              onSelectCustomer={setCustomerId}
+              placeholder="Pesquisar cliente por nome ou código..."
+              required
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

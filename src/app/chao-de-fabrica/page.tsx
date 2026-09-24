@@ -29,7 +29,7 @@ import {
 const INITIAL_MESSAGE: AiChatMessage = {
   id: 'msg-welcome-shopfloor',
   sender: 'assistant',
-  text: `👋 Olá! Sou o **Assistente de Qualidade - Chão de Fábrica** da Rafitec.\n\n` +
+  text: `👋 Olá! Sou o **Assistente de Qualidade - Chão de Fábrica** da Rafitec (*Desenvolvido por Mauricio Grigol*).\n\n` +
     `Estou conectado em tempo real à base de dados para orientar operadores de máquinas, revisores, líderes de turno e inspetores sobre **cuidados operacionais de produção** (extrusão, tecelagem, impressão, solda, costura e paletização) e **histórico de reclamações SAC** dos clientes.\n\n` +
     `💡 **Como posso orientar sua linha hoje?**\n` +
     `• Digite o nome de um cliente para ver a sequência de cuidados (Ex: *"Copacol"*, *"Bunge"*, *"Aurora"*, *"Alisul"*)\n` +
@@ -201,9 +201,11 @@ export default function ChaoDeFabricaPage() {
                 Modo Operacional
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 flex items-center gap-1.5">
+            <p className="text-[11px] text-slate-400 flex items-center gap-1.5 flex-wrap">
               <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
               <span>Orientações Técnicas & Prevenção SAC</span>
+              <span className="text-slate-600 hidden sm:inline">•</span>
+              <span className="text-cyan-400/90 font-medium hidden sm:inline">Desenvolvido por Mauricio Grigol</span>
             </p>
           </div>
         </div>
@@ -527,13 +529,15 @@ export default function ChaoDeFabricaPage() {
             </button>
           </form>
 
-          <div className="flex items-center justify-between text-[11px] text-slate-500 px-1">
+          <div className="flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 px-1 gap-1">
             <span className="hidden sm:inline">
               Terminal exclusivo de chão de fábrica: orientações técnicas de produção e SAC.
             </span>
-            <span className="text-[10px] text-slate-500 ml-auto">
-              Rafitec S/A • QualiDecision Industrial
-            </span>
+            <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium sm:ml-auto">
+              <span className="text-cyan-400 font-semibold">Desenvolvido por Mauricio Grigol</span>
+              <span className="text-slate-600">•</span>
+              <span>Rafitec S/A</span>
+            </div>
           </div>
 
         </div>
