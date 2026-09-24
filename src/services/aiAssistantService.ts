@@ -1005,7 +1005,7 @@ export const aiAssistantService = {
     return {
       id: messageId,
       sender: 'assistant',
-      text: `Olá! Sou o **Copilot de Inteligência de Qualidade e Decisão Industrial**.\n\n` +
+      text: `Olá! Sou o **Sensei**, especialista em Qualidade e Decisão Industrial da Rafitec.\n\n` +
         `Estou conectado em tempo real à base de dados do ERP e SAC para responder dúvidas técnicas e analíticas da fábrica:\n\n` +
         `1. 📦 **Resumo de Envios:** *"Resumo do que foi enviado este ano"* ou *"O que foi enviado para a Copacol?"*\n` +
         `2. 🚨 **Reclamações SAC:** *"Quais foram as reclamações registradas?"* ou *"Reclamações da Alisul"*\n` +
@@ -1027,7 +1027,8 @@ export const aiAssistantService = {
     history: AiChatMessage[] = [],
     customers: Customer[],
     defects: DefectType[],
-    complaints: Complaint[]
+    complaints: Complaint[],
+    concessions: ConcessionShipment[] = []
   ): AiChatMessage {
     const queryNorm = normalizeText(prompt);
     const messageId = `msg-${Date.now()}`;
@@ -1041,18 +1042,18 @@ export const aiAssistantService = {
       return {
         id: messageId,
         sender: 'assistant',
-        text: `🔒 **Aviso de Escopo - Terminal Chão de Fábrica**\n\n` +
+        text: `🔒 **Aviso de Escopo - Terminal Chão de Fábrica (Sensei)**\n\n` +
           `Este terminal é exclusivo para **orientações técnicas operacionais, prevenção de defeitos na fábrica e histórico de reclamações SAC**.\n\n` +
           `Decisões sobre liberação de lotes com desvio sob concessão ou indicadores de refugo/scrap salvo são de alçada da Engenharia de Qualidade e Diretoria através do sistema corporativo.\n\n` +
           `💡 **Você pode consultar:**\n` +
-          `• Cuidados específicos por cliente (Ex: *"Quais os cuidados para a Copacol?"*)\n` +
-          `• Histórico de reclamações SAC (Ex: *"Quais as reclamações da Bunge?"*)\n` +
-          `• Ações preventivas por defeito (Ex: *"Como evitar problemas de solda valvulada?"*)`,
+          `• Cuidados específicos por cliente (Ex: *"Quais os cuidados para a Aurora?"* ou *"Copacol"*)\n` +
+          `• Histórico de reclamações SAC (Ex: *"Quais as reclamações da Aurora?"*)\n` +
+          `• Ações preventivas por defeito (Ex: *"Como evitar problemas de linner ou solda?"*)`,
         timestamp,
         suggestedPrompts: [
+          'Quais os cuidados para o cliente Aurora?',
           'Quais os cuidados para a Copacol?',
-          'Histórico de reclamações da Bunge',
-          'Cuidados na costura e solda'
+          'Histórico de reclamações da Bunge'
         ]
       };
     }
@@ -1070,67 +1071,140 @@ export const aiAssistantService = {
       activeDefect = ctx.lastDefect;
     }
 
-    // 3. Customer query - ranking and operational sequence
+    // 3. Customer query - deep sweep of complaints, tolerance glimpse, machine care, and photos
     if (activeCustomer) {
       const custComplaints = complaints.filter(
         c => c.customerId === activeCustomer!.id || normalizeText(c.customerName).includes(normalizeText(activeCustomer!.name))
       );
 
+      const custConcessions = (concessions || []).filter(
+        c => c.customerId === activeCustomer!.id || normalizeText(c.customerName).includes(normalizeText(activeCustomer!.name))
+      );
+
       // Determine ranking
-      let rankingName = '⭐ Ranking A (Crítico / Altíssimo Rigor Técnico)';
-      let rankingDescription = 'Linha de envase automatizada de alta velocidade. Requer conferência milimétrica e tolerância zero a falhas estruturais ou de estanqueidade.';
+      let rankingName = '⭐ Ranking A (Crítico / Rigor Máximo)';
+      let rankingDescription = 'Linha de envase de alta sensibilidade e rigor operacional. Requer tolerância zero a falhas estruturais, rasgos, estanqueidade ou linner.';
       if (activeCustomer.overallToleranceScore > 75 && custComplaints.length < 2) {
         rankingName = '🥉 Ranking C (Padrão Industrial)';
-        rankingDescription = 'Cliente com envase convencional ou manual. Foco primordial na resistência da embalagem e peso nominal.';
+        rankingDescription = 'Cliente com envase convencional. Foco primordial na integridade do tecido e peso nominal.';
       } else if (activeCustomer.overallToleranceScore > 60 && custComplaints.length < 5) {
         rankingName = '🥈 Ranking B (Atenção Redobrada / Rigor Alto)';
-        rankingDescription = 'Cliente com inspeção rigorosa no recebimento, alta sensibilidade a defeitos visuais e alinhamento de costura/solda.';
+        rankingDescription = 'Inspeção rigorosa no recebimento, alta sensibilidade a desvios visuais, alinhamento e costura.';
       }
 
-      // Group complaints by defect
-      const defectMap: Record<string, number> = {};
-      custComplaints.forEach(c => {
-        const dName = c.defectTypeName || 'Outro';
-        defectMap[dName] = (defectMap[dName] || 0) + 1;
-      });
-      const topCustDefects = Object.entries(defectMap).sort((a, b) => b[1] - a[1]);
-
-      let text = `🏭 **Orientações Técnicas de Chão de Fábrica para o Cliente:**\n`;
+      let text = `🏭 **Orientações Técnicas de Chão de Fábrica — Sensei**\n\n`;
       text += `### **${activeCustomer.name}** (${activeCustomer.code || 'N/A'})\n\n`;
-      text += `• **Nível de Exigência:** **${rankingName}**\n`;
+      text += `• **Nível de Exigência:** **${rankingName}** (Score: ${activeCustomer.overallToleranceScore}/100)\n`;
       text += `• **Segmento:** ${activeCustomer.segment || 'Industrial / Agronegócio'}\n`;
-      text += `• **Perfil:** ${rankingDescription}\n\n`;
+      text += `• **Perfil Operacional:** ${rankingDescription}\n\n`;
 
+      // 1. RECLAMAÇÕES SAC ESPECÍFICAS
       if (custComplaints.length > 0) {
-        text += `🚨 **Histórico de Queixas SAC (${custComplaints.length} apontamentos registrados):**\n`;
-        topCustDefects.slice(0, 4).forEach(([dName, count]) => {
-          text += `• **${dName}:** ${count} ${count === 1 ? 'reclamação' : 'reclamações'}\n`;
+        text += `🚨 **Varredura Detalhada de Reclamações SAC (${custComplaints.length} apontamentos no ERP):**\n\n`;
+        custComplaints.forEach((c, idx) => {
+          const dateStr = c.date ? new Date(c.date).toLocaleDateString('pt-BR') : 'Data não informada';
+          text += `**${idx + 1}. [${c.code}]** Data: **${dateStr}** | Defeito: **${c.defectTypeName}** (Gravidade: **${c.severity.toUpperCase()}**)\n`;
+          if (c.opNumber || c.lotNumber) {
+            text += `  • **Ordem de Produção (OP):** \`${c.opNumber || c.lotNumber}\` | **Volume Afetado:** ${c.quantityAffected} kg\n`;
+          }
+          if (c.description) {
+            text += `  • **Laudo Técnico ERP:** *"${c.description}"*\n`;
+          }
+          if (c.rootCause || c.correctiveAction) {
+            text += `  • **Causa & Ação:** ${c.rootCause || 'Em análise'} • ${c.correctiveAction || 'Ajuste de processo'}\n`;
+          }
+          if (c.photos && c.photos.length > 0) {
+            text += `  • 📷 **Fotos Anexadas:** ${c.photos.length} evidência(s) fotográfica(s) disponível(is) no card abaixo.\n`;
+          }
+          text += `\n`;
         });
-        const latest = custComplaints[0];
-        if (latest) {
-          text += `  *(Último apontamento: ${latest.defectTypeName} em ${new Date(latest.date).toLocaleDateString('pt-BR')}${latest.description ? ` - "${latest.description.slice(0, 120)}..."` : ''})*\n`;
-        }
-        text += `\n`;
       } else {
-        text += `✅ **Histórico SAC Impecável:** Nenhum apontamento recente de reclamação para este cliente.\n\n`;
+        text += `✅ **Histórico SAC Impecável:** Nenhum apontamento recente de não-conformidade registrado no ERP para este cliente.\n\n`;
       }
 
-      text += `📋 **Sequência Obrigatória de Cuidados Operacionais:**\n\n`;
-      text += `1. **🧵 Tecelagem & Fita:**\n`;
-      text += `   - Conferir tensão dos teares e inspecionar a bobina contra furos, tramas rompidas e manchas de óleo.\n`;
-      text += `   - Manter gramatura homogênea conforme ficha técnica do cliente.\n\n`;
+      // 2. VISLUMBRE DE ENVIOS E TOLERÂNCIA (SEM TABELAS OU VALORES MONETÁRIOS)
+      text += `🛡️ **Vislumbre Operacional de Tolerância & Envios:**\n`;
+      const acceptedDefects = Array.from(new Set(custConcessions.map(c => c.defectTypeName).filter(Boolean)));
+      if (acceptedDefects.length > 0) {
+        text += `O cliente possui histórico de tolerar um leve desvio de **${acceptedDefects.join(', ')}**, mas **mostre ao líder e à inspeção da qualidade qualquer desvio para que eles avaliem antes de liberar**.\n\n`;
+      } else {
+        const ratings = activeCustomer.toleranceRatings || {};
+        const toleratedList = Object.entries(ratings)
+          .filter(([_, val]: any) => val?.level === 'alta' || val?.level === 'moderada')
+          .map(([defId, val]: any) => {
+            const dObj = defects.find(d => d.id === defId);
+            return dObj ? dObj.name : defId.replace('def-', '').replace(/-/g, ' ');
+          });
 
-      text += `2. **🎨 Impressão & Laminação:**\n`;
-      text += `   - Conferir rigorosamente a viscosidade da tinta para evitar borrões, decalques ou falhas de tonalidade.\n`;
-      text += `   - Realizar teste de fita para aderência e conferir leitor de código de barras.\n\n`;
+        if (toleratedList.length > 0) {
+          const sample = toleratedList.slice(0, 2).join(' e ');
+          text += `O cliente aceita com ressalvas leves desvios pontuais (como pequenas variações em ${sample}), desde que não afetem a estanqueidade ou resistência estrutural da embalagem. Porém, **mostre ao líder e à inspeção da qualidade qualquer desvio para que eles avaliem antes de prosseguir**, pois falhas de linner ou rasgos causam perda imediata no envase.\n\n`;
+        } else {
+          text += `O cliente possui tolerância restrita e perfil de altíssimo rigor técnico. **Mostre imediatamente ao líder e à inspeção da qualidade qualquer desvio identificado** para bloqueio preventivo do lote.\n\n`;
+        }
+      }
 
-      text += `3. **🔥 Solda Valvulada / Costura:**\n`;
-      text += `   - *Solda Valvulada:* Realizar teste de estanqueidade e arrancamento a cada início de turno e troca de bobina. Garantir temperatura uniforme da sapata.\n`;
-      text += `   - *Costura:* Ponto uniforme (sem pontos falhos), linha na tensão correta, sem pontas soltas na bainha.\n\n`;
+      // 3. CUIDADOS PRÁTICOS NA MÁQUINA (DIRECIONADOS ÀS QUEIXAS REAIS)
+      text += `📋 **Sequência Obrigatória de Cuidados Operacionais na Máquina:**\n\n`;
+      const defectTypesLower = custComplaints.map(c => normalizeText(c.defectTypeName || ''));
+      const hasLinner = defectTypesLower.some(d => d.includes('linner') || d.includes('liner'));
+      const hasRasgos = defectTypesLower.some(d => d.includes('rasg') || d.includes('furo') || d.includes('corte'));
+      const hasImpressao = defectTypesLower.some(d => d.includes('impress') || d.includes('tinta') || d.includes('borr') || d.includes('desencaixe'));
+      const hasSolda = defectTypesLower.some(d => d.includes('solda') || d.includes('valvul'));
+      const hasCostura = defectTypesLower.some(d => d.includes('costur') || d.includes('ponto'));
 
-      text += `4. **📦 Enfardamento, Amarração & Identificação:**\n`;
-      text += `   - Contagem exata por fardo. Amarração firme sem vincar ou deformar as embalagens.\n`;
-      text += `   - Identificação nítida de OP, data, turno e operador na etiqueta externa.\n`;
+      let stepNum = 1;
+
+      if (hasLinner || activeCustomer.segment?.toLowerCase().includes('bag')) {
+        text += `${stepNum++}. **🧴 Cuidados Críticos com Linner (Área Limpa & Acabamento):**\n`;
+        text += `   - Inspecionar minuciosamente a mesa de acabamento e os braços metálicos de inserção para garantir ausência total de rebarbas cortantes, cantos vivos ou parafusos salientes.\n`;
+        text += `   - Conferir a solda de fundo do linner de PE antes da montagem e vestir o Big Bag sem puxamento brusco pelas extremidades para não causar microfissuras que rasgam no envase.\n`;
+        text += `   - Manusear sempre com luvas limpas adequadas para Área Limpa.\n\n`;
+      }
+
+      if (hasRasgos) {
+        text += `${stepNum++}. **✂️ Prevenção Contra Rasgos e Cortes no Tecido:**\n`;
+        text += `   - Verificar e limpar as facas térmicas e ultrassom de corte para assegurar que a borda fique 100% selada, sem pontas picotadas que propaguem rasgos na trama.\n`;
+        text += `   - Controlar a tensão dos roletes de arraste e guias do setor de acabamento, evitando atrito excessivo ou tracionamento em ângulo que possa beliscar o tecido tubular.\n`;
+        text += `   - Segregar imediatamente qualquer embalagem que apresentar fios rompidos ou desfiamento na lateral.\n\n`;
+      }
+
+      if (hasImpressao) {
+        text += `${stepNum++}. **🎨 Controle de Impressão & Tintas:**\n`;
+        text += `   - Monitorar a viscosidade da tinta no copo Ford a cada 60 minutos e conferir registro de clichê no início do lote.\n`;
+        text += `   - Realizar teste de fita adesiva nos primeiros sacos para garantir aderência total e legibilidade de código de barras.\n\n`;
+      }
+
+      if (hasSolda) {
+        text += `${stepNum++}. **🔥 Solda Valvulada & Estanqueidade:**\n`;
+        text += `   - Calibrar temperatura e pressão da sapata de solda conforme a ficha técnica da sacaria.\n`;
+        text += `   - Realizar teste destrutivo manual a cada 500 unidades e teste pneumático de válvula.\n\n`;
+      }
+
+      if (hasCostura) {
+        text += `${stepNum++}. **🧵 Costura & Bainha:**\n`;
+        text += `   - Conferir agulha a cada troca de turno (substituir se houver rebarba ou ponta cega).\n`;
+        text += `   - Garantir ponto uniforme sem pontas soltas na bainha e com a linha na tensão regulada.\n\n`;
+      }
+
+      // Step padrão final
+      text += `${stepNum++}. **📦 Enfardamento & Identificação Rastreável:**\n`;
+      text += `   - Realizar amarração firme sem vincar excessivamente ou deformar as embalagens.\n`;
+      text += `   - Fixar etiqueta externa com identificação legível da OP, data, turno e operador para assegurar rastreabilidade total.\n\n`;
+
+      // 4. EVIDÊNCIAS FOTOGRÁFICAS
+      const complaintsWithPhotos = custComplaints.filter(c => c.photos && c.photos.length > 0);
+      if (complaintsWithPhotos.length > 0) {
+        text += `📷 **Evidências Fotográficas do SAC Anexadas:**\n`;
+        text += `Foram localizadas evidências fotográficas das reclamações registradas no ERP para este cliente. Confira as imagens ampliadas logo abaixo para comparação visual imediata com a produção na linha.\n`;
+      } else {
+        text += `📷 **Evidências Fotográficas:**\n`;
+        text += `*(Nenhuma foto anexada no laudo do ERP para estes apontamentos até o momento).*\n`;
+      }
+
+      const displayCards = complaintsWithPhotos.length > 0
+        ? complaintsWithPhotos
+        : (custComplaints.length > 0 ? custComplaints.slice(0, 3) : undefined);
 
       return {
         id: messageId,
@@ -1138,10 +1212,11 @@ export const aiAssistantService = {
         text,
         timestamp,
         customerCard: activeCustomer,
+        complaintCards: displayCards,
         suggestedPrompts: [
-          `Quais defeitos mais críticos na costura?`,
-          `Histórico de reclamações da ${activeCustomer.name.split(' ')[0]}`,
-          `Ver cuidados para outro cliente`
+          `Como evitar problemas no linner?`,
+          `Quais os cuidados para a Copacol?`,
+          `Defeitos mais reclamados no SAC`
         ]
       };
     }
@@ -1154,7 +1229,8 @@ export const aiAssistantService = {
 
       const affectedClients = Array.from(new Set(defectComplaints.map(c => c.customerName))).filter(Boolean);
 
-      let text = `🔍 **Guia de Prevenção no Chão de Fábrica - Defeito: ${activeDefect.name}**\n\n`;
+      let text = `🔍 **Guia de Prevenção no Chão de Fábrica — Sensei**\n\n`;
+      text += `### Defeito: **${activeDefect.name}**\n\n`;
       text += `• **Categoria Técnica:** ${activeDefect.category.toUpperCase()}\n`;
       text += `• **Descrição:** ${activeDefect.description || 'Não-conformidade industrial.'}\n`;
       text += `• **Total de Queixas SAC no Histórico:** **${defectComplaints.length} reclamações**\n`;
@@ -1189,15 +1265,18 @@ export const aiAssistantService = {
         text += `4. **Conferência de Fardo:** Não enfardar sacarias com inconformidades visuais.\n`;
       }
 
+      const complaintsWithPhotos = defectComplaints.filter(c => c.photos && c.photos.length > 0);
+
       return {
         id: messageId,
         sender: 'assistant',
         text,
         timestamp,
+        complaintCards: complaintsWithPhotos.length > 0 ? complaintsWithPhotos.slice(0, 2) : undefined,
         suggestedPrompts: [
           'Quais clientes reclamaram deste defeito?',
-          'Cuidados para a Copacol',
-          'Cuidados para a Bunge'
+          'Cuidados para a Aurora',
+          'Cuidados para a Copacol'
         ]
       };
     }
@@ -1222,7 +1301,7 @@ export const aiAssistantService = {
       });
       const topClients = Object.entries(clientMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-      let text = `🚨 **Painel de Ocorrências SAC - Foco na Prevenção Operacional:**\n\n`;
+      let text = `🚨 **Painel de Ocorrências SAC — Sensei (Foco na Prevenção Operacional):**\n\n`;
       text += `• **Total de Reclamações Registradas:** **${totalComp} ocorrências**\n\n`;
       text += `⚠️ **Top 5 Defeitos com Maior Reincidência na Fábrica:**\n`;
       topDefects.forEach(([dName, count], idx) => {
@@ -1240,8 +1319,8 @@ export const aiAssistantService = {
         text,
         timestamp,
         suggestedPrompts: [
+          'Quais os cuidados para o cliente Aurora?',
           'Quais os cuidados para a Copacol?',
-          'Quais os cuidados para a Bunge?',
           'Como evitar solda fraca?'
         ]
       };
@@ -1251,17 +1330,17 @@ export const aiAssistantService = {
     return {
       id: messageId,
       sender: 'assistant',
-      text: `👋 Olá! Sou o **Assistente de Qualidade - Chão de Fábrica** da Rafitec.\n\n` +
-        `Estou conectado em tempo real para orientar a produção (extrusão, tecelagem, impressão, solda, costura e paletização) sobre os cuidados operacionais e histórico de queixas SAC dos nossos clientes:\n\n` +
-        `• 🏭 **Cuidados por Cliente:** Digite o nome de um cliente (Ex: *"Quais os cuidados para a Copacol?"* ou *"Perfil da Bunge"*)\n` +
+      text: `👋 Olá! Sou o **Sensei**, seu especialista de Qualidade e Prevenção Operacional no Chão de Fábrica da Rafitec (*Desenvolvido por Mauricio Grigol*).\n\n` +
+        `Estou conectado em tempo real para orientar a produção (extrusão, tecelagem, laminação, impressão, corte, costura, solda valvulada e paletização) sobre os cuidados operacionais e histórico de queixas SAC dos nossos clientes:\n\n` +
+        `• 🏭 **Cuidados por Cliente:** Digite o nome de um cliente (Ex: *"Quais os cuidados para o cliente Aurora?"* ou *"Copacol"*)\n` +
         `• 🚨 **Histórico de SAC:** Pergunte sobre queixas registradas (Ex: *"Quais as reclamações da Aurora?"*)\n` +
-        `• 🛠️ **Prevenção de Defeitos:** Tire dúvidas sobre defeitos na máquina (Ex: *"Como evitar problemas de solda ou costura?"*)\n\n` +
+        `• 🛠️ **Prevenção de Defeitos:** Tire dúvidas sobre defeitos na máquina (Ex: *"Como evitar problemas de linner ou costura?"*)\n\n` +
         `Escolha uma das sugestões abaixo ou digite sua consulta:`,
       timestamp,
       suggestedPrompts: [
+        'Quais os cuidados para o cliente Aurora?',
         'Quais os cuidados para a Copacol?',
         'Quais os cuidados para a Bunge?',
-        'Quais os cuidados para a Aurora?',
         'Defeitos mais reclamados no SAC'
       ]
     };

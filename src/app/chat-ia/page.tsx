@@ -19,7 +19,7 @@ export default function ChatIaPage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-lg sm:text-xl font-extrabold text-white font-heading">
-                Copilot IA de Qualidade & Decisão de Liberação
+                Sensei • Qualidade & Decisão de Liberação
               </h1>
               <span className="px-2 py-0.5 rounded text-[10px] bg-cyan-500/15 text-cyan-300 font-semibold border border-cyan-500/30">
                 LLM Ready

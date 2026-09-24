@@ -39,7 +39,7 @@ export const AiDrawer: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-base sm:text-lg font-extrabold text-white font-heading">
-                Assistente Inteligente de Qualidade & Decisão
+                Sensei • Qualidade & Decisão Industrial
               </h2>
               <span className="px-2 py-0.5 rounded text-[10px] bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30 uppercase tracking-wider">
                 Tela Inteira

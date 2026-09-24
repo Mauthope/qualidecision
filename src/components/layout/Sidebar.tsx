@@ -87,7 +87,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: <Calculator className="w-5 h-5 shrink-0" />
     },
     {
-      label: 'Chão de Fábrica (IA)',
+      label: 'Sensei (Chão de Fábrica)',
       href: '/chao-de-fabrica',
       icon: <Factory className="w-5 h-5 shrink-0" />
     }
@@ -247,7 +247,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             )}
 
-            {/* Assistente IA */}
+            {/* Assistente IA Sensei */}
             <button
               onClick={() => {
                 if (isDrawer) onCloseMobile();
@@ -256,14 +256,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-cyan-500/20 via-teal-500/20 to-emerald-500/20 border border-cyan-500/40 text-cyan-300 hover:text-cyan-100 hover:border-cyan-400 hover:bg-cyan-500/30 transition-all shadow-md shadow-cyan-500/10 cursor-pointer ${
                 collapsed ? 'justify-center' : ''
               }`}
-              title="Abrir Assistente de Inteligência Artificial"
+              title="Abrir IA Sensei - Qualidade & Decisão"
             >
               <Bot className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform shrink-0" />
-              {!collapsed && <span className="truncate">Assistente IA</span>}
+              {!collapsed && <span className="truncate">IA Sensei</span>}
 
               {collapsed && (
                 <div className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-medium whitespace-nowrap shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50">
-                  Assistente IA
+                  IA Sensei
                 </div>
               )}
             </button>
