@@ -64,6 +64,7 @@ interface QualityContextType {
       segment?: string;
       location?: string;
       cityState?: string;
+      initialProfile?: 'padrao' | 'exigente' | 'flexivel';
     }
   ) => Customer | null;
   addDefect: (data: {
@@ -664,6 +665,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       segment?: string;
       location?: string;
       cityState?: string;
+      initialProfile?: 'padrao' | 'exigente' | 'flexivel';
     }
   ): Customer | null => {
     if (isViewer) {
@@ -678,6 +680,69 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (idx === -1) return prev;
 
       const existing = prev[idx];
+      let toleranceRatings = existing.toleranceRatings;
+      let overallToleranceScore = existing.overallToleranceScore;
+
+      if (data.initialProfile) {
+        const profile = data.initialProfile;
+        const newRatings: Record<string, { level: ToleranceLevel; notes?: string }> = {};
+
+        defects.forEach(def => {
+          if (profile === 'flexivel') {
+            newRatings[def.id] = {
+              level: 'alta',
+              notes: 'Perfil flexível definido. Alta flexibilidade para desvios operacionais.'
+            };
+          } else if (profile === 'exigente') {
+            if (def.category === 'costura' || def.category === 'estrutural' || def.category === 'solda') {
+              newRatings[def.id] = {
+                level: 'baixa',
+                notes: 'Perfil exigente: tolerância restrita a desvios estruturais/costura/solda.'
+              };
+            } else if (def.category === 'dimensional') {
+              newRatings[def.id] = {
+                level: 'moderada',
+                notes: 'Perfil exigente: aceita apenas desvios dimensionais mínimos.'
+              };
+            } else {
+              newRatings[def.id] = {
+                level: 'moderada',
+                notes: 'Perfil exigente: desvio estético requer alinhamento prévio.'
+              };
+            }
+          } else {
+            // padrao
+            if (def.category === 'costura' || def.category === 'estrutural' || def.category === 'solda') {
+              newRatings[def.id] = {
+                level: 'moderada',
+                notes: 'Perfil padrão: aceita desvios leves sob inspeção.'
+              };
+            } else {
+              newRatings[def.id] = {
+                level: 'alta',
+                notes: 'Perfil padrão: alta flexibilidade para desvios estéticos e visuais.'
+              };
+            }
+          }
+        });
+
+        // Se o cliente possuir queixas reais de SAC no banco, manter preservada a restrição nos defeitos reclamados
+        const clientComplaints = complaints.filter(c => c.customerId === customerId);
+        clientComplaints.forEach(comp => {
+          if (comp.defectTypeId && newRatings[comp.defectTypeId]) {
+            newRatings[comp.defectTypeId] = {
+              level: 'baixa',
+              notes: `Histórico no ERP: cliente já reclamou deste desvio (${comp.code}).`
+            };
+          }
+        });
+
+        const scoreMap = { alta: 100, moderada: 70, baixa: 40, intolerante: 10 };
+        const totalPoints = defects.reduce((sum, def) => sum + (scoreMap[newRatings[def.id]?.level || 'moderada'] || 70), 0);
+        overallToleranceScore = Math.round(totalPoints / Math.max(defects.length, 1));
+        toleranceRatings = newRatings;
+      }
+
       updatedCust = {
         ...existing,
         name: data.name !== undefined && data.name.trim() !== '' ? data.name.trim() : existing.name,
@@ -685,6 +750,8 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
         segment: data.segment !== undefined ? data.segment.trim() : existing.segment,
         location: data.location !== undefined ? data.location.trim() : (data.cityState !== undefined ? data.cityState.trim() : existing.location),
         cityState: data.cityState !== undefined ? data.cityState.trim() : (data.location !== undefined ? data.location.trim() : existing.cityState),
+        toleranceRatings,
+        overallToleranceScore
       };
 
       const next = [...prev];
@@ -699,7 +766,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     return updatedCust;
-  }, [isViewer, showToast]);
+  }, [isViewer, showToast, defects, complaints]);
 
   const addDefect = useCallback((data: {
     name: string;
