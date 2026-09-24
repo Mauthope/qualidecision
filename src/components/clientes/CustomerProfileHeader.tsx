@@ -9,10 +9,13 @@ import {
   Send,
   Sparkles,
   Bot,
-  MapPin
+  MapPin,
+  Pencil
 } from 'lucide-react';
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
 import { ConcessionDecisionModal } from '@/components/clientes/ConcessionDecisionModal';
+import { EditCustomerModal } from '@/components/clientes/EditCustomerModal';
+import { useAuth } from '@/context/AuthContext';
 
 interface Props {
   customer: Customer;
@@ -22,8 +25,10 @@ interface Props {
 
 export const CustomerProfileHeader: React.FC<Props> = ({ customer, complaints, concessions }) => {
   const { openAiDrawer } = useQuality();
+  const { canEdit } = useAuth();
   const [isConcessionOpen, setIsConcessionOpen] = useState(false);
   const [isDecisionModalOpen, setIsDecisionModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const totalSavedValue = concessions.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0);
   const totalUnitsSaved = concessions.reduce((acc, c) => acc + (c.quantity || 0), 0);
@@ -112,6 +117,17 @@ export const CustomerProfileHeader: React.FC<Props> = ({ customer, complaints, c
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              {canEdit && (
+                <button
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 transition-all cursor-pointer active:scale-95"
+                  title="Editar informações do cliente (código ERP, nome, etc.)"
+                >
+                  <Pencil className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Editar Dados</span>
+                </button>
+              )}
+
               <button
                 onClick={handleSimulateWithAi}
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-400 hover:to-indigo-500 shadow-md shadow-purple-500/25 transition-all cursor-pointer active:scale-95"
@@ -185,6 +201,14 @@ export const CustomerProfileHeader: React.FC<Props> = ({ customer, complaints, c
           isOpen={isDecisionModalOpen}
           customer={customer}
           onClose={() => setIsDecisionModalOpen(false)}
+        />
+      )}
+
+      {isEditModalOpen && (
+        <EditCustomerModal
+          isOpen={isEditModalOpen}
+          customer={customer}
+          onClose={() => setIsEditModalOpen(false)}
         />
       )}
     </>

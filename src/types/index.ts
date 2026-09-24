@@ -42,6 +42,7 @@ export interface Complaint {
   code: string;
   customerId: string;
   customerName: string;
+  customerNumber?: string; // Código / Número do Cliente no ERP
   date: string;
   opNumber?: string; // Número da Ordem de Produção (OP)
   lotNumber?: string;

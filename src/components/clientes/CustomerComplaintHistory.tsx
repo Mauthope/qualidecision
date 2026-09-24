@@ -142,7 +142,8 @@ export const CustomerComplaintHistory: React.FC<Props> = ({ customer, complaints
                           key={photo.id}
                           onClick={() => {
                             setActivePhoto(photo);
-                            setPhotoTitle(`${customer.name} - ${item.code} (${item.bales?.length ? `Fardos ${item.bales.join(', ')}` : item.lotNumber || ''})`);
+                            const balesInfo = item.bales?.length ? 'Fardos ' + item.bales.join(', ') : (item.lotNumber || '');
+                            setPhotoTitle(`${customer.name} - ${item.code} (${balesInfo})`);
                           }}
                           className="relative group cursor-pointer w-28 h-20 rounded-xl overflow-hidden border border-slate-700 hover:border-cyan-400 transition-all bg-black shadow-md"
                         >

@@ -14,11 +14,13 @@ import {
   Sparkles,
   Building2,
   MapPin,
-  Plus
+  Plus,
+  Pencil
 } from 'lucide-react';
 import { ConcessionDecisionModal } from '@/components/clientes/ConcessionDecisionModal';
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
 import { NewCustomerModal } from '@/components/clientes/NewCustomerModal';
+import { EditCustomerModal } from '@/components/clientes/EditCustomerModal';
 import { Customer } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 
@@ -30,6 +32,7 @@ export default function ClientesPage() {
   const [filterTolerance, setFilterTolerance] = useState<string>('all');
 
   const [isNewCustomerModalOpen, setIsNewCustomerModalOpen] = useState(false);
+  const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null);
   const [activeCustomerForDecision, setActiveCustomerForDecision] = useState<Customer | null>(null);
   const [activeCustomerForConcession, setActiveCustomerForConcession] = useState<string | null>(null);
 
@@ -222,12 +225,22 @@ export default function ClientesPage() {
 
                 <div className="flex items-center gap-2">
                   {canEdit && (
-                    <button
-                      onClick={() => setActiveCustomerForConcession(customer.id)}
-                      className="px-2.5 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-semibold transition-colors"
-                    >
-                      + Envio
-                    </button>
+                    <>
+                      <button
+                        onClick={() => setCustomerToEdit(customer)}
+                        className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-cyan-300 border border-slate-800 transition-colors cursor-pointer"
+                        title={`Editar informações de ${customer.name}`}
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        onClick={() => setActiveCustomerForConcession(customer.id)}
+                        className="px-2.5 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-semibold transition-colors cursor-pointer"
+                      >
+                        + Envio
+                      </button>
+                    </>
                   )}
 
                   <Link
@@ -243,6 +256,15 @@ export default function ClientesPage() {
           );
         })}
       </div>
+
+      {/* Edit Customer Modal */}
+      {customerToEdit && (
+        <EditCustomerModal
+          isOpen={!!customerToEdit}
+          customer={customerToEdit}
+          onClose={() => setCustomerToEdit(null)}
+        />
+      )}
 
       {/* Decision Simulation Modal */}
       {activeCustomerForDecision && (

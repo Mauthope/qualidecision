@@ -81,7 +81,6 @@ export const RecentConcessionsTable: React.FC = () => {
                   <th className="pb-3 px-4">Defeito & Severidade</th>
                   <th className="pb-3 px-4 text-right">Volume Concedido</th>
                   <th className="pb-3 px-4 text-right">Scrap Salvo (R$)</th>
-                  <th className="pb-3 px-4 text-center">Status / Feedback</th>
                   {(canEdit || canDelete) && <th className="pb-3 pl-2 pr-4 text-center">Ações</th>}
                 </tr>
               </thead>
@@ -93,36 +92,6 @@ export const RecentConcessionsTable: React.FC = () => {
                       (comp.defectTypeId === item.defectTypeId && new Date(comp.date) >= new Date(item.date))
                     )
                   ) || item.customerFeedbackStatus === 'reclamado_posteriormente';
-
-                  let statusBadge = (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                      <Clock className="w-3 h-3" />
-                      Em Trânsito
-                    </span>
-                  );
-
-                  if (isReclaimed) {
-                    statusBadge = (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
-                        <AlertTriangle className="w-3 h-3 text-rose-400" />
-                        Reclamado Posteriormente
-                      </span>
-                    );
-                  } else if (item.customerFeedbackStatus === 'aceito_sem_ressalvas') {
-                    statusBadge = (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        <CheckCircle2 className="w-3 h-3" />
-                        Aceito sem queixa
-                      </span>
-                    );
-                  } else if (item.customerFeedbackStatus === 'aceito_com_observacao') {
-                    statusBadge = (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                        <AlertTriangle className="w-3 h-3" />
-                        Aceito c/ obs
-                      </span>
-                    );
-                  }
 
                   return (
                     <tr
@@ -136,6 +105,12 @@ export const RecentConcessionsTable: React.FC = () => {
                       <td className="py-3.5 pr-4">
                         <div className="font-mono font-bold text-cyan-400">{item.code}</div>
                         <div className="text-[11px] text-slate-500">{new Date(item.date).toLocaleDateString('pt-BR')}</div>
+                        {isReclaimed && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-rose-500/20 text-rose-300 border border-rose-500/40 mt-1 animate-pulse">
+                            <AlertTriangle className="w-2.5 h-2.5 text-rose-400" />
+                            Reclamado
+                          </span>
+                        )}
                       </td>
 
                       <td className="py-3.5 px-4 font-medium text-slate-200">
@@ -179,10 +154,6 @@ export const RecentConcessionsTable: React.FC = () => {
 
                       <td className="py-3.5 px-4 text-right font-mono font-bold text-emerald-400">
                         R$ {item.totalSavedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </td>
-
-                      <td className="py-3.5 px-4 text-center">
-                        {statusBadge}
                       </td>
 
                       {(canEdit || canDelete) && (

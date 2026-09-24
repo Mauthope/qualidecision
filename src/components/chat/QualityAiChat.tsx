@@ -437,7 +437,8 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                                     key={photo.id}
                                     onClick={() => {
                                       setActivePhoto(photo);
-                                      setActivePhotoTitle(`${complaint.customerName} - [${complaint.code}] ${complaint.bales?.length ? `Fardos ${complaint.bales.join(', ')}` : complaint.lotNumber || ''}`);
+                                      const balesInfo = complaint.bales?.length ? 'Fardos ' + complaint.bales.join(', ') : (complaint.lotNumber || '');
+                                      setActivePhotoTitle(`${complaint.customerName} - [${complaint.code}] (${balesInfo})`);
                                     }}
                                     className="relative group cursor-pointer w-32 sm:w-40 h-24 sm:h-28 rounded-xl overflow-hidden border border-slate-700 bg-black hover:border-cyan-400 transition-all shadow-md"
                                   >

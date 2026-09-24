@@ -56,6 +56,16 @@ interface QualityContextType {
     location?: string;
     initialProfile?: 'padrao' | 'exigente' | 'flexivel';
   }) => Customer;
+  updateCustomer: (
+    customerId: string,
+    data: {
+      name?: string;
+      code?: string;
+      segment?: string;
+      location?: string;
+      cityState?: string;
+    }
+  ) => Customer | null;
   addDefect: (data: {
     name: string;
     category: DefectCategory;
@@ -65,6 +75,7 @@ interface QualityContextType {
   }) => DefectType;
   addComplaint: (data: {
     customerId: string;
+    customerNumber?: string;
     opNumber?: string;
     date?: string;
     lotNumber?: string;
@@ -645,6 +656,51 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return newCustomer;
   }, [customers, defects, showToast, isViewer]);
 
+  const updateCustomer = useCallback((
+    customerId: string,
+    data: {
+      name?: string;
+      code?: string;
+      segment?: string;
+      location?: string;
+      cityState?: string;
+    }
+  ): Customer | null => {
+    if (isViewer) {
+      showToast('Acesso Restrito: Usuários com perfil de Visualizador não podem editar clientes.', 'warning');
+      return null;
+    }
+
+    let updatedCust: Customer | null = null;
+
+    setCustomers(prev => {
+      const idx = prev.findIndex(c => c.id === customerId);
+      if (idx === -1) return prev;
+
+      const existing = prev[idx];
+      updatedCust = {
+        ...existing,
+        name: data.name !== undefined && data.name.trim() !== '' ? data.name.trim() : existing.name,
+        code: data.code !== undefined && data.code.trim() !== '' ? data.code.trim() : existing.code,
+        segment: data.segment !== undefined ? data.segment.trim() : existing.segment,
+        location: data.location !== undefined ? data.location.trim() : (data.cityState !== undefined ? data.cityState.trim() : existing.location),
+        cityState: data.cityState !== undefined ? data.cityState.trim() : (data.location !== undefined ? data.location.trim() : existing.cityState),
+      };
+
+      const next = [...prev];
+      next[idx] = updatedCust;
+      storageService.saveCustomers(next);
+      return next;
+    });
+
+    if (updatedCust) {
+      supabaseService.saveCustomer(updatedCust);
+      showToast(`Cliente "${(updatedCust as Customer).name}" atualizado com sucesso!`, 'success');
+    }
+
+    return updatedCust;
+  }, [isViewer, showToast]);
+
   const addDefect = useCallback((data: {
     name: string;
     category: DefectCategory;
@@ -689,6 +745,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const addComplaint = useCallback((data: {
     customerId: string;
+    customerNumber?: string;
     opNumber?: string;
     date?: string;
     lotNumber?: string;
@@ -723,6 +780,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       code: `REC-${year}-${Math.floor(100 + Math.random() * 900)}`,
       customerId: data.customerId,
       customerName,
+      customerNumber: data.customerNumber?.trim() || customer?.code || undefined,
       opNumber: data.opNumber?.trim() || (data.lotNumber ? data.lotNumber.replace(/^OP\s*/i, '') : undefined),
       date: entryDate,
       lotNumber: resolvedLotOrBale,
@@ -1036,6 +1094,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
         updateConcession,
         deleteConcession,
         addCustomer,
+        updateCustomer,
         addDefect,
         addComplaint,
         deleteComplaint,

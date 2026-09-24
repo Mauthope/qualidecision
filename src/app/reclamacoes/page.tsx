@@ -614,7 +614,8 @@ export default function ReclamacoesPage() {
                         key={photo.id}
                         onClick={() => {
                           setActivePhoto(photo);
-                          setPhotoTitle(`${item.customerName} - [${item.code}] ${item.bales?.length ? `Fardos ${item.bales.join(', ')}` : item.lotNumber || ''}`);
+                          const balesInfo = item.bales?.length ? 'Fardos ' + item.bales.join(', ') : (item.lotNumber || '');
+                          setPhotoTitle(`${item.customerName} - [${item.code}] (${balesInfo})`);
                         }}
                         className="relative group cursor-pointer w-32 h-24 rounded-xl overflow-hidden border border-slate-700 hover:border-cyan-400 transition-all bg-black shadow-md"
                       >

@@ -74,12 +74,13 @@ function LoginContent() {
     }
   }, [searchParams, isRecoveryMode]);
 
-  // If already authenticated and NOT resetting password, redirect to home
+  // If already authenticated and NOT resetting password, redirect to target or home
   useEffect(() => {
     if (!isLoading && user && mode !== 'reset_password') {
-      router.push('/');
+      const redirectUrl = searchParams.get('redirect');
+      router.push(redirectUrl && redirectUrl.startsWith('/') ? redirectUrl : '/');
     }
-  }, [user, isLoading, mode, router]);
+  }, [user, isLoading, mode, router, searchParams]);
 
   // Real-time email validation
   const cleanEmail = email.trim().toLowerCase();

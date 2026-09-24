@@ -21,7 +21,8 @@ import {
   LogOut,
   Lock,
   UserCog,
-  KeyRound
+  KeyRound,
+  Factory
 } from 'lucide-react';
 import { useQuality } from '@/context/QualityContext';
 import { useAuth } from '@/context/AuthContext';
@@ -84,6 +85,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Memorial de Cálculo',
       href: '/memorial',
       icon: <Calculator className="w-5 h-5 shrink-0" />
+    },
+    {
+      label: 'Chão de Fábrica (IA)',
+      href: '/chao-de-fabrica',
+      icon: <Factory className="w-5 h-5 shrink-0" />
     }
   ];
 

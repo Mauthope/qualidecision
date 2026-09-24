@@ -3,11 +3,10 @@
 import React, { useState } from 'react';
 import { useQuality } from '@/context/QualityContext';
 import { DefectSeverity, ComplaintPhoto } from '@/types';
-import { AlertCircle, X, PlusCircle, UserPlus } from 'lucide-react';
+import { AlertCircle, X, PlusCircle, UserPlus, Hash } from 'lucide-react';
 import { PhotoUploadCamera } from '@/components/common/PhotoUploadCamera';
 import { SearchableCustomerSelect } from '@/components/common/SearchableCustomerSelect';
 import { SearchableDefectSelect } from '@/components/common/SearchableDefectSelect';
-import { BaleListInput } from '@/components/common/BaleListInput';
 import { NewCustomerModal } from '@/components/clientes/NewCustomerModal';
 import { NewDefectModal } from '@/components/defeitos/NewDefectModal';
 
@@ -21,15 +20,13 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
   const { customers, defects, addComplaint } = useQuality();
 
   const [customerId, setCustomerId] = useState(defaultCustomerId || '');
+  const [customerNumber, setCustomerNumber] = useState('');
   const [opNumber, setOpNumber] = useState('');
   const [date, setDate] = useState('');
   const [defectTypeId, setDefectTypeId] = useState('');
-  const [bales, setBales] = useState<string[]>([]);
   const [quantityAffected, setQuantityAffected] = useState<number | ''>('');
   const [severity, setSeverity] = useState<DefectSeverity>('severa');
   const [description, setDescription] = useState('');
-  const [rootCause, setRootCause] = useState('');
-  const [correctiveAction, setCorrectiveAction] = useState('');
   const [origin, setOrigin] = useState<'sac_manual' | 'erp_sync'>('sac_manual');
   const [photos, setPhotos] = useState<ComplaintPhoto[]>([]);
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
@@ -40,18 +37,17 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
   React.useEffect(() => {
     if (isOpen) {
       setCustomerId(defaultCustomerId || '');
+      const cust = customers.find(c => c.id === defaultCustomerId);
+      setCustomerNumber(cust?.code || '');
       setOpNumber('');
       setDate('');
       setDefectTypeId('');
-      setBales([]);
       setQuantityAffected('');
       setSeverity('severa');
       setDescription('');
-      setRootCause('');
-      setCorrectiveAction('');
       setPhotos([]);
     }
-  }, [isOpen, defaultCustomerId]);
+  }, [isOpen, defaultCustomerId, customers]);
 
   const numQuantity = typeof quantityAffected === 'number' ? quantityAffected : 0;
 
@@ -59,19 +55,17 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerId || !defectTypeId || !description.trim() || bales.length === 0 || !date || numQuantity <= 0) return;
+    if (!customerId || !defectTypeId || !description.trim() || !date || numQuantity <= 0) return;
 
     addComplaint({
       customerId,
+      customerNumber: customerNumber.trim() || undefined,
       opNumber: opNumber.trim() || undefined,
       date,
-      bales,
       defectTypeId,
       quantityAffected: numQuantity,
       severity,
       description: description.trim(),
-      rootCause: rootCause.trim(),
-      correctiveAction: correctiveAction.trim(),
       origin,
       photos
     });
@@ -91,12 +85,12 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
             </div>
             <div>
               <h3 className="text-base font-bold text-white font-heading">Acrescentar Reclamação de Cliente (SAC)</h3>
-              <p className="text-xs text-slate-400">Cadastro manual de não-conformidade com laudo técnico e fotos</p>
+              <p className="text-xs text-slate-400">Cadastro de não-conformidade com laudo técnico e evidências fotográficas</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -105,9 +99,10 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1 text-sm">
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Customer with Search */}
-            <div>
+          {/* Cliente e Número do Cliente */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Customer with Search (2 cols) */}
+            <div className="sm:col-span-2">
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-xs font-semibold text-slate-300">
                   Cliente Reclamante *
@@ -124,17 +119,39 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
               <SearchableCustomerSelect
                 customers={customers}
                 selectedCustomerId={customerId}
-                onSelectCustomer={setCustomerId}
+                onSelectCustomer={(id) => {
+                  setCustomerId(id);
+                  const cust = customers.find(c => c.id === id);
+                  if (cust?.code) setCustomerNumber(cust.code);
+                }}
                 placeholder="Pesquisar cliente por nome ou código..."
                 required
               />
             </div>
 
+            {/* Número do Cliente / Código ERP (1 col) */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
+                <Hash className="w-3.5 h-3.5 text-cyan-400" />
+                <span>N° do Cliente (ERP)</span>
+              </label>
+              <input
+                type="text"
+                value={customerNumber}
+                onChange={e => setCustomerNumber(e.target.value)}
+                placeholder="Ex: CLI-001 ou 10425"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-cyan-300 placeholder-slate-600 focus:outline-none focus:border-rose-500/50"
+              />
+            </div>
+          </div>
+
+          {/* Defeito e Identificadores Operacionais */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Defect Type with Search */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-xs font-semibold text-slate-300">
-                  Tipo de Não-Conformidade *
+                  Tipo de Não-Conformidade / Defeito *
                 </label>
                 <button
                   type="button"
@@ -160,23 +177,23 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
                 required
               />
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Número da OP */}
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Número da OP
+                Número da OP (Ordem de Produção)
               </label>
               <input
                 type="text"
                 value={opNumber}
                 onChange={e => setOpNumber(e.target.value)}
                 placeholder="Ex: 00.110.771/01.05"
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-rose-500/50 font-mono"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-rose-500/50 font-mono"
               />
             </div>
+          </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Data da Reclamação */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
@@ -234,16 +251,6 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
             </div>
           </div>
 
-          {/* Fardos Reclamados (Adição dinâmica por botão) */}
-          <BaleListInput
-            bales={bales}
-            onChange={setBales}
-            variant="rose"
-            required={true}
-            label="Número do(s) Fardo(s) Reclamado(s) *"
-            helperText="Adicione o número de cada fardo reclamado com o botão '+ Add Fardo' (ou intervalos como 101-105 / cole do Excel)."
-          />
-
           {/* Description */}
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5">
@@ -257,35 +264,6 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
               className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-rose-500/50"
               required
             />
-          </div>
-
-          {/* Root cause and action */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Causa Raiz Apurada
-              </label>
-              <input
-                type="text"
-                value={rootCause}
-                onChange={e => setRootCause(e.target.value)}
-                placeholder="Ex: Rolo anilox com excesso de viscosidade..."
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Ação Corretiva / Disposição
-              </label>
-              <input
-                type="text"
-                value={correctiveAction}
-                onChange={e => setCorrectiveAction(e.target.value)}
-                placeholder="Ex: Troca preventiva de navalhas / reposição de lote..."
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none"
-              />
-            </div>
           </div>
 
           {/* Direct Camera / File Upload for Complaint Evidence */}
@@ -302,13 +280,13 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-colors"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-colors cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              disabled={!customerId || !defectTypeId || !description.trim() || bales.length === 0 || !date || numQuantity <= 0}
+              disabled={!customerId || !defectTypeId || !description.trim() || !date || numQuantity <= 0}
               className="px-5 py-2 rounded-xl text-xs font-bold bg-rose-500 hover:bg-rose-400 text-white shadow-md shadow-rose-500/20 transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <AlertCircle className="w-3.5 h-3.5" />
@@ -325,6 +303,7 @@ export const NewComplaintModal: React.FC<Props> = ({ isOpen, onClose, defaultCus
           onClose={() => setIsCustomerModalOpen(false)}
           onSuccess={newCust => {
             setCustomerId(newCust.id);
+            if (newCust.code) setCustomerNumber(newCust.code);
           }}
         />
       )}

@@ -28,7 +28,8 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
   // Protect private routes
   useEffect(() => {
     if (!isLoading && !user && pathname !== '/login') {
-      router.push('/login');
+      const redirectUrl = pathname === '/' ? '/login' : `/login?redirect=${encodeURIComponent(pathname)}`;
+      router.push(redirectUrl);
     }
   }, [isLoading, user, pathname, router]);
 
@@ -47,6 +48,11 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
   // If on login page, don't show navigation sidebar or headers
   if (pathname === '/login') {
     return <main className="w-full min-h-screen">{children}</main>;
+  }
+
+  // If on shop floor standalone page, render isolated full-screen view without ERP sidebar/header
+  if (pathname === '/chao-de-fabrica') {
+    return <main className="w-full min-h-screen bg-[#060a13]">{children}</main>;
   }
 
   // Loading state while checking auth

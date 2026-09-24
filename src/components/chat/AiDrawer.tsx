@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { useQuality } from '@/context/QualityContext';
 import { Bot, X, Sparkles, Maximize2, Database, ShieldCheck } from 'lucide-react';
 import { QualityAiChat } from './QualityAiChat';
 
 export const AiDrawer: React.FC = () => {
+  const pathname = usePathname();
   const { isAiDrawerOpen, closeAiDrawer } = useQuality();
 
   // Handle ESC key to close full screen
@@ -19,7 +21,7 @@ export const AiDrawer: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isAiDrawerOpen, closeAiDrawer]);
 
-  if (!isAiDrawerOpen) return null;
+  if (!isAiDrawerOpen || pathname === '/chao-de-fabrica') return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-[#060a13] flex flex-col animate-in fade-in zoom-in-95 duration-200">

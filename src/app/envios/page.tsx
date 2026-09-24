@@ -38,7 +38,6 @@ export default function EnviosPage() {
   const [search, setSearch] = useState('');
   const [filterCustomer, setFilterCustomer] = useState('all');
   const [filterDefect, setFilterDefect] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
 
   const filteredConcessions = concessions.filter(c => {
     const s = search.toLowerCase();
@@ -51,24 +50,22 @@ export default function EnviosPage() {
 
     const matchesCustomer = filterCustomer === 'all' || c.customerId === filterCustomer;
     const matchesDefect = filterDefect === 'all' || c.defectTypeId === filterDefect;
-    const matchesStatus = filterStatus === 'all' || c.customerFeedbackStatus === filterStatus;
 
-    return matchesSearch && matchesCustomer && matchesDefect && matchesStatus;
+    return matchesSearch && matchesCustomer && matchesDefect;
   });
 
   const exportCsv = () => {
-    const headers = ['Codigo', 'Data', 'Cliente', 'Lote', 'Produto', 'Defeito', 'Quantidade', 'Severidade', 'Scrap_Salvo_RS', 'Status'];
+    const headers = ['Codigo', 'Data', 'Cliente', 'Lote_Fardos', 'Produto', 'Defeito', 'Quantidade', 'Severidade', 'Scrap_Salvo_RS'];
     const rows = filteredConcessions.map(c => [
       c.code,
       c.date,
       `"${c.customerName}"`,
-      c.lotNumber,
+      `"${c.bales && c.bales.length > 0 ? c.bales.join('; ') : c.lotNumber || ''}"`,
       `"${c.productName}"`,
       `"${c.defectTypeName}"`,
       c.quantity,
       c.severity,
-      c.totalSavedValue.toFixed(2),
-      c.customerFeedbackStatus
+      c.totalSavedValue.toFixed(2)
     ]);
 
     const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -203,17 +200,6 @@ export default function EnviosPage() {
               <option key={d.id} value={d.id}>{d.name}</option>
             ))}
           </select>
-
-          <select
-            value={filterStatus}
-            onChange={e => setFilterStatus(e.target.value)}
-            className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none"
-          >
-            <option value="all">Todos os Status</option>
-            <option value="aceito_sem_ressalvas">Aceito sem Queixa</option>
-            <option value="aceito_com_observacao">Aceito c/ Observação</option>
-            <option value="em_transito">Em Trânsito</option>
-          </select>
         </div>
       </div>
 
@@ -249,7 +235,6 @@ export default function EnviosPage() {
                   setSearch('');
                   setFilterCustomer('all');
                   setFilterDefect('all');
-                  setFilterStatus('all');
                 }}
                 className="mt-2 text-xs text-cyan-400 hover:underline cursor-pointer"
               >
@@ -258,20 +243,19 @@ export default function EnviosPage() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto custom-scrollbar">
-            <table className="w-full text-left text-xs">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs min-w-[980px]">
               <thead>
                 <tr className="border-b border-slate-800 text-slate-400 uppercase text-[11px] font-semibold">
-                  <th className="pb-3 pr-4">Código / Data</th>
-                  <th className="pb-3 px-4">Cliente Destino</th>
-                  <th className="pb-3 px-4">Produto & Fardos</th>
-                  <th className="pb-3 px-4">Defeito Concedido</th>
-                  <th className="pb-3 px-4">Evidência Fotográfica</th>
-                  <th className="pb-3 px-4 text-right">Volume</th>
-                  <th className="pb-3 px-4 text-right">Scrap Salvo</th>
-                  <th className="pb-3 px-4">Parecer Técnico</th>
-                  <th className="pb-3 px-4 text-center">Status / Aceite</th>
-                  <th className="pb-3 pl-2 pr-4 text-center">Ações</th>
+                  <th className="pb-3 pr-3 whitespace-nowrap min-w-[130px]">Código / Data</th>
+                  <th className="pb-3 px-3 min-w-[150px]">Cliente Destino</th>
+                  <th className="pb-3 px-3 min-w-[170px]">Produto & Fardos</th>
+                  <th className="pb-3 px-3 min-w-[140px]">Defeito Concedido</th>
+                  <th className="pb-3 px-3 min-w-[110px]">Fotos</th>
+                  <th className="pb-3 px-3 text-right whitespace-nowrap min-w-[85px]">Volume</th>
+                  <th className="pb-3 px-3 text-right whitespace-nowrap min-w-[110px]">Scrap Salvo</th>
+                  <th className="pb-3 px-3 min-w-[180px]">Parecer Técnico</th>
+                  <th className="pb-3 pl-2 pr-3 text-center whitespace-nowrap min-w-[80px]">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
@@ -292,18 +276,24 @@ export default function EnviosPage() {
                         : 'hover:bg-slate-900/50'
                     }`}
                   >
-                    <td className="py-3.5 pr-4">
+                    <td className="py-3.5 pr-3 whitespace-nowrap">
                       <div className="font-mono font-bold text-cyan-400">{c.code}</div>
                       <div className="text-[11px] text-slate-500">{new Date(c.date).toLocaleDateString('pt-BR')}</div>
+                      {isReclaimed && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-rose-500/20 text-rose-300 border border-rose-500/40 mt-1 animate-pulse">
+                          <AlertTriangle className="w-2.5 h-2.5 text-rose-400" />
+                          Reclamado no SAC
+                        </span>
+                      )}
                     </td>
 
-                    <td className="py-3.5 px-4 font-medium text-slate-200">
+                    <td className="py-3.5 px-3 font-medium text-slate-200 min-w-[150px]">
                       <Link href={`/clientes/${c.customerId}`} className="hover:text-cyan-300 transition-colors font-semibold">
                         {c.customerName}
                       </Link>
                     </td>
 
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-3 min-w-[170px]">
                       <div className="text-slate-200 font-bold flex flex-wrap items-center gap-1.5">
                         <span>{c.productName}</span>
                         {c.opNumber && (
@@ -323,12 +313,12 @@ export default function EnviosPage() {
                       </div>
                     </td>
 
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-3 min-w-[140px]">
                       <div className="text-slate-200 font-semibold">{c.defectTypeName}</div>
                       <div className="text-[10px] text-emerald-400 font-bold uppercase">{c.severity}</div>
                     </td>
 
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-3 min-w-[110px]">
                       {c.photos && c.photos.length > 0 ? (
                         <div className="flex items-center gap-1.5">
                           {c.photos.map(p => (
@@ -337,7 +327,8 @@ export default function EnviosPage() {
                               type="button"
                               onClick={() => {
                                 setActivePhoto(p);
-                                setPhotoTitle(`Concessão ${c.code} - ${c.defectTypeName} (${c.bales?.length ? `Fardos ${c.bales.join(', ')}` : c.lotNumber || ''})`);
+                                const balesInfo = c.bales?.length ? 'Fardos ' + c.bales.join(', ') : (c.lotNumber || '');
+                                setPhotoTitle(`Concessão ${c.code} - ${c.defectTypeName} (${balesInfo})`);
                               }}
                               className="relative group w-10 h-10 rounded-lg overflow-hidden border border-slate-700 hover:border-cyan-400 shrink-0 transition-all cursor-pointer bg-black"
                             >
@@ -356,35 +347,21 @@ export default function EnviosPage() {
                       )}
                     </td>
 
-                    <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-200">
+                    <td className="py-3.5 px-3 text-right font-mono font-bold text-slate-200 whitespace-nowrap min-w-[85px]">
                       {c.quantity.toLocaleString('pt-BR')} un
                     </td>
 
-                    <td className="py-3.5 px-4 text-right font-mono font-bold text-emerald-400">
+                    <td className="py-3.5 px-3 text-right font-mono font-bold text-emerald-400 whitespace-nowrap min-w-[110px]">
                       R$ {c.totalSavedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </td>
 
-                    <td className="py-3.5 px-4 text-slate-400 text-[11px] max-w-xs truncate">
-                      {c.technicalNotes}
-                    </td>
-
-                    <td className="py-3.5 px-4 text-center">
-                      {isReclaimed ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
-                          <AlertTriangle className="w-3 h-3 text-rose-400" />
-                          Reclamado Posteriormente
+                    <td className="py-3.5 px-3 text-slate-400 text-[11px] min-w-[180px] max-w-sm">
+                      {c.technicalNotes ? (
+                        <span className="line-clamp-2" title={c.technicalNotes}>
+                          {c.technicalNotes}
                         </span>
                       ) : (
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
-                          c.customerFeedbackStatus === 'aceito_sem_ressalvas' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                          c.customerFeedbackStatus === 'aceito_com_observacao' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                          'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
-                        }`}>
-                          {c.customerFeedbackStatus === 'aceito_sem_ressalvas' && <CheckCircle2 className="w-3 h-3" />}
-                          {c.customerFeedbackStatus === 'aceito_com_observacao' && <AlertTriangle className="w-3 h-3" />}
-                          {c.customerFeedbackStatus === 'em_transito' && <Clock className="w-3 h-3" />}
-                          <span>{c.customerFeedbackStatus.replace(/_/g, ' ')}</span>
-                        </span>
+                        <span className="text-slate-600 italic">Sem parecer</span>
                       )}
                     </td>
 

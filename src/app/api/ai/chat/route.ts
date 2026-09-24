@@ -202,8 +202,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Prompt obrigatório' }, { status: 400 });
     }
 
+    const isShopFloor = (body as any).mode === 'chao_de_fabrica';
+
     // Se nenhuma chave do Gemini estiver configurada na Vercel ou .env, processa via motor analítico local
     if (!apiKey) {
+      if (isShopFloor) {
+        const localResponse = aiAssistantService.processShopFloorQuery(
+          prompt,
+          history,
+          customers,
+          defects,
+          complaints
+        );
+        return NextResponse.json({ ...localResponse, source: 'local_engine' });
+      }
       const localResponse = aiAssistantService.processQuery(
         prompt,
         history,
@@ -229,7 +241,8 @@ export async function POST(req: Request) {
     let calculatedRisk: RiskEvaluationResult | null = null;
     let alternativeCustomers: string[] = [];
 
-    if (activeCustomer && activeDefect) {
+    // Cálculo de risco é feito apenas no modo padrão ERP corporativo, nunca no chão de fábrica
+    if (!isShopFloor && activeCustomer && activeDefect) {
       calculatedRisk = qualityService.evaluateConcessionRisk(
         activeCustomer,
         activeDefect,
@@ -249,7 +262,29 @@ export async function POST(req: Request) {
     }
 
     // Diretrizes da persona especializada
-    const systemPrompt = `Você é o Diretor/Engenheiro Chefe de Qualidade e Decisão Industrial da Rafitec / Qualidecision.
+    const systemPrompt = isShopFloor
+      ? `Você é o Assistente Especialista de Qualidade e Prevenção Operacional do Chão de Fábrica da Rafitec / Qualidecision.
+Seu público-alvo são os operadores de máquinas, revisores, líderes de turno e inspetores de qualidade no chão de fábrica (extrusão, tecelagem, laminação, impressão, corte, costura, solda valvulada e enfardamento/paletização).
+
+OBJETIVO PRINCIPAL:
+Orientar os operadores sobre cuidados operacionais na máquina, prevenção de não conformidades, requisitos técnicos e histórico de reclamações SAC dos clientes da Rafitec.
+
+DIRETRIZES E REGRAS ESTRITAS DE SEGURANÇA:
+1. Responda em português brasileiro com tom profissional, prático, objetivo e focado no chão de fábrica.
+2. RESTRITO À QUALIDADE E SAC: Responda apenas sobre cuidados de fabricação, prevenção de defeitos e histórico de queixas SAC dos clientes.
+3. PROIBIDO FALAR DE CONCESSÕES / DESVIOS DE ENVIO / VALORES: É terminantemente proibido falar sobre liberação de lotes com desvio, concessões, volumes concedidos ou valores financeiros/monetários de refugo salvo. Se o usuário perguntar se pode enviar um lote com defeito ou sobre concessões, recuse educadamente esclarecendo: "Este terminal de chão de fábrica é estritamente voltado para a prevenção de defeitos, orientações técnicas na máquina e histórico de SAC. Decisões de concessão de envio e dados financeiros são restritos à Engenharia de Qualidade no sistema corporativo."
+4. ESTRUTURAÇÃO DE RESPOSTA AO ORIENTAR SOBRE UM CLIENTE:
+   Estruture sempre a resposta com clareza e tópicos práticos:
+   - 🏷️ **Perfil & Ranking de Exigência** (Ex: Ranking A - Crítico / Rigor Máximo para clientes exigentes como Copacol, Bunge, Aurora, Alisul, JBS; Ranking B para exigência moderada; Ranking C para padrão).
+   - 🚨 **Histórico de Queixas SAC Recorrentes** (quais defeitos este cliente mais reclama e apontamentos anteriores).
+   - 📋 **Sequência Obrigatória de Cuidados Operacionais (Checklist do Operador)**:
+     • 🧵 *Tecelagem / Fita:* controle de denier, espessura, tenacidade, ausência de fios caídos, tramas limpas sem furos ou óleo.
+     • 🎨 *Impressão / Laminação:* clichê alinhado, viscosidade de tinta no copo Ford, aderência com teste de fita e leitura de código de barras.
+     • 🔥 *Solda Valvulada / Costura:* teste de estanqueidade e resistência em solda valvulada, ponto uniforme em costura sem pontas soltas na bainha.
+     • 📦 *Enfardamento / Paletização:* amarração sem vincos, contagem exata e identificação nítida de OP/Lote/Turno.
+5. NO FINAL DA RESPOSTA, inclua exatamente uma linha com 2 a 3 sugestões de perguntas subsequentes no formato:
+SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`
+      : `Você é o Diretor/Engenheiro Chefe de Qualidade e Decisão Industrial da Rafitec / Qualidecision.
 Sua especialidade é embalagens industriais de polipropileno (sacaria convencional, sacaria valvulada, Big Bags / FIBC, tecidos e fitas).
 Seu objetivo é dar orientações técnicas de alta precisão sobre liberação de lotes com desvios de qualidade (concessões), avaliação de risco de refugo, histórico de reclamações SAC, envios realizados por período (2026 ano corrente, 2025 histórico consolidado) e perfis de tolerância de clientes industriais.
 
@@ -272,63 +307,106 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
     const comp2025 = complaints.filter(c => c.date?.startsWith('2025'));
     const comp2024 = complaints.filter(c => c.date?.startsWith('2024'));
 
-    let groundingContext = `[DADOS OFICIAIS DO SISTEMA QUALIDECISION / ERP]\n`;
-    groundingContext += `- Data Atual do Sistema: ${new Date().toISOString().split('T')[0]} (Ano corrente: ${currentYear})\n`;
-    groundingContext += `- Total de Clientes Cadastrados: ${customers.length}\n`;
-    groundingContext += `- Total de Defeitos Catalogados: ${defects.length}\n\n`;
+    let groundingContext = '';
 
-    groundingContext += `[HISTÓRICO DE ENVIOS COM CONCESSÃO]:\n`;
-    groundingContext += `- Total Geral Acumulado: ${concessions.length} concessões (${concessions.reduce((acc, c) => acc + (c.quantity || 0), 0).toLocaleString('pt-BR')} unidades, R$ ${concessions.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0).toFixed(2)} salvos)\n`;
-    groundingContext += `- Ano Atual (2026): ${conc2026.length} concessões, ${conc2026.reduce((acc, c) => acc + (c.quantity || 0), 0).toLocaleString('pt-BR')} unidades, R$ ${conc2026.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0).toFixed(2)} economizados.\n`;
-    if (conc2026.length > 0) {
-      groundingContext += `  Envios detalhados de 2026:\n`;
-      conc2026.forEach(c => {
-        groundingContext += `  • [${c.code}] ${c.date} | Cliente: ${c.customerName} | Desvio: ${c.defectTypeName} (${c.severity}) | Qtd: ${c.quantity} un | Fardos: ${c.bales?.join(', ') || c.lotNumber || 'N/A'} | Scrap Salvo: R$ ${c.totalSavedValue.toFixed(2)} | Status: ${c.customerFeedbackStatus}\n`;
-      });
-    }
-    groundingContext += `- Ano Base Consolidado (2025): ${conc2025.length} concessões, ${conc2025.reduce((acc, c) => acc + (c.quantity || 0), 0).toLocaleString('pt-BR')} unidades, R$ ${conc2025.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0).toFixed(2)} economizados.\n`;
-    groundingContext += `  Top Clientes 2025: Copacol (12 envios), Bunge (9 envios), Aurora (8 envios), Alisul (7 envios).\n`;
-    groundingContext += `  Top Desvios 2025: Vinco (28 lotes), Borrão de impressão (24 lotes), Tonalidade (18 lotes).\n\n`;
+    if (isShopFloor) {
+      groundingContext = `[DADOS OFICIAIS DO SISTEMA QUALIDECISION / ERP - MODO CHÃO DE FÁBRICA]\n`;
+      groundingContext += `- Data Atual: ${new Date().toISOString().split('T')[0]}\n`;
+      groundingContext += `- Total de Clientes Cadastrados: ${customers.length}\n`;
+      groundingContext += `- Total de Defeitos Catalogados: ${defects.length}\n\n`;
 
-    groundingContext += `[HISTÓRICO DE RECLAMAÇÕES SAC]:\n`;
-    groundingContext += `- Total Geral de Queixas: ${complaints.length} reclamações (${complaints.reduce((acc, c) => acc + (c.quantityAffected || 0), 0).toLocaleString('pt-BR')} kg afetados)\n`;
-    groundingContext += `- Ocorrências em 2025: ${comp2025.length} queixas\n`;
-    groundingContext += `- Ocorrências em 2024: ${comp2024.length} queixas\n`;
-    groundingContext += `- Severidade Geral: ${complaints.filter(c => c.severity === 'leve').length} Leves, ${complaints.filter(c => c.severity === 'moderada').length} Moderadas, ${complaints.filter(c => c.severity === 'severa').length} Severas (críticas)\n`;
-    groundingContext += `- Top Defeitos Reclamados: Refilada (13), Falhas de impressão (11), Solda fraca (10), Raspado (9), Falta de embalagem (6)\n`;
-    groundingContext += `- Top Clientes Reclamantes: Alisul (8), Copacol (7), Bunge (6), Aurora (6), JBS (5)\n\n`;
+      groundingContext += `[HISTÓRICO CONSOLIDADO DE RECLAMAÇÕES SAC]:\n`;
+      groundingContext += `- Total Geral de Queixas SAC: ${complaints.length} reclamações (${complaints.reduce((acc, c) => acc + (c.quantityAffected || 0), 0).toLocaleString('pt-BR')} kg afetados)\n`;
+      groundingContext += `- Ocorrências em 2025: ${comp2025.length} queixas\n`;
+      groundingContext += `- Ocorrências em 2024: ${comp2024.length} queixas\n`;
+      groundingContext += `- Severidade Geral: ${complaints.filter(c => c.severity === 'leve').length} Leves, ${complaints.filter(c => c.severity === 'moderada').length} Moderadas, ${complaints.filter(c => c.severity === 'severa').length} Severas (críticas)\n`;
+      groundingContext += `- Top Defeitos Mais Reclamados: Refilada (13), Falhas de impressão (11), Solda fraca (10), Raspado (9), Falta de embalagem (6)\n`;
+      groundingContext += `- Top Clientes com Mais Apontamentos: Alisul (8), Copacol (7), Bunge (6), Aurora (6), JBS (5)\n\n`;
 
-    if (activeCustomer) {
-      const custComplaints = complaints.filter(c => c.customerId === activeCustomer!.id);
-      const custConcessions = concessions.filter(c => c.customerId === activeCustomer!.id);
-      groundingContext += `[CLIENTE EM CONTEXTO]: ${activeCustomer.name} (${activeCustomer.code})\n`;
-      groundingContext += `- Segmento: ${activeCustomer.segment || 'Geral'}\n`;
-      groundingContext += `- Score de Tolerância Geral: ${activeCustomer.overallToleranceScore}/100\n`;
-      groundingContext += `- Concessões já recebidas por este cliente: ${custConcessions.length} lotes (${custConcessions.reduce((acc, c) => acc + (c.quantity || 0), 0).toLocaleString('pt-BR')} un)\n`;
-      groundingContext += `- Reclamações SAC deste cliente: ${custComplaints.length} queixas\n\n`;
-    }
-
-    if (activeDefect) {
-      groundingContext += `[DEFEITO EM CONTEXTO]: ${activeDefect.name} (Categoria: ${activeDefect.category})\n`;
-      groundingContext += `- Descrição: ${activeDefect.description}\n`;
-      groundingContext += `- Custo Unitário de Refugo: R$ ${activeDefect.defaultUnitLoss.toFixed(2)}\n`;
       if (activeCustomer) {
-        const tol = activeCustomer.toleranceRatings[activeDefect.id]?.level || 'moderada';
-        groundingContext += `- Tolerância do cliente para este defeito: ${tol.toUpperCase()}\n`;
+        const custComplaints = complaints.filter(c => c.customerId === activeCustomer!.id);
+        groundingContext += `[CLIENTE EM CONTEXTO]: ${activeCustomer.name} (${activeCustomer.code || 'N/A'})\n`;
+        groundingContext += `- Segmento: ${activeCustomer.segment || 'Geral'}\n`;
+        groundingContext += `- Nível de Exigência / Score: ${activeCustomer.overallToleranceScore}/100\n`;
+        groundingContext += `- Total de Queixas SAC deste cliente: ${custComplaints.length} reclamações\n`;
+        if (custComplaints.length > 0) {
+          groundingContext += `  Detalhes das reclamações deste cliente:\n`;
+          custComplaints.forEach(c => {
+            groundingContext += `  • [${c.code}] ${c.date} | Defeito: ${c.defectTypeName} (${c.severity}) | Afetado: ${c.quantityAffected} kg | Relato: ${c.description || 'N/A'}\n`;
+          });
+        }
+        groundingContext += `\n`;
       }
-      groundingContext += '\n';
-    }
 
-    if (calculatedRisk) {
-      groundingContext += `[CÁLCULO TÉCNICO DE RISCO]:\n`;
-      groundingContext += `- Nível de Risco: ${calculatedRisk.riskLevel.toUpperCase()} (Score: ${calculatedRisk.score}/100)\n`;
-      groundingContext += `- Veredito do Algoritmo: ${calculatedRisk.title}\n`;
-      groundingContext += `- Reclamações SAC anteriores para este defeito/cliente: ${calculatedRisk.historicalComplaintsCount}\n`;
-      groundingContext += `- Concessões anteriores com sucesso: ${calculatedRisk.historicalConcessionsCount}\n`;
-      if (alternativeCustomers.length > 0) {
-        groundingContext += `- Clientes alternativos recomendados com alta tolerância: ${alternativeCustomers.join(', ')}\n`;
+      if (activeDefect) {
+        const defComplaints = complaints.filter(c => c.defectTypeId === activeDefect!.id || c.defectTypeName === activeDefect!.name);
+        groundingContext += `[DEFEITO EM CONTEXTO]: ${activeDefect.name} (Categoria: ${activeDefect.category})\n`;
+        groundingContext += `- Descrição: ${activeDefect.description}\n`;
+        groundingContext += `- Total de queixas SAC com este defeito: ${defComplaints.length}\n`;
+        if (defComplaints.length > 0) {
+          groundingContext += `- Clientes que reclamaram: ${Array.from(new Set(defComplaints.map(c => c.customerName))).join(', ')}\n`;
+        }
+        groundingContext += `\n`;
       }
-      groundingContext += '\n';
+    } else {
+      groundingContext = `[DADOS OFICIAIS DO SISTEMA QUALIDECISION / ERP]\n`;
+      groundingContext += `- Data Atual do Sistema: ${new Date().toISOString().split('T')[0]} (Ano corrente: ${currentYear})\n`;
+      groundingContext += `- Total de Clientes Cadastrados: ${customers.length}\n`;
+      groundingContext += `- Total de Defeitos Catalogados: ${defects.length}\n\n`;
+
+      groundingContext += `[HISTÓRICO DE ENVIOS COM CONCESSÃO]:\n`;
+      groundingContext += `- Total Geral Acumulado: ${concessions.length} concessões (${concessions.reduce((acc, c) => acc + (c.quantity || 0), 0).toLocaleString('pt-BR')} unidades, R$ ${concessions.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0).toFixed(2)} salvos)\n`;
+      groundingContext += `- Ano Atual (2026): ${conc2026.length} concessões, ${conc2026.reduce((acc, c) => acc + (c.quantity || 0), 0).toLocaleString('pt-BR')} unidades, R$ ${conc2026.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0).toFixed(2)} economizados.\n`;
+      if (conc2026.length > 0) {
+        groundingContext += `  Envios detalhados de 2026:\n`;
+        conc2026.forEach(c => {
+          groundingContext += `  • [${c.code}] ${c.date} | Cliente: ${c.customerName} | Desvio: ${c.defectTypeName} (${c.severity}) | Qtd: ${c.quantity} un | Fardos: ${c.bales?.join(', ') || c.lotNumber || 'N/A'} | Scrap Salvo: R$ ${c.totalSavedValue.toFixed(2)} | Status: ${c.customerFeedbackStatus}\n`;
+        });
+      }
+      groundingContext += `- Ano Base Consolidado (2025): ${conc2025.length} concessões, ${conc2025.reduce((acc, c) => acc + (c.quantity || 0), 0).toLocaleString('pt-BR')} unidades, R$ ${conc2025.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0).toFixed(2)} economizados.\n`;
+      groundingContext += `  Top Clientes 2025: Copacol (12 envios), Bunge (9 envios), Aurora (8 envios), Alisul (7 envios).\n`;
+      groundingContext += `  Top Desvios 2025: Vinco (28 lotes), Borrão de impressão (24 lotes), Tonalidade (18 lotes).\n\n`;
+
+      groundingContext += `[HISTÓRICO DE RECLAMAÇÕES SAC]:\n`;
+      groundingContext += `- Total Geral de Queixas: ${complaints.length} reclamações (${complaints.reduce((acc, c) => acc + (c.quantityAffected || 0), 0).toLocaleString('pt-BR')} kg afetados)\n`;
+      groundingContext += `- Ocorrências em 2025: ${comp2025.length} queixas\n`;
+      groundingContext += `- Ocorrências em 2024: ${comp2024.length} queixas\n`;
+      groundingContext += `- Severidade Geral: ${complaints.filter(c => c.severity === 'leve').length} Leves, ${complaints.filter(c => c.severity === 'moderada').length} Moderadas, ${complaints.filter(c => c.severity === 'severa').length} Severas (críticas)\n`;
+      groundingContext += `- Top Defeitos Reclamados: Refilada (13), Falhas de impressão (11), Solda fraca (10), Raspado (9), Falta de embalagem (6)\n`;
+      groundingContext += `- Top Clientes Reclamantes: Alisul (8), Copacol (7), Bunge (6), Aurora (6), JBS (5)\n\n`;
+
+      if (activeCustomer) {
+        const custComplaints = complaints.filter(c => c.customerId === activeCustomer!.id);
+        const custConcessions = concessions.filter(c => c.customerId === activeCustomer!.id);
+        groundingContext += `[CLIENTE EM CONTEXTO]: ${activeCustomer.name} (${activeCustomer.code})\n`;
+        groundingContext += `- Segmento: ${activeCustomer.segment || 'Geral'}\n`;
+        groundingContext += `- Score de Tolerância Geral: ${activeCustomer.overallToleranceScore}/100\n`;
+        groundingContext += `- Concessões já recebidas por este cliente: ${custConcessions.length} lotes (${custConcessions.reduce((acc, c) => acc + (c.quantity || 0), 0).toLocaleString('pt-BR')} un)\n`;
+        groundingContext += `- Reclamações SAC deste cliente: ${custComplaints.length} queixas\n\n`;
+      }
+
+      if (activeDefect) {
+        groundingContext += `[DEFEITO EM CONTEXTO]: ${activeDefect.name} (Categoria: ${activeDefect.category})\n`;
+        groundingContext += `- Descrição: ${activeDefect.description}\n`;
+        groundingContext += `- Custo Unitário de Refugo: R$ ${activeDefect.defaultUnitLoss.toFixed(2)}\n`;
+        if (activeCustomer) {
+          const tol = activeCustomer.toleranceRatings[activeDefect.id]?.level || 'moderada';
+          groundingContext += `- Tolerância do cliente para este defeito: ${tol.toUpperCase()}\n`;
+        }
+        groundingContext += '\n';
+      }
+
+      if (calculatedRisk) {
+        groundingContext += `[CÁLCULO TÉCNICO DE RISCO]:\n`;
+        groundingContext += `- Nível de Risco: ${calculatedRisk.riskLevel.toUpperCase()} (Score: ${calculatedRisk.score}/100)\n`;
+        groundingContext += `- Veredito do Algoritmo: ${calculatedRisk.title}\n`;
+        groundingContext += `- Reclamações SAC anteriores para este defeito/cliente: ${calculatedRisk.historicalComplaintsCount}\n`;
+        groundingContext += `- Concessões anteriores com sucesso: ${calculatedRisk.historicalConcessionsCount}\n`;
+        if (alternativeCustomers.length > 0) {
+          groundingContext += `- Clientes alternativos recomendados com alta tolerância: ${alternativeCustomers.join(', ')}\n`;
+        }
+        groundingContext += '\n';
+      }
     }
 
     // Montagem das mensagens alternadas estritamente válidas para a API do Gemini
@@ -449,6 +527,20 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
 
     if (!rawReply.trim()) {
       console.warn('Gemini não retornou texto ou falhou em todos os modelos. Recorrendo ao motor analítico local.');
+      if (isShopFloor) {
+        const localResponse = aiAssistantService.processShopFloorQuery(
+          prompt,
+          history,
+          customers,
+          defects,
+          complaints
+        );
+        return NextResponse.json({
+          ...localResponse,
+          source: 'local_engine',
+          geminiError: lastGeminiErrorDetails || 'A API do Google Gemini não respondeu com sucesso.'
+        });
+      }
       const localResponse = aiAssistantService.processQuery(
         prompt,
         history,
@@ -478,24 +570,40 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
 
     // Sugestões de fallback inteligentes caso o Gemini não tenha retornado a linha
     if (!suggestedPrompts || suggestedPrompts.length === 0) {
-      if (activeCustomer && activeDefect) {
-        suggestedPrompts = [
-          `E se a gravidade for leve?`,
-          `Quais clientes alternativos aceitam ${activeDefect.name}?`,
-          `Ver histórico de SAC da ${activeCustomer.name}`
-        ];
+      if (isShopFloor) {
+        if (activeCustomer) {
+          suggestedPrompts = [
+            `Quais os defeitos mais críticos na costura?`,
+            `Histórico de reclamações da ${activeCustomer.name.split(' ')[0]}`,
+            `Cuidados com solda e valvulado`
+          ];
+        } else {
+          suggestedPrompts = [
+            'Quais os cuidados para a Copacol?',
+            'Quais os cuidados para a Bunge?',
+            'Defeitos mais reclamados no SAC'
+          ];
+        }
       } else {
-        suggestedPrompts = [
-          'Posso enviar 10.000 sacos com vinco para a Copacol?',
-          'Qual cliente aceita falha de solda?',
-          'Quanto de refugo foi evitado este mês?'
-        ];
+        if (activeCustomer && activeDefect) {
+          suggestedPrompts = [
+            `E se a gravidade for leve?`,
+            `Quais clientes alternativos aceitam ${activeDefect.name}?`,
+            `Ver histórico de SAC da ${activeCustomer.name}`
+          ];
+        } else {
+          suggestedPrompts = [
+            'Posso enviar 10.000 sacos com vinco para a Copacol?',
+            'Qual cliente aceita falha de solda?',
+            'Quanto de refugo foi evitado este mês?'
+          ];
+        }
       }
     }
 
-    // Botão de ação direta para abrir concessão pré-preenchida se seguro
+    // Botão de ação direta para abrir concessão pré-preenchida se seguro (apenas no ERP corporativo)
     let actionButton = undefined;
-    if (activeCustomer && activeDefect && calculatedRisk && (calculatedRisk.riskLevel === 'baixo' || calculatedRisk.riskLevel === 'moderado')) {
+    if (!isShopFloor && activeCustomer && activeDefect && calculatedRisk && (calculatedRisk.riskLevel === 'baixo' || calculatedRisk.riskLevel === 'moderado')) {
       actionButton = {
         label: `Criar Envio com Concessão (${activeCustomer.name})`,
         type: 'open_concession' as const,
@@ -514,7 +622,7 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
       text: rawReply,
       timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
       customerCard: activeCustomer,
-      riskRecommendation: calculatedRisk || undefined,
+      riskRecommendation: isShopFloor ? undefined : (calculatedRisk || undefined),
       suggestedPrompts,
       actionButton,
       source: 'gemini'
@@ -525,6 +633,17 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
     console.error('Erro no processamento da IA:', err);
     try {
       const body = await req.json().catch(() => ({}));
+      const isShopFloor = (body as any)?.mode === 'chao_de_fabrica';
+      if (isShopFloor) {
+        const localResponse = aiAssistantService.processShopFloorQuery(
+          body.prompt || '',
+          body.history || [],
+          body.customers || [],
+          body.defects || [],
+          body.complaints || []
+        );
+        return NextResponse.json({ ...localResponse, source: 'local_engine' });
+      }
       const localResponse = aiAssistantService.processQuery(
         body.prompt || '',
         body.history || [],

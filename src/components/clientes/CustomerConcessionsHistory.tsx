@@ -117,18 +117,14 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
         </div>
 
         {/* Quick summary counters */}
-        <div className="flex items-center gap-2 text-xs">
-          {reclaimedCount > 0 && (
+        {reclaimedCount > 0 && (
+          <div className="flex items-center gap-2 text-xs">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
               <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
               <span>{reclaimedCount} Reclamado(s) Pós-Envio</span>
             </span>
-          )}
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-            <span>{successfulCount} Aceito(s) sem Queixa</span>
-          </span>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* List of Concessions Blocks */}
@@ -191,15 +187,10 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
                       Data de Envio: <strong className="text-slate-200">{new Date(item.date).toLocaleDateString('pt-BR')}</strong>
                     </span>
 
-                    {isReclaimed ? (
+                    {isReclaimed && (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-600 text-white border border-rose-400 shadow-md shadow-rose-900/50 animate-pulse">
                         <AlertTriangle className="w-3.5 h-3.5 text-white" />
                         RECLAMADO APÓS ENVIO
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                        CONCESSÃO ACEITA (SEM RECLAMAÇÃO)
                       </span>
                     )}
 
@@ -269,7 +260,8 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
                           key={photo.id}
                           onClick={() => {
                             setActivePhoto(photo);
-                            setPhotoTitle(`Concessão ${item.code} - ${item.defectTypeName} (${item.bales?.length ? `Fardos ${item.bales.join(', ')}` : item.lotNumber || ''})`);
+                            const balesInfo = item.bales?.length ? 'Fardos ' + item.bales.join(', ') : (item.lotNumber || '');
+                            setPhotoTitle(`Concessão ${item.code} - ${item.defectTypeName} (${balesInfo})`);
                           }}
                           className="relative group cursor-pointer w-28 h-20 rounded-xl overflow-hidden border border-slate-700 hover:border-cyan-400 transition-all bg-black shadow-md"
                         >
