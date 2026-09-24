@@ -54,6 +54,18 @@ export default function ReclamacoesPage() {
   const [search, setSearch] = useState('');
   const [filterCustomer, setFilterCustomer] = useState('all');
   const [filterSeverity, setFilterSeverity] = useState('all');
+  const [filterYear, setFilterYear] = useState('all');
+
+  const availableYears = useMemo(() => {
+    const years = new Set<string>();
+    complaints.forEach(c => {
+      if (c.date) {
+        const y = c.date.slice(0, 4);
+        if (y && !isNaN(Number(y))) years.add(y);
+      }
+    });
+    return Array.from(years).sort((a, b) => b.localeCompare(a));
+  }, [complaints]);
 
   const filteredComplaints = useMemo(() => {
     return complaints.filter(c => {
@@ -68,10 +80,11 @@ export default function ReclamacoesPage() {
 
       const matchesCustomer = filterCustomer === 'all' || c.customerId === filterCustomer;
       const matchesSeverity = filterSeverity === 'all' || c.severity === filterSeverity;
+      const matchesYear = filterYear === 'all' || (c.date && c.date.startsWith(filterYear));
 
-      return matchesSearch && matchesCustomer && matchesSeverity;
+      return matchesSearch && matchesCustomer && matchesSeverity && matchesYear;
     });
-  }, [complaints, search, filterCustomer, filterSeverity]);
+  }, [complaints, search, filterCustomer, filterSeverity, filterYear]);
 
   // Cálculos analíticos para os gráficos
   const complaintDefectData = useMemo(() => {
@@ -221,6 +234,17 @@ export default function ReclamacoesPage() {
             <option value="severa">Severa</option>
             <option value="moderada">Moderada</option>
             <option value="leve">Leve</option>
+          </select>
+
+          <select
+            value={filterYear}
+            onChange={e => setFilterYear(e.target.value)}
+            className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none font-mono"
+          >
+            <option value="all">Todos os Anos</option>
+            {availableYears.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
           </select>
         </div>
       </div>
