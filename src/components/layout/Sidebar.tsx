@@ -30,6 +30,7 @@ import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
 import { ExportImportModal } from '@/components/modals/ExportImportModal';
 import { UserManagementModal } from '@/components/modals/UserManagementModal';
 import { ChangePasswordModal } from '@/components/modals/ChangePasswordModal';
+import { PwaInstallButton } from '@/components/pwa/PwaInstallButton';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -342,6 +343,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Footer & Tools */}
         <div className="p-3 border-t border-slate-800/80 space-y-2.5">
+          {/* PWA Install Button */}
+          <div className="w-full">
+            <PwaInstallButton
+              variant={collapsed ? 'compact' : 'header'}
+              className="w-full justify-center"
+              label="Instalar App (PWA)"
+            />
+          </div>
+
           {/* User Profile Card */}
           {user && (
             <div

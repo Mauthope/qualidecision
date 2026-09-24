@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Menu, ShieldCheck, Bot, PlusCircle } from 'lucide-react';
 import { useQuality } from '@/context/QualityContext';
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
+import { PwaInstallButton } from '@/components/pwa/PwaInstallButton';
 
 interface MobileHeaderProps {
   onOpenSidebar: () => void;
@@ -45,12 +46,14 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({ onOpenSidebar }) => 
         </div>
 
         {/* Right: Quick actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <PwaInstallButton variant="header" label="Instalar" />
+
           <button
             onClick={() => openAiDrawer()}
             className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/20 transition-all cursor-pointer"
-            title="Assistente IA"
-            aria-label="Assistente IA"
+            title="Assistente IA Sensei"
+            aria-label="Assistente IA Sensei"
           >
             <Bot className="w-4 h-4" />
           </button>

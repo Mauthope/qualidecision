@@ -7,6 +7,7 @@ import { storageService } from '@/services/storageService';
 import { aiAssistantService } from '@/services/aiAssistantService';
 import { AiChatMessage, ComplaintPhoto } from '@/types';
 import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
+import { PwaInstallButton } from '@/components/pwa/PwaInstallButton';
 import {
   Factory,
   ShieldCheck,
@@ -233,8 +234,10 @@ export default function ChaoDeFabricaPage() {
           </div>
         </div>
 
-        {/* Right Info: Status Dot & Logout */}
-        <div className="flex items-center gap-3">
+        {/* Right Info: PWA Install Button, Status Dot & Logout */}
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <PwaInstallButton label="Instalar no Aparelho" />
+
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-slate-800 text-xs text-slate-300 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="font-medium text-slate-200">Sensei Conectado</span>
