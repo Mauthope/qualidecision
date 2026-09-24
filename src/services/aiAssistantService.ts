@@ -25,6 +25,24 @@ const DEFECT_SYNONYMS: Record<string, string[]> = {
   laminacao: ['laminacao', 'delaminacao', 'filme solto', 'bolha']
 };
 
+export const CORPORATE_STOP_WORDS = new Set([
+  'agroindustrial', 'agropecuaria', 'agro', 'agraria', 'cooperativa', 'coop', 
+  'alimentos', 'alimenticia', 'alimenticios', 'produtos', 'industria', 'industrial', 
+  'comercio', 'comercial', 'brasil', 'ltda', 's/a', 'sa', 'me', 'epp', 
+  'nutricao', 'animal', 'estoque', 'embalagens', 'plasticos', 'plastico', 
+  'fardos', 'graos', 'cereais', 'regional', 'nacional', 'internacional', 
+  'distribuidora', 'distribuicao', 'transportes', 'logistica', 'central', 'uniao',
+  'de', 'da', 'do', 'das', 'dos', 'e', 'em', 'para', 'com'
+]);
+
+export function getBrandTokens(name: string): string[] {
+  const norm = normalizeText(name);
+  return norm
+    .split(/[\s\-–—/.,;:]+/)
+    .map(w => w.trim())
+    .filter(w => w.length >= 3 && !CORPORATE_STOP_WORDS.has(w));
+}
+
 export function matchesCustomer(
   record: { customerId?: string; customer_id?: string; customerName?: string; customer_name?: string; customerNumber?: string; customer_number?: string },
   customer?: Customer
@@ -43,10 +61,7 @@ export function matchesCustomer(
   // Direct containment in either direction
   if (recName.includes(custName) || custName.includes(recName)) return true;
 
-  // Extract primary corporate brand/name tokens (e.g. "alisul", "copacol", "bunge", "aurora", "jbs")
-  const stopWords = ['agro', 'alimentos', 'brasil', 'industria', 'comercio', 'cooperativa', 'ltda', 's/a', 'nutricao', 'estoque', 'sa', 'me', 'epp', 'embalagens'];
-  const getBrandTokens = (name: string) => name.split(/[\s\-–—/]+/).filter(w => w.length >= 3 && !stopWords.includes(w));
-  
+  // Extract core brand tokens (excluding all generic legal and industrial terms)
   const custTokens = getBrandTokens(custName);
   const recTokens = getBrandTokens(recName);
 
@@ -128,12 +143,14 @@ export const aiAssistantService = {
         return c;
       }
 
-      // Check principal brand words (min 4 chars)
-      const words = normName.split(/[\s\-–—/]+/).filter(w => w.length >= 4 && !['agro', 'alimentos', 'brasil', 'industria', 'comercio', 'cooperativa', 'ltda', 's/a', 'nutricao'].includes(w));
+      // Check principal brand words (excluding corporate stop words)
+      const words = getBrandTokens(c.name);
       for (const w of words) {
-        const wordRegex = new RegExp(`\\b${w}\\b`, 'i');
-        if (wordRegex.test(norm)) {
-          return c;
+        if (w.length >= 3) {
+          const wordRegex = new RegExp(`\\b${w}\\b`, 'i');
+          if (wordRegex.test(norm)) {
+            return c;
+          }
         }
       }
     }
