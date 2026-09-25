@@ -103,6 +103,8 @@ export default function ChaoDeFabricaPage() {
 
   const {
     isRecording,
+    isFinishing: isVoiceFinishing,
+    isTranscribing: isVoiceTranscribing,
     transcript: recordingTranscript,
     duration: recordingDuration,
     audioLevel: recordingAudioLevel,
@@ -816,6 +818,8 @@ export default function ChaoDeFabricaPage() {
               transcript={recordingTranscript}
               audioLevel={recordingAudioLevel}
               error={recordingError || localVoiceError}
+              isFinishing={isVoiceFinishing}
+              isTranscribing={isVoiceTranscribing}
               onCancel={() => {
                 setLocalVoiceError(null);
                 handleCancelVoice();

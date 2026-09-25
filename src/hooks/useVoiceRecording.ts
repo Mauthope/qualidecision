@@ -11,6 +11,8 @@ export interface VoiceRecordingResult {
 
 export function useVoiceRecording() {
   const [isRecording, setIsRecording] = useState(false);
+  const [isFinishing, setIsFinishing] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [duration, setDuration] = useState(0);
   const [audioLevel, setAudioLevel] = useState(0);
@@ -87,8 +89,9 @@ export function useVoiceRecording() {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
       recognition.lang = 'pt-BR';
-      // On iOS Safari, continuous MUST be false or an InvalidModificationError is thrown
-      recognition.continuous = false;
+      // On iOS Safari, continuous MUST be false or an InvalidModificationError is thrown.
+      // On Chrome/Edge (Desktop & Android), continuous=true is much faster and eliminates pause delays!
+      recognition.continuous = !isIOS;
       recognition.interimResults = true;
       recognition.maxAlternatives = 1;
 
@@ -96,7 +99,7 @@ export function useVoiceRecording() {
         let currentFinal = '';
         let currentInterim = '';
 
-        for (let i = 0; i < event.results.length; i++) {
+        for (let i = event.resultIndex; i < event.results.length; i++) {
           const result = event.results[i];
           if (result.isFinal) {
             currentFinal += result[0].transcript + ' ';
@@ -112,6 +115,7 @@ export function useVoiceRecording() {
         const fullText = (accumulatedFinalRef.current + ' ' + currentInterim).replace(/\s+/g, ' ').trim();
         fullTranscriptRef.current = fullText;
         setTranscript(fullText);
+        setIsTranscribing(Boolean(currentInterim));
 
         // When user speaks, increase audio level indicator
         if (currentInterim || currentFinal) {
@@ -128,6 +132,7 @@ export function useVoiceRecording() {
       };
 
       recognition.onend = () => {
+        setIsTranscribing(false);
         // If recording is still active and recognition ended (e.g. pause in speech or continuous=false), restart seamlessly
         if (shouldBeRecordingRef.current) {
           try {
@@ -271,6 +276,7 @@ export function useVoiceRecording() {
   }, [isMobile, isSpeechSupported, startRecognition, cleanupStream]);
 
   const stopRecording = useCallback(async (): Promise<VoiceRecordingResult> => {
+    setIsFinishing(true);
     shouldBeRecordingRef.current = false;
 
     if (timerRef.current) {
@@ -282,56 +288,83 @@ export function useVoiceRecording() {
       waveTimerRef.current = null;
     }
 
-    stopRecognition();
+    // 1. Drain pending audio from SpeechRecognition gracefully (up to 900ms)
+    // This allows the recognition engine to finish acoustic decoding of words spoken right before clicking Send!
+    const recognition = recognitionRef.current;
+    if (recognition) {
+      await new Promise<void>((resolve) => {
+        let finished = false;
+        const complete = () => {
+          if (!finished) {
+            finished = true;
+            resolve();
+          }
+        };
 
-    const recorder = mediaRecorderRef.current;
-    const finalTranscript = fullTranscriptRef.current.trim();
+        const timer = setTimeout(complete, 900);
 
-    if (!recorder || recorder.state === 'inactive') {
-      cleanupStream();
-      setIsRecording(false);
-      return {
-        audioBlob: null,
-        audioUrl: null,
-        transcript: finalTranscript,
-        duration: Math.max(duration, 1)
-      };
-    }
+        recognition.onend = () => {
+          clearTimeout(timer);
+          complete();
+        };
 
-    return new Promise<VoiceRecordingResult>((resolve) => {
-      recorder.onstop = () => {
-        const mimeType = recorder.mimeType || 'audio/webm';
-        const blob = new Blob(audioChunksRef.current, { type: mimeType });
-        const url = URL.createObjectURL(blob);
-
-        cleanupStream();
-        setIsRecording(false);
-
-        resolve({
-          audioBlob: blob,
-          audioUrl: url,
-          transcript: finalTranscript,
-          duration: Math.max(duration, 1)
-        });
-      };
+        try {
+          recognition.stop();
+        } catch {
+          clearTimeout(timer);
+          complete();
+        }
+      });
 
       try {
-        recorder.stop();
-      } catch {
-        cleanupStream();
-        setIsRecording(false);
-        resolve({
-          audioBlob: null,
-          audioUrl: null,
-          transcript: finalTranscript,
-          duration: Math.max(duration, 1)
-        });
-      }
-    });
-  }, [stopRecognition, cleanupStream, duration]);
+        recognition.onresult = null;
+        recognition.onend = null;
+        recognition.onerror = null;
+      } catch {}
+      recognitionRef.current = null;
+    }
+
+    // 2. Stop MediaRecorder if running
+    const recorder = mediaRecorderRef.current;
+    let audioBlob: Blob | null = null;
+    let audioUrl: string | null = null;
+
+    if (recorder && recorder.state !== 'inactive') {
+      const audioResult = await new Promise<{ blob: Blob | null; url: string | null }>((resolve) => {
+        recorder.onstop = () => {
+          const mimeType = recorder.mimeType || 'audio/webm';
+          const blob = new Blob(audioChunksRef.current, { type: mimeType });
+          const url = URL.createObjectURL(blob);
+          resolve({ blob, url });
+        };
+        try {
+          recorder.stop();
+        } catch {
+          resolve({ blob: null, url: null });
+        }
+      });
+      audioBlob = audioResult.blob;
+      audioUrl = audioResult.url;
+    }
+
+    cleanupStream();
+    setIsRecording(false);
+    setIsFinishing(false);
+    setIsTranscribing(false);
+
+    const finalTranscript = fullTranscriptRef.current.trim();
+    return {
+      audioBlob,
+      audioUrl,
+      transcript: finalTranscript,
+      duration: Math.max(duration, 1)
+    };
+  }, [cleanupStream, duration]);
 
   const cancelRecording = useCallback(() => {
     shouldBeRecordingRef.current = false;
+    setIsFinishing(false);
+    setIsTranscribing(false);
 
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -373,6 +406,8 @@ export function useVoiceRecording() {
 
   return {
     isRecording,
+    isFinishing,
+    isTranscribing,
     transcript: transcript || fullTranscriptRef.current,
     duration,
     audioLevel,
