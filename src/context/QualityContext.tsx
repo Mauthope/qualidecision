@@ -91,7 +91,7 @@ interface QualityContextType {
     photos?: Array<{ id: string; url: string; caption: string; defectLocation?: string }>;
   }) => Complaint;
   updateCustomerTolerance: (customerId: string, defectId: string, level: ToleranceLevel, notes?: string) => void;
-  sendAiMessage: (prompt: string) => void;
+  sendAiMessage: (prompt: string, voiceData?: { audioUrl?: string; audioDuration?: number; isVoiceMessage?: boolean }) => Promise<void>;
   isAiTyping: boolean;
   prefillConcessionData: {
     customerId?: string;
@@ -981,14 +981,20 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [customers, showToast, canEdit]);
 
 
-  const sendAiMessage = useCallback(async (prompt: string) => {
+  const sendAiMessage = useCallback(async (
+    prompt: string,
+    voiceData?: { audioUrl?: string; audioDuration?: number; isVoiceMessage?: boolean }
+  ) => {
     if (!prompt.trim()) return;
 
     const userMessage: AiChatMessage = {
       id: `msg-${Date.now()}`,
       sender: 'user',
       text: prompt,
-      timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      isVoiceMessage: voiceData?.isVoiceMessage,
+      audioUrl: voiceData?.audioUrl,
+      audioDuration: voiceData?.audioDuration
     };
 
     const newHistory = [...chatMessages, userMessage];

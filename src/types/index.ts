@@ -129,6 +129,9 @@ export interface AiChatMessage {
   actionButton?: AiChatAction;
   source?: 'gemini' | 'local_engine';
   geminiError?: string;
+  isVoiceMessage?: boolean;
+  audioUrl?: string;
+  audioDuration?: number;
 }
 
 export interface QualitySettings {

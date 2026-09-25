@@ -27,8 +27,13 @@ import {
   HelpCircle,
   Hash,
   Layers,
-  ChevronRight
+  ChevronRight,
+  Mic
 } from 'lucide-react';
+import { useVoiceRecording } from '@/hooks/useVoiceRecording';
+import { VoiceMessageBubble } from '@/components/chat/VoiceMessageBubble';
+import { VoiceRecordingBar } from '@/components/chat/VoiceRecordingBar';
+import { TtsSpeakerButton } from '@/components/chat/TtsSpeakerButton';
 
 const INITIAL_MESSAGE: AiChatMessage = {
   id: 'msg-welcome-shopfloor',
@@ -96,7 +101,36 @@ export default function ChaoDeFabricaPage() {
     } catch {}
   }, [messages]);
 
-  const handleSendMessage = useCallback(async (textToSend?: string) => {
+  const {
+    isRecording,
+    transcript: recordingTranscript,
+    duration: recordingDuration,
+    audioLevel: recordingAudioLevel,
+    error: recordingError,
+    startRecording,
+    stopRecording,
+    cancelRecording
+  } = useVoiceRecording();
+
+  const handleStartVoice = async () => {
+    await startRecording();
+  };
+
+  const handleCancelVoice = () => {
+    cancelRecording();
+  };
+
+  const handleStopVoiceToReview = async () => {
+    const res = await stopRecording();
+    if (res.transcript) {
+      setInputPrompt(res.transcript);
+    }
+  };
+
+  const handleSendMessage = useCallback(async (
+    textToSend?: string,
+    voiceData?: { audioUrl?: string; audioDuration?: number; isVoiceMessage?: boolean }
+  ) => {
     const text = (textToSend || inputPrompt).trim();
     if (!text || isTyping) return;
 
@@ -104,7 +138,10 @@ export default function ChaoDeFabricaPage() {
       id: `usr-${Date.now()}`,
       sender: 'user',
       text,
-      timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      isVoiceMessage: voiceData?.isVoiceMessage,
+      audioUrl: voiceData?.audioUrl,
+      audioDuration: voiceData?.audioDuration
     };
 
     const newHistory = [...messages, userMessage];
@@ -224,6 +261,20 @@ export default function ChaoDeFabricaPage() {
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [inputPrompt, isTyping, messages, customers, defects, complaints, concessions]);
+
+  const handleSendVoice = async () => {
+    const res = await stopRecording();
+    const query = res.transcript.trim();
+    if (!query) {
+      cancelRecording();
+      return;
+    }
+    await handleSendMessage(query, {
+      audioUrl: res.audioUrl || undefined,
+      audioDuration: res.duration,
+      isVoiceMessage: true
+    });
+  };
 
   const handleClearChat = () => {
     setMessages([INITIAL_MESSAGE]);
@@ -351,31 +402,47 @@ export default function ChaoDeFabricaPage() {
                   <div
                     className={`p-4 sm:p-5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-xl ${
                       isUser
-                        ? 'bg-cyan-600 text-white rounded-tr-none ml-auto max-w-2xl'
+                        ? msg.isVoiceMessage
+                          ? 'bg-slate-900/95 border border-cyan-500/40 text-white rounded-tr-none ml-auto max-w-md p-3 sm:p-4'
+                          : 'bg-cyan-600 text-white rounded-tr-none ml-auto max-w-2xl'
                         : 'glow-card rounded-tl-none border border-slate-800/80 text-slate-100'
                     }`}
                   >
-                    <RichChatMessage text={msg.text} isUser={isUser} />
+                    {isUser && msg.isVoiceMessage ? (
+                      <VoiceMessageBubble
+                        audioUrl={msg.audioUrl}
+                        audioDuration={msg.audioDuration}
+                        text={msg.text}
+                        timestamp={msg.timestamp}
+                      />
+                    ) : (
+                      <>
+                        <RichChatMessage text={msg.text} isUser={isUser} />
 
-                    {/* Metadata footer */}
-                    <div className={`text-[10px] mt-3 pt-2 border-t border-slate-800/60 flex items-center justify-between font-mono ${isUser ? 'text-cyan-100/70 border-cyan-500/30' : 'text-slate-500'}`}>
-                      {!isUser && (
-                        <span className="flex items-center gap-1.5">
-                          {msg.source === 'gemini' ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-sans font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                              <Sparkles className="w-2.5 h-2.5" />
-                              Sensei Ativo • IA Gemini
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-sans font-medium text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-full">
-                              <ShieldCheck className="w-2.5 h-2.5" />
-                              Sensei Ativo • Base Qualidecision
-                            </span>
+                        {/* Metadata footer */}
+                        <div className={`text-[10px] mt-3 pt-2 border-t border-slate-800/60 flex items-center justify-between font-mono ${isUser ? 'text-cyan-100/70 border-cyan-500/30' : 'text-slate-500'}`}>
+                          {!isUser && (
+                            <div className="flex items-center gap-2">
+                              <span className="flex items-center gap-1.5">
+                                {msg.source === 'gemini' ? (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-sans font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                                    <Sparkles className="w-2.5 h-2.5" />
+                                    Sensei Ativo • IA Gemini
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-sans font-medium text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-full">
+                                    <ShieldCheck className="w-2.5 h-2.5" />
+                                    Sensei Ativo • Base Qualidecision
+                                  </span>
+                                )}
+                              </span>
+                              <TtsSpeakerButton text={msg.text} />
+                            </div>
                           )}
-                        </span>
-                      )}
-                      <span className={isUser ? 'ml-auto' : ''}>{msg.timestamp}</span>
-                    </div>
+                          <span className={isUser ? 'ml-auto' : ''}>{msg.timestamp}</span>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Customer Card Attached */}
@@ -627,50 +694,85 @@ export default function ChaoDeFabricaPage() {
       <footer className="shrink-0 bg-slate-950/85 backdrop-blur-xl border-t border-slate-800/80 p-3 sm:p-4 z-20 shadow-2xl">
         <div className="max-w-5xl mx-auto flex flex-col gap-2">
           
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSendMessage();
-            }}
-            className="flex items-center gap-2"
-          >
-            <div className="relative flex-1">
-              <input
-                ref={inputRef}
-                type="text"
-                value={inputPrompt}
-                onChange={(e) => setInputPrompt(e.target.value)}
-                placeholder="Pergunte ao Sensei (Ex: 'Quais os cuidados para o cliente Aurora?')..."
-                disabled={isTyping}
-                className="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-3.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all disabled:opacity-50 shadow-inner"
-              />
+          {/* Recording Error Alert Banner if any */}
+          {recordingError && (
+            <div className="p-3 bg-rose-950/80 border border-rose-500/50 rounded-xl flex items-center justify-between text-xs text-rose-200">
+              <span>{recordingError}</span>
+              <button
+                type="button"
+                onClick={handleCancelVoice}
+                className="text-rose-400 hover:text-white font-bold ml-2 underline cursor-pointer"
+              >
+                Fechar
+              </button>
             </div>
+          )}
 
-            <button
-              type="submit"
-              disabled={!inputPrompt.trim() || isTyping}
-              className="px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-500 text-slate-950 font-bold text-xs sm:text-sm hover:from-cyan-400 hover:to-emerald-400 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/20 cursor-pointer active:scale-95 shrink-0"
+          {isRecording ? (
+            <VoiceRecordingBar
+              duration={recordingDuration}
+              transcript={recordingTranscript}
+              audioLevel={recordingAudioLevel}
+              onCancel={handleCancelVoice}
+              onSend={handleSendVoice}
+              onStop={handleStopVoiceToReview}
+            />
+          ) : (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendMessage();
+              }}
+              className="flex items-center gap-2"
             >
-              {isTyping ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  <Send className="w-4 h-4" />
-                  <span className="hidden sm:inline">Enviar</span>
-                </>
-              )}
-            </button>
+              <button
+                type="button"
+                onClick={handleStartVoice}
+                disabled={isTyping}
+                className="p-3.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 hover:border-cyan-400/50 transition-all flex items-center justify-center shrink-0 cursor-pointer shadow-sm group active:scale-95 disabled:opacity-40"
+                title="Gravar mensagem de voz (Falar ao invés de digitar)"
+              >
+                <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
+              </button>
 
-            <button
-              type="button"
-              onClick={handleClearChat}
-              disabled={messages.length <= 1 || isTyping}
-              className="p-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0 shadow-sm"
-              title="Reiniciar conversa e limpar histórico"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </button>
-          </form>
+              <div className="relative flex-1">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={inputPrompt}
+                  onChange={(e) => setInputPrompt(e.target.value)}
+                  placeholder="Pergunte ao Sensei (Ex: 'Quais os cuidados para o cliente Aurora?')..."
+                  disabled={isTyping}
+                  className="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-3.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all disabled:opacity-50 shadow-inner"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={!inputPrompt.trim() || isTyping}
+                className="px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-500 text-slate-950 font-bold text-xs sm:text-sm hover:from-cyan-400 hover:to-emerald-400 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/20 cursor-pointer active:scale-95 shrink-0"
+              >
+                {isTyping ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    <span className="hidden sm:inline">Enviar</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleClearChat}
+                disabled={messages.length <= 1 || isTyping}
+                className="p-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0 shadow-sm"
+                title="Reiniciar conversa e limpar histórico"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+            </form>
+          )}
 
           <div className="flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 px-1 gap-1">
             <span className="hidden sm:inline">

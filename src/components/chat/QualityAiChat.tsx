@@ -23,9 +23,14 @@ import {
   ShieldCheck,
   Key,
   Database,
-  Loader2
+  Loader2,
+  Mic
 } from 'lucide-react';
 import { storageService } from '@/services/storageService';
+import { useVoiceRecording } from '@/hooks/useVoiceRecording';
+import { VoiceMessageBubble } from './VoiceMessageBubble';
+import { VoiceRecordingBar } from './VoiceRecordingBar';
+import { TtsSpeakerButton } from './TtsSpeakerButton';
 
 interface Props {
   isDrawer?: boolean;
@@ -154,9 +159,46 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [chatMessages, isAiTyping]);
+  const {
+    isRecording,
+    transcript: recordingTranscript,
+    duration: recordingDuration,
+    audioLevel: recordingAudioLevel,
+    error: recordingError,
+    startRecording,
+    stopRecording,
+    cancelRecording
+  } = useVoiceRecording();
+
+  const handleStartVoice = async () => {
+    await startRecording();
+  };
+
+  const handleCancelVoice = () => {
+    cancelRecording();
+  };
+
+  const handleStopVoiceToReview = async () => {
+    const res = await stopRecording();
+    if (res.transcript) {
+      setInputPrompt(res.transcript);
+    }
+  };
+
+  const handleSendVoice = async () => {
+    const res = await stopRecording();
+    const query = res.transcript.trim();
+    if (!query) {
+      cancelRecording();
+      return;
+    }
+    await sendAiMessage(query, {
+      audioUrl: res.audioUrl || undefined,
+      audioDuration: res.duration,
+      isVoiceMessage: true
+    });
+    setInputPrompt('');
+  };
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -277,34 +319,51 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                 <div
                   className={`p-4 sm:p-5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-lg ${
                     isUser
-                      ? 'bg-cyan-600 text-white rounded-tr-none ml-auto max-w-2xl'
+                      ? msg.isVoiceMessage
+                        ? 'bg-slate-900/95 border border-cyan-500/40 text-white rounded-tr-none ml-auto max-w-md p-3 sm:p-4'
+                        : 'bg-cyan-600 text-white rounded-tr-none ml-auto max-w-2xl'
                       : 'bg-slate-900/90 border border-slate-800 text-slate-100 rounded-tl-none'
                   }`}
                 >
-                  <RichChatMessage text={msg.text} isUser={isUser} />
+                  {isUser && msg.isVoiceMessage ? (
+                    <VoiceMessageBubble
+                      audioUrl={msg.audioUrl}
+                      audioDuration={msg.audioDuration}
+                      text={msg.text}
+                      timestamp={msg.timestamp}
+                    />
+                  ) : (
+                    <>
+                      <RichChatMessage text={msg.text} isUser={isUser} />
 
-                  <div className={`text-[10px] mt-2 flex flex-col gap-1.5 font-mono ${isUser ? 'text-cyan-100/70 items-end' : 'text-slate-500 items-start'}`}>
-                    <div className="flex items-center justify-between w-full">
-                      {!isUser && (
-                        <span className="flex items-center gap-1.5">
-                          {msg.source === 'gemini' ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-sans font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
-                              <Sparkles className="w-2.5 h-2.5" />
-                              Gemini 1.5
-                            </span>
-                          ) : (
-                            <span
-                              className="inline-flex items-center gap-1.5 text-[10px] font-sans font-medium text-cyan-300 bg-cyan-950/70 border border-cyan-800/40 px-2 py-0.5 rounded"
-                              title="Processamento analítico do QualiDecision conectado diretamente à base de dados do ERP e SAC."
-                            >
-                              <Database className="w-2.5 h-2.5 text-cyan-400" />
-                              Base ERP / QualiDecision
-                            </span>
+                      <div className={`text-[10px] mt-2 flex flex-col gap-1.5 font-mono ${isUser ? 'text-cyan-100/70 items-end' : 'text-slate-500 items-start'}`}>
+                        <div className="flex items-center justify-between w-full">
+                          {!isUser && (
+                            <div className="flex items-center gap-2">
+                              <span className="flex items-center gap-1.5">
+                                {msg.source === 'gemini' ? (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-sans font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
+                                    <Sparkles className="w-2.5 h-2.5" />
+                                    Gemini 1.5
+                                  </span>
+                                ) : (
+                                  <span
+                                    className="inline-flex items-center gap-1.5 text-[10px] font-sans font-medium text-cyan-300 bg-cyan-950/70 border border-cyan-800/40 px-2 py-0.5 rounded"
+                                    title="Processamento analítico do QualiDecision conectado diretamente à base de dados do ERP e SAC."
+                                  >
+                                    <Database className="w-2.5 h-2.5 text-cyan-400" />
+                                    Base ERP / QualiDecision
+                                  </span>
+                                )}
+                              </span>
+                              <TtsSpeakerButton text={msg.text} />
+                            </div>
                           )}
-                        </span>
-                      )}
-                      <span>{msg.timestamp}</span>
-                    </div>
+                          <span>{msg.timestamp}</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
 
                     {!isUser && msg.geminiError && (
                       <div className="w-full text-[11px] font-sans text-amber-300 bg-amber-950/40 border border-amber-500/30 rounded-lg p-2.5 flex items-start gap-2 text-left">
@@ -327,7 +386,6 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                       </div>
                     )}
                   </div>
-                </div>
 
                 {/* Primary Action Button (Direct Creation of Concession) */}
                 {msg.actionButton && (
@@ -557,25 +615,61 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Bar Fullscreen */}
-      <form onSubmit={handleSend} className="p-3.5 sm:p-5 border-t border-slate-800/80 bg-slate-900/70 flex items-center gap-3">
-        <input
-          type="text"
-          value={inputPrompt}
-          onChange={e => setInputPrompt(e.target.value)}
-          disabled={isAiTyping}
-          placeholder="Digite sua dúvida ou simulação (ex: Posso enviar 5 mil sacos com vinco para a Copacol?)..."
-          className="flex-1 bg-slate-900 border border-slate-700/80 rounded-2xl px-5 py-3.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/70 focus:ring-2 focus:ring-cyan-500/20 shadow-inner disabled:opacity-50"
-        />
-        <button
-          type="submit"
-          disabled={!inputPrompt.trim() || isAiTyping}
-          className="px-5 sm:px-7 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 font-bold hover:from-cyan-400 hover:to-teal-400 disabled:opacity-40 transition-all shadow-lg shadow-cyan-500/25 shrink-0 flex items-center gap-2 cursor-pointer"
-        >
-          <Send className="w-4 h-4" />
-          <span className="hidden sm:inline">Consultar</span>
-        </button>
-      </form>
+      {/* Recording Error Alert Banner if any */}
+      {recordingError && (
+        <div className="mx-4 sm:mx-6 mb-2 p-3 bg-rose-950/80 border border-rose-500/50 rounded-xl flex items-center justify-between text-xs text-rose-200">
+          <span>{recordingError}</span>
+          <button
+            type="button"
+            onClick={handleCancelVoice}
+            className="text-rose-400 hover:text-white font-bold ml-2 underline cursor-pointer"
+          >
+            Fechar
+          </button>
+        </div>
+      )}
+
+      {/* Input Bar Fullscreen / Voice Recording Bar */}
+      {isRecording ? (
+        <div className="p-3 sm:p-5 border-t border-slate-800/80 bg-slate-900/90">
+          <VoiceRecordingBar
+            duration={recordingDuration}
+            transcript={recordingTranscript}
+            audioLevel={recordingAudioLevel}
+            onCancel={handleCancelVoice}
+            onSend={handleSendVoice}
+            onStop={handleStopVoiceToReview}
+          />
+        </div>
+      ) : (
+        <form onSubmit={handleSend} className="p-3.5 sm:p-5 border-t border-slate-800/80 bg-slate-900/70 flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={handleStartVoice}
+            disabled={isAiTyping}
+            className="p-3.5 rounded-2xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 hover:border-cyan-400/50 transition-all flex items-center justify-center shrink-0 cursor-pointer shadow-sm group active:scale-95 disabled:opacity-40"
+            title="Gravar mensagem de voz (Falar ao invés de digitar)"
+          >
+            <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
+          </button>
+          <input
+            type="text"
+            value={inputPrompt}
+            onChange={e => setInputPrompt(e.target.value)}
+            disabled={isAiTyping}
+            placeholder="Digite sua dúvida ou use o microfone para falar..."
+            className="flex-1 bg-slate-900 border border-slate-700/80 rounded-2xl px-4 sm:px-5 py-3.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/70 focus:ring-2 focus:ring-cyan-500/20 shadow-inner disabled:opacity-50"
+          />
+          <button
+            type="submit"
+            disabled={!inputPrompt.trim() || isAiTyping}
+            className="px-5 sm:px-7 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 font-bold hover:from-cyan-400 hover:to-teal-400 disabled:opacity-40 transition-all shadow-lg shadow-cyan-500/25 shrink-0 flex items-center gap-2 cursor-pointer"
+          >
+            <Send className="w-4 h-4" />
+            <span className="hidden sm:inline">Consultar</span>
+          </button>
+        </form>
+      )}
 
       {/* Photo Viewer Zoom Modal */}
       {activePhoto && (
