@@ -1,7 +1,9 @@
-const CACHE_NAME = 'qualidecision-pwa-v1';
+const CACHE_NAME = 'qualidecision-pwa-v2';
 const ASSETS_TO_CACHE = [
   '/',
+  '/chao-de-fabrica',
   '/manifest.json',
+  '/manifest-chao-de-fabrica.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
   '/icons/apple-touch-icon.png'

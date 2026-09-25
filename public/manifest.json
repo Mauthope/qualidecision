@@ -26,5 +26,35 @@
       "sizes": "180x180",
       "type": "image/png"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Sensei • Chão de Fábrica",
+      "short_name": "Sensei Fábrica",
+      "description": "Terminal operacional exclusivo do chão de fábrica",
+      "url": "/chao-de-fabrica",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Painel Principal",
+      "short_name": "Painel",
+      "description": "Dashboard geral de indicadores de qualidade",
+      "url": "/",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Reclamações SAC",
+      "short_name": "Reclamações",
+      "description": "Histórico de reclamações de clientes",
+      "url": "/reclamacoes",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Envios com Desvio",
+      "short_name": "Envios",
+      "description": "Controle de lotes e concessões",
+      "url": "/envios",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    }
   ]
 }

@@ -29,6 +29,22 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: '180x180',
         type: 'image/png'
       }
+    ],
+    shortcuts: [
+      {
+        name: 'Sensei • Chão de Fábrica',
+        short_name: 'Sensei Fábrica',
+        description: 'Terminal operacional exclusivo do chão de fábrica',
+        url: '/chao-de-fabrica',
+        icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }]
+      },
+      {
+        name: 'Painel Principal',
+        short_name: 'Painel',
+        description: 'Dashboard geral de qualidade',
+        url: '/',
+        icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }]
+      }
     ]
   };
 }

@@ -18,12 +18,16 @@ interface Props {
   className?: string;
   variant?: 'header' | 'compact' | 'badge';
   label?: string;
+  appName?: string;
+  appDescription?: string;
 }
 
 export const PwaInstallButton: React.FC<Props> = ({
   className = '',
   variant = 'header',
-  label = 'Instalar App'
+  label = 'Instalar App',
+  appName = 'Qualidecision',
+  appDescription = 'Instale o Qualidecision & IA Sensei como aplicativo nativo no seu celular ou tablet. O app ocupará menos de 1 MB, abrirá em tela cheia e funcionará com acesso rápido direto da sua tela de início.'
 }) => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isStandalone, setIsStandalone] = useState(false);
@@ -143,14 +147,14 @@ export const PwaInstallButton: React.FC<Props> = ({
                   <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
                     <img
                       src="/icons/icon-192x192.png"
-                      alt="Qualidecision"
+                      alt={appName}
                       className="w-8 h-8 rounded-lg object-contain"
                     />
                   </div>
                 </div>
                 <div>
                   <h3 className="text-base font-extrabold text-white font-heading">
-                    Instalar Qualidecision
+                    {`Instalar ${appName}`}
                   </h3>
                   <p className="text-xs text-slate-400">
                     Aplicativo Web Progressivo (PWA)
@@ -169,7 +173,7 @@ export const PwaInstallButton: React.FC<Props> = ({
 
             {/* Description */}
             <p className="text-xs text-slate-300 leading-relaxed">
-              Instale o <strong>Qualidecision & IA Sensei</strong> como aplicativo nativo no seu celular ou tablet. O app ocupará menos de 1 MB, abrirá em tela cheia e funcionará com acesso rápido direto da sua tela de início.
+              {appDescription}
             </p>
 
             {/* Instructions based on OS */}

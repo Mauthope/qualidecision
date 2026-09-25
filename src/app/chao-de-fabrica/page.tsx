@@ -358,7 +358,11 @@ export default function ChaoDeFabricaPage() {
 
         {/* Right Info: PWA Install Button, Status Dot & Logout */}
         <div className="flex items-center gap-2.5 sm:gap-3">
-          <PwaInstallButton label="Instalar no Aparelho" />
+          <PwaInstallButton
+            label="Instalar Sensei"
+            appName="Sensei • Chão de Fábrica"
+            appDescription="Instale o terminal exclusivo do Sensei no seu celular ou tablet. O app abrirá diretamente no Chão de Fábrica, em tela cheia, rápido e sem distrações."
+          />
 
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-slate-800 text-xs text-slate-300 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />

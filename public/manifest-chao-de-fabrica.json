@@ -1,0 +1,46 @@
+{
+  "name": "Sensei • Chão de Fábrica (Rafitec)",
+  "short_name": "Sensei Fábrica",
+  "description": "Terminal operacional exclusivo do Sensei para orientação técnica, prevenção de defeitos e consulta SAC no chão de fábrica da Rafitec.",
+  "start_url": "/chao-de-fabrica",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#060a13",
+  "theme_color": "#060a13",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Sensei • Chão de Fábrica",
+      "short_name": "Sensei",
+      "description": "Abrir o terminal do chão de fábrica",
+      "url": "/chao-de-fabrica",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Painel Principal Qualidecision",
+      "short_name": "Painel",
+      "description": "Abrir o dashboard executivo da qualidade",
+      "url": "/",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}
