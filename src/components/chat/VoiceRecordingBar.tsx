@@ -59,7 +59,7 @@ export const VoiceRecordingBar: React.FC<VoiceRecordingBarProps> = ({
         </div>
 
         {/* Real-time Dynamic Equalizer Waves */}
-        <div className="flex-1 flex items-center justify-center gap-1 h-8 max-w-xs px-2">
+        <div className="flex-1 flex items-center justify-center gap-1 h-8 max-w-xs px-1 sm:px-2 min-w-0 overflow-hidden">
           {bars.map((h, i) => (
             <div
               key={i}
@@ -77,12 +77,12 @@ export const VoiceRecordingBar: React.FC<VoiceRecordingBarProps> = ({
         </div>
 
         {/* Action Controls: Cancel, Concluir Gravação */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <button
             type="button"
             onClick={onCancel}
             disabled={isBusy}
-            className="p-2.5 rounded-xl bg-slate-900 hover:bg-rose-950/50 text-slate-400 hover:text-rose-400 border border-slate-800 hover:border-rose-800/40 transition-all cursor-pointer shadow-sm disabled:opacity-50"
+            className="p-2 sm:p-2.5 rounded-xl bg-slate-900 hover:bg-rose-950/50 text-slate-400 hover:text-rose-400 border border-slate-800 hover:border-rose-800/40 transition-all cursor-pointer shadow-sm disabled:opacity-50"
             title="Descartar gravação de áudio"
           >
             <Trash2 className="w-4 h-4" />
@@ -92,7 +92,7 @@ export const VoiceRecordingBar: React.FC<VoiceRecordingBarProps> = ({
             type="button"
             onClick={onFinish}
             disabled={isBusy}
-            className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-md active:scale-95 ${
+            className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs flex items-center gap-1.5 sm:gap-2 transition-all shadow-md active:scale-95 ${
               isBusy
                 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 cursor-wait'
                 : 'bg-gradient-to-r from-emerald-400 to-teal-400 text-slate-950 hover:from-emerald-300 hover:to-teal-300 shadow-emerald-500/25 cursor-pointer'
@@ -101,13 +101,15 @@ export const VoiceRecordingBar: React.FC<VoiceRecordingBarProps> = ({
           >
             {isBusy ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin text-amber-300" />
-                <span>Interpretando com IA...</span>
+                <Loader2 className="w-4 h-4 animate-spin text-amber-300 shrink-0" />
+                <span className="hidden sm:inline">Interpretando com IA...</span>
+                <span className="sm:hidden">Interpretando...</span>
               </>
             ) : (
               <>
-                <CheckCircle2 className="w-4 h-4 text-slate-950" />
-                <span>Concluir Gravação</span>
+                <CheckCircle2 className="w-4 h-4 text-slate-950 shrink-0" />
+                <span className="hidden sm:inline">Concluir Gravação</span>
+                <span className="sm:hidden">Concluir</span>
               </>
             )}
           </button>

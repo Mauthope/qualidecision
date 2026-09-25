@@ -885,40 +885,40 @@ export default function ChaoDeFabricaPage() {
                   setPendingVoiceData(null);
                   handleSendMessage(inputPrompt.trim(), currentVoice || undefined);
                 }}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1.5 sm:gap-2 w-full max-w-full"
               >
                 <button
                   type="button"
                   onClick={handleStartVoice}
                   disabled={isTyping || isRefiningVoice}
-                  className="p-3.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 hover:border-cyan-400/50 transition-all flex items-center justify-center shrink-0 cursor-pointer shadow-sm group active:scale-95 disabled:opacity-40"
+                  className="p-2.5 sm:p-3.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 hover:border-cyan-400/50 transition-all flex items-center justify-center shrink-0 cursor-pointer shadow-sm group active:scale-95 disabled:opacity-40"
                   title="Gravar mensagem de voz (Falar ao invés de digitar)"
                 >
                   <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
                 </button>
 
-                <div className="relative flex-1">
+                <div className="relative flex-1 min-w-0">
                   <input
                     ref={inputRef}
                     type="text"
                     value={inputPrompt}
                     onChange={(e) => setInputPrompt(e.target.value)}
-                    placeholder="Pergunte ao Sensei (Ex: 'Quais os cuidados para o cliente Aurora?')..."
+                    placeholder="Pergunte ao Sensei (Ex: 'Cuidados com Aurora')..."
                     disabled={isTyping || isRefiningVoice}
-                    className="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-3.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all disabled:opacity-50 shadow-inner"
+                    className="w-full min-w-0 bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all disabled:opacity-50 shadow-inner"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={!inputPrompt.trim() || isTyping || isRefiningVoice}
-                  className="px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-500 text-slate-950 font-bold text-xs sm:text-sm hover:from-cyan-400 hover:to-emerald-400 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/20 cursor-pointer active:scale-95 shrink-0"
+                  className="px-3.5 py-2.5 sm:px-5 sm:py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-500 text-slate-950 font-bold text-xs sm:text-sm hover:from-cyan-400 hover:to-emerald-400 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/20 cursor-pointer active:scale-95 shrink-0"
                 >
                   {isTyping ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin shrink-0" />
                   ) : (
                     <>
-                      <Send className="w-4 h-4" />
+                      <Send className="w-4 h-4 shrink-0" />
                       <span className="hidden sm:inline">Enviar</span>
                     </>
                   )}
@@ -928,7 +928,7 @@ export default function ChaoDeFabricaPage() {
                   type="button"
                   onClick={handleClearChat}
                   disabled={messages.length <= 1 || isTyping || isRefiningVoice}
-                  className="p-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0 shadow-sm"
+                  className="p-2.5 sm:p-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0 shadow-sm"
                   title="Reiniciar conversa e limpar histórico"
                 >
                   <RotateCcw className="w-4 h-4" />

@@ -801,30 +801,32 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
             </div>
           )}
 
-          <form onSubmit={handleSend} className="flex items-center gap-2 sm:gap-3">
+          <form onSubmit={handleSend} className="flex items-center gap-1.5 sm:gap-3 w-full max-w-full">
             <button
               type="button"
               onClick={handleStartVoice}
               disabled={isAiTyping || isRefiningVoice}
-              className="p-3.5 rounded-2xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 hover:border-cyan-400/50 transition-all flex items-center justify-center shrink-0 cursor-pointer shadow-sm group active:scale-95 disabled:opacity-40"
+              className="p-2.5 sm:p-3.5 rounded-2xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 hover:border-cyan-400/50 transition-all flex items-center justify-center shrink-0 cursor-pointer shadow-sm group active:scale-95 disabled:opacity-40"
               title="Gravar mensagem de voz (Falar ao invés de digitar)"
             >
               <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
             </button>
-            <input
-              type="text"
-              value={inputPrompt}
-              onChange={e => setInputPrompt(e.target.value)}
-              disabled={isAiTyping || isRefiningVoice}
-              placeholder="Digite sua dúvida ou use o microfone para falar..."
-              className="flex-1 bg-slate-900 border border-slate-700/80 rounded-2xl px-4 sm:px-5 py-3.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/70 focus:ring-2 focus:ring-cyan-500/20 shadow-inner disabled:opacity-50"
-            />
+            <div className="relative flex-1 min-w-0">
+              <input
+                type="text"
+                value={inputPrompt}
+                onChange={e => setInputPrompt(e.target.value)}
+                disabled={isAiTyping || isRefiningVoice}
+                placeholder="Digite sua dúvida ou use o microfone..."
+                className="w-full min-w-0 bg-slate-900 border border-slate-700/80 rounded-2xl px-3 py-2.5 sm:px-5 sm:py-3.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/70 focus:ring-2 focus:ring-cyan-500/20 shadow-inner disabled:opacity-50"
+              />
+            </div>
             <button
               type="submit"
               disabled={!inputPrompt.trim() || isAiTyping || isRefiningVoice}
-              className="px-5 sm:px-7 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 font-bold hover:from-cyan-400 hover:to-teal-400 disabled:opacity-40 transition-all shadow-lg shadow-cyan-500/25 shrink-0 flex items-center gap-2 cursor-pointer"
+              className="px-3.5 py-2.5 sm:px-7 sm:py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 font-bold hover:from-cyan-400 hover:to-teal-400 disabled:opacity-40 transition-all shadow-lg shadow-cyan-500/25 shrink-0 flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-4 h-4 shrink-0" />
               <span className="hidden sm:inline">Consultar</span>
             </button>
           </form>
