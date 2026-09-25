@@ -507,7 +507,19 @@ export const aiAssistantService = {
             `  Relato: "${c.description}"\n\n`;
         });
       } else {
-        text += `*Nenhuma reclamação registrada para este cliente no período selecionado.*\n`;
+        text += `*Nenhuma reclamação registrada para este cliente no período selecionado.*\n\n`;
+      }
+
+      const compsWithPhotos = filtered.filter(c => c.photos && c.photos.length > 0);
+      let referenceComplaintCards: Complaint[] | undefined = undefined;
+
+      if (compsWithPhotos.length === 0 && filtered.length > 0) {
+        const defectIds = Array.from(new Set(filtered.map(c => c.defectTypeId).filter(Boolean)));
+        const refComps = complaints.filter(c => defectIds.includes(c.defectTypeId) && c.photos && c.photos.length > 0 && !matchesCustomer(c, activeCustomer));
+        if (refComps.length > 0) {
+          referenceComplaintCards = refComps.slice(0, 2);
+          text += `📷 **Evidências Fotográficas**: O cliente **${activeCustomer.name}** não possui fotos registradas nos laudos destas ocorrências. Abaixo são exibidas fotos de **referência técnica de problemas semelhantes** registrados em outros clientes para apoio visual.\n\n`;
+        }
       }
 
       return {
@@ -517,6 +529,7 @@ export const aiAssistantService = {
         timestamp,
         customerCard: activeCustomer,
         complaintCards: filtered.slice(0, 4),
+        referenceComplaintCards,
         suggestedPrompts: [
           `Simular envio para ${activeCustomer.name.split(' ')[0]}`,
           `Perfil de tolerância de ${activeCustomer.name.split(' ')[0]}`,
@@ -977,6 +990,16 @@ export const aiAssistantService = {
 
       const compsWithPhotos = clientComplaints.filter(c => c.photos && c.photos.length > 0);
       const concsWithPhotos = clientConcessions.filter(c => c.photos && c.photos.length > 0);
+      let referenceComplaintCards: Complaint[] | undefined = undefined;
+
+      if (compsWithPhotos.length === 0 && clientComplaints.length > 0) {
+        const defectIds = Array.from(new Set(clientComplaints.map(c => c.defectTypeId).filter(Boolean)));
+        const refComps = complaints.filter(c => defectIds.includes(c.defectTypeId) && c.photos && c.photos.length > 0 && !matchesCustomer(c, activeCustomer));
+        if (refComps.length > 0) {
+          referenceComplaintCards = refComps.slice(0, 2);
+          text += `\n\n📷 **Evidências Fotográficas**: O cliente **${activeCustomer.name}** não possui fotos arquivadas no sistema. Exibindo abaixo **amostras de referência de defeitos semelhantes** de outros clientes para apoio visual.`;
+        }
+      }
 
       return {
         id: messageId,
@@ -987,6 +1010,7 @@ export const aiAssistantService = {
         complaintCards: compsWithPhotos.length > 0
           ? [...compsWithPhotos, ...clientComplaints.filter(c => !c.photos || c.photos.length === 0)].slice(0, 3)
           : clientComplaints.slice(0, 3),
+        referenceComplaintCards,
         concessionCards: concsWithPhotos.length > 0
           ? [...concsWithPhotos, ...clientConcessions.filter(c => !c.photos || c.photos.length === 0)].slice(0, 3)
           : clientConcessions.slice(0, 2),
@@ -1225,6 +1249,7 @@ export const aiAssistantService = {
 
       let finalPhotosCards: Complaint[] = [];
       let finalConcessionCards: ConcessionShipment[] = [];
+      let finalReferenceCards: Complaint[] | undefined = undefined;
 
       if (compsWithPhotos.length > 0) {
         finalPhotosCards = compsWithPhotos.slice(0, 4);
@@ -1235,12 +1260,25 @@ export const aiAssistantService = {
         finalConcessionCards = concsWithPhotos.slice(0, 3);
       }
 
-      const totalPhotos = finalPhotosCards.reduce((acc, c) => acc + (c.photos?.length || 0), 0) +
-                          finalConcessionCards.reduce((acc, c) => acc + (c.photos?.length || 0), 0);
+      // Se o cliente não tem fotos em suas queixas, busca fotos de referência de outros clientes com defeitos idênticos
+      if (compsWithPhotos.length === 0 && custComplaints.length > 0) {
+        const defectIds = Array.from(new Set(custComplaints.map(c => c.defectTypeId).filter(Boolean)));
+        const refCompsWithPhotos = complaints.filter(
+          c => defectIds.includes(c.defectTypeId) && c.photos && c.photos.length > 0 && !matchesCustomer(c, activeCustomer)
+        );
+        if (refCompsWithPhotos.length > 0) {
+          finalReferenceCards = refCompsWithPhotos.slice(0, 2);
+        }
+      }
 
-      if (totalPhotos > 0) {
-        text += `📷 **EVIDÊNCIAS FOTOGRÁFICAS (${totalPhotos} fotos disponíveis):**\n`;
-        text += `Fotos reais de inspeção disponíveis nos cards abaixo (toque para ampliar em tela cheia na bancada).`;
+      if (compsWithPhotos.length > 0) {
+        const totalPhotos = compsWithPhotos.reduce((acc, c) => acc + (c.photos?.length || 0), 0);
+        text += `📷 **EVIDÊNCIAS FOTOGRÁFICAS (${totalPhotos} fotos reais):**\n`;
+        text += `Fotos reais de inspeção/SAC deste cliente disponíveis nos cards abaixo (toque para ampliar em tela cheia na bancada).`;
+      } else if (finalReferenceCards && finalReferenceCards.length > 0) {
+        text += `📷 **EVIDÊNCIAS FOTOGRÁFICAS:**\n`;
+        text += `⚠️ *O cliente ${activeCustomer.name} não possui fotos cadastradas nos laudos do SAC.*\n`;
+        text += `📌 *Anexamos abaixo fotos de **referência técnica de problemas semelhantes** registrados em outros clientes para apoio e conferência visual.*`;
       } else {
         text += `📷 **EVIDÊNCIAS FOTOGRÁFICAS:**\n`;
         text += `*(Sem fotos anexadas nos laudos deste cliente até o momento).*`;
@@ -1253,6 +1291,7 @@ export const aiAssistantService = {
         timestamp,
         customerCard: activeCustomer,
         complaintCards: finalPhotosCards.length > 0 ? finalPhotosCards : (custComplaints.length > 0 ? custComplaints.slice(0, 2) : undefined),
+        referenceComplaintCards: finalReferenceCards,
         concessionCards: finalConcessionCards.length > 0 ? finalConcessionCards : undefined,
         suggestedPrompts: [
           `Quais os cuidados para a Copacol?`,

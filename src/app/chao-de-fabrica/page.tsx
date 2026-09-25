@@ -217,6 +217,12 @@ export default function ChaoDeFabricaPage() {
             return fullComp && fullComp.photos && fullComp.photos.length > 0 ? { ...cc, photos: fullComp.photos } : cc;
           });
         }
+        if (aiResponse.referenceComplaintCards && aiResponse.referenceComplaintCards.length > 0) {
+          aiResponse.referenceComplaintCards = aiResponse.referenceComplaintCards.map(cc => {
+            const fullComp = complaints.find(comp => comp.id === cc.id);
+            return fullComp && fullComp.photos && fullComp.photos.length > 0 ? { ...cc, photos: fullComp.photos } : cc;
+          });
+        }
         if (aiResponse.concessionCards && aiResponse.concessionCards.length > 0) {
           aiResponse.concessionCards = aiResponse.concessionCards.map(cc => {
             const fullConc = concessions.find(conc => conc.id === cc.id);
@@ -557,6 +563,93 @@ export default function ChaoDeFabricaPage() {
                                       />
                                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
                                         <Eye className="w-5 h-5 text-cyan-300" />
+                                      </div>
+                                      {photo.caption && (
+                                        <div className="absolute bottom-0 inset-x-0 bg-black/70 px-1.5 py-0.5 text-[9px] text-slate-200 truncate">
+                                          {photo.caption}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Reference SAC Complaint Cards (Exemplos Visuais de Outros Clientes) */}
+                  {msg.referenceComplaintCards && msg.referenceComplaintCards.length > 0 && (
+                    <div className="space-y-3 pt-2">
+                      <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-3 shadow-sm">
+                        <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                        <div className="space-y-1">
+                          <div className="font-bold text-amber-300 flex items-center gap-2">
+                            <span>Amostras de Referência Técnica (Defeito Semelhante)</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase font-mono font-bold tracking-wider">
+                              Ilustrativo
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-amber-200/90 leading-relaxed">
+                            Por <strong>não haver fotos registradas</strong> no histórico deste cliente para o problema relatado, estamos apresentando abaixo evidências fotográficas de <strong>problemas semelhantes registrados em outros clientes</strong> para apoio e conferência visual na bancada.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {msg.referenceComplaintCards.map(complaint => (
+                          <div
+                            key={complaint.id}
+                            className="p-4 rounded-2xl bg-slate-900/90 border border-amber-500/30 hover:border-amber-500/50 transition-all space-y-2.5 shadow-md relative"
+                          >
+                            <div className="flex items-center justify-between text-xs border-b border-slate-800 pb-2">
+                              <span className="font-mono text-[10px] uppercase font-bold text-amber-300 px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/25">
+                                Referência Visual
+                              </span>
+                              <span className="text-[11px] text-slate-400">
+                                Origem: {complaint.customerName}
+                              </span>
+                            </div>
+
+                            <div className="text-xs text-white font-bold flex items-center justify-between">
+                              <span>{complaint.defectTypeName}</span>
+                              <span className="text-[10px] font-semibold text-amber-300 uppercase px-1.5 py-0.5 rounded bg-amber-500/15">
+                                {complaint.severity}
+                              </span>
+                            </div>
+
+                            {complaint.description && (
+                              <p className="text-[11px] text-slate-300 italic bg-black/40 p-2.5 rounded-xl border border-slate-800/80 leading-relaxed">
+                                "{complaint.description}"
+                              </p>
+                            )}
+
+                            {/* Photos Gallery */}
+                            {complaint.photos && complaint.photos.length > 0 && (
+                              <div className="space-y-1.5 pt-1">
+                                <div className="text-[10px] text-amber-300/80 font-semibold flex items-center gap-1">
+                                  <Eye className="w-3 h-3 text-amber-400" />
+                                  Foto do defeito similar (toque para ampliar):
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {complaint.photos.map(photo => (
+                                    <div
+                                      key={photo.id}
+                                      onClick={() => {
+                                        setActivePhoto(photo);
+                                        setActivePhotoTitle(`[REFERÊNCIA VISUAL] ${complaint.defectTypeName} (Origem: ${complaint.customerName})`);
+                                      }}
+                                      className="relative group cursor-pointer w-28 sm:w-32 h-20 sm:h-24 rounded-xl overflow-hidden border border-amber-500/40 hover:border-amber-400 transition-all shadow-md bg-black"
+                                    >
+                                      <img
+                                        src={photo.url}
+                                        alt={photo.caption || 'Foto de referência'}
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
+                                      />
+                                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
+                                        <Eye className="w-5 h-5 text-amber-300" />
                                       </div>
                                       {photo.caption && (
                                         <div className="absolute bottom-0 inset-x-0 bg-black/70 px-1.5 py-0.5 text-[9px] text-slate-200 truncate">

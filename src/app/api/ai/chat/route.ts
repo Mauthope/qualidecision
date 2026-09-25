@@ -274,7 +274,10 @@ REGRAS ESTRITAS DE INTEGRIDADE (ZERO ALUCINAÇÃO):
 1. PROIBIDO INVENTAR: Utilize APENAS e EXCLUSIVAMENTE os dados reais presentes no [CLIENTE EM CONTEXTO DETALHADO] ou no histórico oficial do ERP.
 2. Se o cliente possui reclamações listadas nos dados, mencione APENAS aquelas ocorrências reais (com o código REC, OP e laudo reais).
 3. Se o cliente NÃO possui reclamações listadas nos dados (0 queixas), NUNCA invente nada! Diga claramente: "✅ ZERO RECLAMAÇÕES NO SAC: Este cliente não possui histórico de não-conformidades registradas no sistema."
-4. EVIDÊNCIAS FOTOGRÁFICAS: Sempre informe se as fotos reais de evidência estão disponíveis e anexadas nos cards abaixo da mensagem para conferência imediata na bancada.
+4. EVIDÊNCIAS FOTOGRÁFICAS E REFERÊNCIAS:
+   - Se o cliente tiver fotos de suas reclamações reais, informe que as fotos de evidência estão disponíveis nos cards abaixo.
+   - Se o cliente NÃO possuir fotos cadastradas no SAC, mas houver fotos de referência anexadas abaixo, É OBRIGATÓRIO DEIXAR BEM CLARO:
+     "⚠️ O cliente [Nome] não possui fotos cadastradas em seus laudos no SAC. As imagens anexadas abaixo são **amostras ilustrativas de referência** de problemas semelhantes registrados em outros clientes para apoio visual na bancada."
 5. PROIBIDO APROVAR CONCESSÕES PELO CHÃO DE FÁBRICA: Deixe claro que qualquer desvio deve ser sempre mostrado e avaliado pelo líder de turno e inspeção da qualidade antes de prosseguir.
 
 ESTRUTURA VISUAL OBRIGATÓRIA DA RESPOSTA (UTILIZE EXATAMENTE ESTES BLOCOS VISUAIS CURTOS):
@@ -298,7 +301,7 @@ ESTRUTURA VISUAL OBRIGATÓRIA DA RESPOSTA (UTILIZE EXATAMENTE ESTES BLOCOS VISUA
 • 📦 **Enfardamento:** [Cuidado com amarração e identificação da OP]
 
 📷 **EVIDÊNCIAS FOTOGRÁFICAS:**
-Fotos reais de inspeção/SAC disponíveis nos cards abaixo (toque para ampliar em tela cheia na bancada).
+[Informe se as fotos são do próprio cliente OU se são fotos de referência de problemas semelhantes de outros clientes porque este cliente não possui fotos registradas].
 
 SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`
       : `Você é o Sensei, o Diretor/Engenheiro Chefe de Qualidade e Decisão Industrial da Rafitec / Qualidecision.
@@ -320,7 +323,9 @@ DIRETRIZES:
    - Análise de risco técnico e perfil do cliente.
    - Recomendações e cuidados necessários na expedição/uso.
    - Se o risco for alto ou proibitivo, sugira clientes alternativos disponíveis na base.
-6. NO FINAL DA SUA RESPOSTA, forneça exatamente uma linha com 2 a 3 sugestões de perguntas subsequentes no formato:
+6. EVIDÊNCIAS FOTOGRÁFICAS E REFERÊNCIAS VISUAIS:
+   - Se o cliente consultado não possuir fotos registradas em seus laudos e forem exibidas fotos de referência, explicite claramente na resposta que aquelas imagens são **exemplos ilustrativos de referência de defeitos semelhantes registrados em outros clientes**, deixando evidente que o cliente em questão não possui fotos arquivadas.
+7. NO FINAL DA SUA RESPOSTA, forneça exatamente uma linha com 2 a 3 sugestões de perguntas subsequentes no formato:
 SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
 
     // Grounding Context - Injeção de dados reais consolidados da fábrica
@@ -353,6 +358,11 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
         groundingContext += `- Segmento: ${activeCustomer.segment || 'Geral'}\n`;
         groundingContext += `- Nível de Exigência / Score: ${activeCustomer.overallToleranceScore}/100\n`;
         groundingContext += `- Total de Queixas SAC deste cliente: ${custComplaints.length} reclamações registradas no ERP\n`;
+        const custPhotos = custComplaints.filter(c => c.photos && c.photos.length > 0);
+        groundingContext += `- Fotos anexadas deste cliente: ${custPhotos.length} queixas com fotos registradas.\n`;
+        if (custPhotos.length === 0 && custComplaints.length > 0) {
+          groundingContext += `  AVISO OBRIGATÓRIO DE FOTOS: O cliente ${activeCustomer.name} NÃO possui fotos registradas no sistema para suas queixas. O sistema irá anexar fotos de REFERÊNCIA de defeitos idênticos de outros clientes para apoio visual. Você DEVE deixar bem claro no bloco 📷 EVIDÊNCIAS FOTOGRÁFICAS que as fotos anexadas abaixo são REFERÊNCIAS VISUAIS DE DEFEITOS SEMELHANTES de outros clientes, pois ${activeCustomer.name} não possui fotos cadastradas no momento da queixa.\n`;
+        }
         if (custComplaints.length > 0) {
           groundingContext += `  Detalhamento de cada reclamação SAC registrada para este cliente:\n`;
           custComplaints.forEach((c, idx) => {
@@ -422,11 +432,16 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
       if (activeCustomer) {
         const custComplaints = complaints.filter(c => matchesCustomer(c, activeCustomer!));
         const custConcessions = concessions.filter(c => matchesCustomer(c, activeCustomer!));
+        const custPhotos = custComplaints.filter(c => c.photos && c.photos.length > 0);
         groundingContext += `[CLIENTE EM CONTEXTO]: ${activeCustomer.name} (${activeCustomer.code})\n`;
         groundingContext += `- Segmento: ${activeCustomer.segment || 'Geral'}\n`;
         groundingContext += `- Score de Tolerância Geral: ${activeCustomer.overallToleranceScore}/100\n`;
         groundingContext += `- Concessões já recebidas por este cliente: ${custConcessions.length} lotes (${custConcessions.reduce((acc, c) => acc + (c.quantity || 0), 0).toLocaleString('pt-BR')} un)\n`;
-        groundingContext += `- Reclamações SAC deste cliente: ${custComplaints.length} queixas\n\n`;
+        groundingContext += `- Reclamações SAC deste cliente: ${custComplaints.length} queixas (${custPhotos.length} com fotos registradas)\n`;
+        if (custPhotos.length === 0 && custComplaints.length > 0) {
+          groundingContext += `  AVISO OBRIGATÓRIO DE FOTOS: O cliente ${activeCustomer.name} NÃO possui fotos registradas no sistema. Foram anexadas fotos de REFERÊNCIA de defeitos idênticos de outros clientes. Você deve deixar bem claro na sua resposta que as fotos exibidas são de REFERÊNCIA TÉCNICA / PROBLEMAS SEMELHANTES de outros clientes, pois ${activeCustomer.name} não possui registros fotográficos arquivados.\n`;
+        }
+        groundingContext += '\n';
       }
 
       if (activeDefect) {
@@ -663,6 +678,7 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
 
     let attachedComplaints: Complaint[] | undefined = undefined;
     let attachedConcessions: ConcessionShipment[] | undefined = undefined;
+    let attachedReferences: Complaint[] | undefined = undefined;
 
     if (activeCustomer) {
       const custComps = complaints.filter(c => matchesCustomer(c, activeCustomer!));
@@ -679,6 +695,18 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
 
       if (concsWithPhotos.length > 0) {
         attachedConcessions = concsWithPhotos.slice(0, 3);
+      }
+
+      // Se o cliente possui queixas registradas mas nenhuma delas tem foto anexada,
+      // busca fotos de referência técnica de problemas idênticos registrados em outros clientes para apoio visual
+      if (compsWithPhotos.length === 0 && custComps.length > 0) {
+        const defectIds = Array.from(new Set(custComps.map(c => c.defectTypeId).filter(Boolean)));
+        const refCompsWithPhotos = complaints.filter(
+          c => defectIds.includes(c.defectTypeId) && c.photos && c.photos.length > 0 && !matchesCustomer(c, activeCustomer!)
+        );
+        if (refCompsWithPhotos.length > 0) {
+          attachedReferences = refCompsWithPhotos.slice(0, 2);
+        }
       }
     } else if (activeDefect) {
       const defComps = complaints.filter(
@@ -706,6 +734,7 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
       timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
       customerCard: activeCustomer,
       complaintCards: attachedComplaints,
+      referenceComplaintCards: attachedReferences,
       concessionCards: attachedConcessions,
       riskRecommendation: isShopFloor ? undefined : (calculatedRisk || undefined),
       suggestedPrompts,

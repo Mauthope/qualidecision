@@ -122,6 +122,7 @@ export interface AiChatMessage {
   text: string;
   timestamp: string;
   complaintCards?: Complaint[];
+  referenceComplaintCards?: Complaint[];
   concessionCards?: ConcessionShipment[];
   customerCard?: Customer;
   riskRecommendation?: RiskEvaluationResult;

@@ -1076,6 +1076,12 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
             return fullComp && fullComp.photos && fullComp.photos.length > 0 ? { ...cc, photos: fullComp.photos } : cc;
           });
         }
+        if (aiResponse.referenceComplaintCards && aiResponse.referenceComplaintCards.length > 0) {
+          aiResponse.referenceComplaintCards = aiResponse.referenceComplaintCards.map(cc => {
+            const fullComp = complaints.find(comp => comp.id === cc.id);
+            return fullComp && fullComp.photos && fullComp.photos.length > 0 ? { ...cc, photos: fullComp.photos } : cc;
+          });
+        }
         if (aiResponse.concessionCards && aiResponse.concessionCards.length > 0) {
           aiResponse.concessionCards = aiResponse.concessionCards.map(cc => {
             const fullConc = concessions.find(conc => conc.id === cc.id);
