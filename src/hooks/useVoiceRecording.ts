@@ -28,9 +28,10 @@ export function useVoiceRecording() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animFrameRef = useRef<number | null>(null);
-
-  // Refs for real-time transcription to prevent stale closure bugs
-  const accumulatedFinalRef = useRef('');
+  // Refs for real-time transcription to prevent stale closure and repetition bugs
+  const previousSessionsTextRef = useRef('');
+  const currentSessionFinalRef = useRef('');
+  const currentSessionInterimRef = useRef('');
   const fullTranscriptRef = useRef('');
 
   // Check speech recognition support
@@ -96,29 +97,34 @@ export function useVoiceRecording() {
       recognition.maxAlternatives = 1;
 
       recognition.onresult = (event: any) => {
-        let currentFinal = '';
-        let currentInterim = '';
+        let sessionFinal = '';
+        let sessionInterim = '';
 
-        for (let i = event.resultIndex; i < event.results.length; i++) {
+        // Extract final and interim transcripts strictly from the current event results
+        for (let i = 0; i < event.results.length; i++) {
           const result = event.results[i];
           if (result.isFinal) {
-            currentFinal += result[0].transcript + ' ';
+            sessionFinal += result[0].transcript + ' ';
           } else {
-            currentInterim += result[0].transcript;
+            sessionInterim += result[0].transcript;
           }
         }
 
-        if (currentFinal) {
-          accumulatedFinalRef.current = (accumulatedFinalRef.current + ' ' + currentFinal).replace(/\s+/g, ' ').trim();
-        }
+        currentSessionFinalRef.current = sessionFinal.trim();
+        currentSessionInterimRef.current = sessionInterim.trim();
 
-        const fullText = (accumulatedFinalRef.current + ' ' + currentInterim).replace(/\s+/g, ' ').trim();
+        const fullText = [
+          previousSessionsTextRef.current,
+          sessionFinal.trim(),
+          sessionInterim.trim()
+        ].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+
         fullTranscriptRef.current = fullText;
         setTranscript(fullText);
-        setIsTranscribing(Boolean(currentInterim));
+        setIsTranscribing(Boolean(sessionInterim.trim()));
 
         // When user speaks, increase audio level indicator
-        if (currentInterim || currentFinal) {
+        if (sessionInterim || sessionFinal) {
           setAudioLevel(Math.floor(45 + Math.random() * 45));
         }
       };
@@ -133,6 +139,16 @@ export function useVoiceRecording() {
 
       recognition.onend = () => {
         setIsTranscribing(false);
+        // Commit current session's final transcript into previousSessionsTextRef
+        if (currentSessionFinalRef.current) {
+          previousSessionsTextRef.current = [
+            previousSessionsTextRef.current,
+            currentSessionFinalRef.current
+          ].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+          currentSessionFinalRef.current = '';
+          currentSessionInterimRef.current = '';
+        }
+
         // If recording is still active and recognition ended (e.g. pause in speech or continuous=false), restart seamlessly
         if (shouldBeRecordingRef.current) {
           try {
@@ -152,7 +168,9 @@ export function useVoiceRecording() {
     setError(null);
     setTranscript('');
     setDuration(0);
-    accumulatedFinalRef.current = '';
+    previousSessionsTextRef.current = '';
+    currentSessionFinalRef.current = '';
+    currentSessionInterimRef.current = '';
     fullTranscriptRef.current = '';
     audioChunksRef.current = [];
     shouldBeRecordingRef.current = true;
@@ -352,7 +370,15 @@ export function useVoiceRecording() {
     setIsFinishing(false);
     setIsTranscribing(false);
 
-    const finalTranscript = fullTranscriptRef.current.trim();
+    const finalTranscript = [
+      previousSessionsTextRef.current,
+      currentSessionFinalRef.current,
+      currentSessionInterimRef.current
+    ].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+
+    fullTranscriptRef.current = finalTranscript;
+    setTranscript(finalTranscript);
+
     return {
       audioBlob,
       audioUrl,
@@ -385,7 +411,9 @@ export function useVoiceRecording() {
 
     cleanupStream();
     audioChunksRef.current = [];
-    accumulatedFinalRef.current = '';
+    previousSessionsTextRef.current = '';
+    currentSessionFinalRef.current = '';
+    currentSessionInterimRef.current = '';
     fullTranscriptRef.current = '';
     setIsRecording(false);
     setTranscript('');
