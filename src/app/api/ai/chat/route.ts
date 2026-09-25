@@ -672,30 +672,13 @@ SUGESTOES: ["Pergunta 1", "Pergunta 2", "Pergunta 3"]`;
       const concsWithPhotos = custConcs.filter(c => c.photos && c.photos.length > 0);
 
       if (compsWithPhotos.length > 0) {
-        attachedComplaints = compsWithPhotos;
+        attachedComplaints = compsWithPhotos.slice(0, 4);
       } else if (custComps.length > 0) {
         attachedComplaints = custComps.slice(0, 3);
       }
 
       if (concsWithPhotos.length > 0) {
         attachedConcessions = concsWithPhotos.slice(0, 3);
-      }
-
-      // Se nem as queixas nem as concessões do cliente possuem fotos, mas o cliente reclamou de defeitos específicos,
-      // buscar fotos de referência da fábrica desse mesmo defeito para exibir visualmente na bancada
-      const totalPhotos = (attachedComplaints?.reduce((acc, c) => acc + (c.photos?.length || 0), 0) || 0) +
-                          (attachedConcessions?.reduce((acc, c) => acc + (c.photos?.length || 0), 0) || 0);
-
-      if (totalPhotos === 0 && custComps.length > 0) {
-        const defectIds = Array.from(new Set(custComps.map(c => c.defectTypeId)));
-        const refCompsWithPhotos = complaints.filter(c => defectIds.includes(c.defectTypeId) && c.photos && c.photos.length > 0);
-        const refConcsWithPhotos = concessions.filter(c => defectIds.includes(c.defectTypeId) && c.photos && c.photos.length > 0);
-
-        if (refCompsWithPhotos.length > 0) {
-          attachedComplaints = (attachedComplaints || []).concat(refCompsWithPhotos.slice(0, 2));
-        } else if (refConcsWithPhotos.length > 0) {
-          attachedConcessions = refConcsWithPhotos.slice(0, 3);
-        }
       }
     } else if (activeDefect) {
       const defComps = complaints.filter(

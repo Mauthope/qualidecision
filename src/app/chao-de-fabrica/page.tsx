@@ -120,13 +120,6 @@ export default function ChaoDeFabricaPage() {
     cancelRecording();
   };
 
-  const handleStopVoiceToReview = async () => {
-    const res = await stopRecording();
-    if (res.transcript) {
-      setInputPrompt(res.transcript);
-    }
-  };
-
   const handleSendMessage = useCallback(async (
     textToSend?: string,
     voiceData?: { audioUrl?: string; audioDuration?: number; isVoiceMessage?: boolean }
@@ -262,11 +255,24 @@ export default function ChaoDeFabricaPage() {
     }
   }, [inputPrompt, isTyping, messages, customers, defects, complaints, concessions]);
 
+  const [localVoiceError, setLocalVoiceError] = useState<string | null>(null);
+
+  const handleStopVoiceToReview = async () => {
+    const res = await stopRecording();
+    if (res.transcript) {
+      setInputPrompt(res.transcript);
+      setLocalVoiceError(null);
+    } else {
+      setLocalVoiceError('Nenhuma fala foi detectada para preencher.');
+    }
+  };
+
   const handleSendVoice = async () => {
+    setLocalVoiceError(null);
     const res = await stopRecording();
     const query = res.transcript.trim();
     if (!query) {
-      cancelRecording();
+      setLocalVoiceError('Nenhuma fala detectada. Aproxime o microfone e fale claramente antes de enviar.');
       return;
     }
     await handleSendMessage(query, {
@@ -695,15 +701,18 @@ export default function ChaoDeFabricaPage() {
         <div className="max-w-5xl mx-auto flex flex-col gap-2">
           
           {/* Recording Error Alert Banner if any */}
-          {recordingError && (
-            <div className="p-3 bg-rose-950/80 border border-rose-500/50 rounded-xl flex items-center justify-between text-xs text-rose-200">
-              <span>{recordingError}</span>
+          {(recordingError || localVoiceError) && (
+            <div className="p-3 bg-amber-950/80 border border-amber-500/50 rounded-xl flex items-center justify-between text-xs text-amber-200 animate-in fade-in">
+              <span>{recordingError || localVoiceError}</span>
               <button
                 type="button"
-                onClick={handleCancelVoice}
-                className="text-rose-400 hover:text-white font-bold ml-2 underline cursor-pointer"
+                onClick={() => {
+                  setLocalVoiceError(null);
+                  handleCancelVoice();
+                }}
+                className="text-amber-400 hover:text-white font-bold ml-2 underline cursor-pointer"
               >
-                Fechar
+                OK
               </button>
             </div>
           )}
@@ -713,7 +722,11 @@ export default function ChaoDeFabricaPage() {
               duration={recordingDuration}
               transcript={recordingTranscript}
               audioLevel={recordingAudioLevel}
-              onCancel={handleCancelVoice}
+              error={recordingError || localVoiceError}
+              onCancel={() => {
+                setLocalVoiceError(null);
+                handleCancelVoice();
+              }}
               onSend={handleSendVoice}
               onStop={handleStopVoiceToReview}
             />

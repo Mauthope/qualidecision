@@ -12,7 +12,6 @@ export interface VoiceRecordingResult {
 export function useVoiceRecording() {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [interimTranscript, setInterimTranscript] = useState('');
   const [duration, setDuration] = useState(0);
   const [audioLevel, setAudioLevel] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -21,20 +20,36 @@ export function useVoiceRecording() {
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const waveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const recognitionRef = useRef<any>(null);
   const shouldBeRecordingRef = useRef(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animFrameRef = useRef<number | null>(null);
 
+  // Refs for real-time transcription to prevent stale closure bugs
+  const accumulatedFinalRef = useRef('');
+  const fullTranscriptRef = useRef('');
+
   // Check speech recognition support
   const isSpeechSupported = typeof window !== 'undefined' &&
     !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+
+  const isMobile = typeof navigator !== 'undefined' &&
+    (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+     (navigator.maxTouchPoints && navigator.maxTouchPoints > 1));
+
+  const isIOS = typeof navigator !== 'undefined' &&
+    /iPad|iPhone|iPod/.test(navigator.userAgent);
 
   const cleanupAudioLevel = useCallback(() => {
     if (animFrameRef.current) {
       cancelAnimationFrame(animFrameRef.current);
       animFrameRef.current = null;
+    }
+    if (waveTimerRef.current) {
+      clearInterval(waveTimerRef.current);
+      waveTimerRef.current = null;
     }
     if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
       try {
@@ -56,6 +71,7 @@ export function useVoiceRecording() {
   const stopRecognition = useCallback(() => {
     if (recognitionRef.current) {
       try {
+        recognitionRef.current.onresult = null;
         recognitionRef.current.onend = null;
         recognitionRef.current.onerror = null;
         recognitionRef.current.stop();
@@ -71,41 +87,48 @@ export function useVoiceRecording() {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
       recognition.lang = 'pt-BR';
-      recognition.continuous = true;
+      // On iOS Safari, continuous MUST be false or an InvalidModificationError is thrown
+      recognition.continuous = false;
       recognition.interimResults = true;
       recognition.maxAlternatives = 1;
 
       recognition.onresult = (event: any) => {
-        let finalStr = '';
-        let interimStr = '';
+        let currentFinal = '';
+        let currentInterim = '';
 
         for (let i = 0; i < event.results.length; i++) {
           const result = event.results[i];
           if (result.isFinal) {
-            finalStr += result[0].transcript + ' ';
+            currentFinal += result[0].transcript + ' ';
           } else {
-            interimStr += result[0].transcript;
+            currentInterim += result[0].transcript;
           }
         }
 
-        if (finalStr) {
-          setTranscript(prev => {
-            const combined = (prev + ' ' + finalStr).replace(/\s+/g, ' ').trim();
-            return combined;
-          });
+        if (currentFinal) {
+          accumulatedFinalRef.current = (accumulatedFinalRef.current + ' ' + currentFinal).replace(/\s+/g, ' ').trim();
         }
-        setInterimTranscript(interimStr);
+
+        const fullText = (accumulatedFinalRef.current + ' ' + currentInterim).replace(/\s+/g, ' ').trim();
+        fullTranscriptRef.current = fullText;
+        setTranscript(fullText);
+
+        // When user speaks, increase audio level indicator
+        if (currentInterim || currentFinal) {
+          setAudioLevel(Math.floor(45 + Math.random() * 45));
+        }
       };
 
       recognition.onerror = (event: any) => {
-        // Silently ignore 'no-speech' or 'aborted', report other errors
-        if (event.error !== 'no-speech' && event.error !== 'aborted') {
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          setError('Permissão de microfone negada. Autorize o microfone no navegador.');
+        } else if (event.error !== 'no-speech' && event.error !== 'aborted') {
           console.warn('SpeechRecognition error:', event.error);
         }
       };
 
       recognition.onend = () => {
-        // If recording is still active and recognition stopped due to silence, restart it
+        // If recording is still active and recognition ended (e.g. pause in speech or continuous=false), restart seamlessly
         if (shouldBeRecordingRef.current) {
           try {
             recognition.start();
@@ -123,13 +146,42 @@ export function useVoiceRecording() {
   const startRecording = useCallback(async () => {
     setError(null);
     setTranscript('');
-    setInterimTranscript('');
     setDuration(0);
+    accumulatedFinalRef.current = '';
+    fullTranscriptRef.current = '';
     audioChunksRef.current = [];
     shouldBeRecordingRef.current = true;
 
+    // 1. On mobile devices with SpeechRecognition support:
+    // DO NOT run getUserMedia at the same time! On Android and iOS, getUserMedia locks
+    // the hardware audio stream, which causes SpeechRecognition to fail with audio-capture error.
+    if (isMobile && isSpeechSupported) {
+      try {
+        startRecognition();
+
+        // Simulate lively audio equalizer bars while recording
+        waveTimerRef.current = setInterval(() => {
+          if (!shouldBeRecordingRef.current) return;
+          setAudioLevel(prev => {
+            const delta = (Math.random() - 0.5) * 30;
+            return Math.max(15, Math.min(85, Math.round(prev + delta)));
+          });
+        }, 150);
+
+        const startTime = Date.now();
+        timerRef.current = setInterval(() => {
+          setDuration(Math.floor((Date.now() - startTime) / 1000));
+        }, 500);
+
+        setIsRecording(true);
+        return;
+      } catch (err: any) {
+        console.warn('Mobile speech recognition failed, fallback to getUserMedia:', err);
+      }
+    }
+
+    // 2. On Desktop or Mobile without SpeechRecognition: use getUserMedia + MediaRecorder
     try {
-      // 1. Get audio stream with optimal quality for voice
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -139,7 +191,7 @@ export function useVoiceRecording() {
       });
       streamRef.current = stream;
 
-      // 2. Set up AudioContext for real-time waveform / volume detection
+      // AudioContext frequency analyser for real volume
       try {
         const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
         if (AudioContextClass) {
@@ -170,7 +222,7 @@ export function useVoiceRecording() {
         console.warn('AudioContext visualization not available:', err);
       }
 
-      // 3. Determine supported MIME type for MediaRecorder
+      // MediaRecorder for desktop playback
       let mimeType = '';
       const types = [
         'audio/webm;codecs=opus',
@@ -195,12 +247,11 @@ export function useVoiceRecording() {
         }
       };
 
-      recorder.start(250); // Slice chunks every 250ms
+      recorder.start(250);
 
-      // 4. Start speech recognition in pt-BR
+      // Start SpeechRecognition on desktop (desktop audio drivers support multi-client capture)
       startRecognition();
 
-      // 5. Start duration timer
       const startTime = Date.now();
       timerRef.current = setInterval(() => {
         setDuration(Math.floor((Date.now() - startTime) / 1000));
@@ -217,7 +268,7 @@ export function useVoiceRecording() {
         setError('Não foi possível acessar o microfone.');
       }
     }
-  }, [startRecognition, cleanupStream]);
+  }, [isMobile, isSpeechSupported, startRecognition, cleanupStream]);
 
   const stopRecording = useCallback(async (): Promise<VoiceRecordingResult> => {
     shouldBeRecordingRef.current = false;
@@ -226,18 +277,24 @@ export function useVoiceRecording() {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    if (waveTimerRef.current) {
+      clearInterval(waveTimerRef.current);
+      waveTimerRef.current = null;
+    }
 
     stopRecognition();
 
     const recorder = mediaRecorderRef.current;
+    const finalTranscript = fullTranscriptRef.current.trim();
+
     if (!recorder || recorder.state === 'inactive') {
       cleanupStream();
       setIsRecording(false);
       return {
         audioBlob: null,
         audioUrl: null,
-        transcript: transcript.trim() || interimTranscript.trim(),
-        duration
+        transcript: finalTranscript,
+        duration: Math.max(duration, 1)
       };
     }
 
@@ -249,8 +306,6 @@ export function useVoiceRecording() {
 
         cleanupStream();
         setIsRecording(false);
-
-        const finalTranscript = (transcript + ' ' + interimTranscript).replace(/\s+/g, ' ').trim();
 
         resolve({
           audioBlob: blob,
@@ -268,12 +323,12 @@ export function useVoiceRecording() {
         resolve({
           audioBlob: null,
           audioUrl: null,
-          transcript: transcript.trim() || interimTranscript.trim(),
-          duration
+          transcript: finalTranscript,
+          duration: Math.max(duration, 1)
         });
       }
     });
-  }, [stopRecognition, cleanupStream, transcript, interimTranscript, duration]);
+  }, [stopRecognition, cleanupStream, duration]);
 
   const cancelRecording = useCallback(() => {
     shouldBeRecordingRef.current = false;
@@ -281,6 +336,10 @@ export function useVoiceRecording() {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
+    }
+    if (waveTimerRef.current) {
+      clearInterval(waveTimerRef.current);
+      waveTimerRef.current = null;
     }
 
     stopRecognition();
@@ -293,9 +352,10 @@ export function useVoiceRecording() {
 
     cleanupStream();
     audioChunksRef.current = [];
+    accumulatedFinalRef.current = '';
+    fullTranscriptRef.current = '';
     setIsRecording(false);
     setTranscript('');
-    setInterimTranscript('');
     setDuration(0);
     setError(null);
   }, [stopRecognition, cleanupStream]);
@@ -305,16 +365,15 @@ export function useVoiceRecording() {
     return () => {
       shouldBeRecordingRef.current = false;
       if (timerRef.current) clearInterval(timerRef.current);
+      if (waveTimerRef.current) clearInterval(waveTimerRef.current);
       stopRecognition();
       cleanupStream();
     };
   }, [stopRecognition, cleanupStream]);
 
-  const fullLiveTranscript = (transcript + (interimTranscript ? ' ' + interimTranscript : '')).replace(/\s+/g, ' ').trim();
-
   return {
     isRecording,
-    transcript: fullLiveTranscript,
+    transcript: transcript || fullTranscriptRef.current,
     duration,
     audioLevel,
     error,

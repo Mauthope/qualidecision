@@ -1,12 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Mic, Trash2, Send, StopCircle, Radio } from 'lucide-react';
+import { Trash2, Send, StopCircle, Radio, AlertTriangle } from 'lucide-react';
 
 interface VoiceRecordingBarProps {
   duration: number;
   transcript: string;
   audioLevel: number; // 0 to 100
+  error?: string | null;
   onCancel: () => void;
   onSend: () => void;
   onStop?: () => void;
@@ -16,6 +17,7 @@ export const VoiceRecordingBar: React.FC<VoiceRecordingBarProps> = ({
   duration,
   transcript,
   audioLevel,
+  error,
   onCancel,
   onSend,
   onStop
@@ -100,18 +102,25 @@ export const VoiceRecordingBar: React.FC<VoiceRecordingBarProps> = ({
         </div>
       </div>
 
-      {/* Live speech recognition transcription preview */}
-      <div className="bg-slate-900/90 border border-slate-800/80 rounded-xl px-3 py-2 text-xs flex items-start gap-2">
-        <Radio className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5 animate-pulse" />
-        <div className="flex-1 min-w-0">
-          <span className="text-slate-400 font-medium mr-1.5">Ouvindo:</span>
-          {transcript ? (
-            <span className="text-cyan-200 font-medium italic">"{transcript}"</span>
-          ) : (
-            <span className="text-slate-500 italic">Fale sua dúvida sobre clientes, defeitos ou envio...</span>
-          )}
+      {/* Error or Live speech recognition transcription preview */}
+      {error ? (
+        <div className="bg-rose-950/60 border border-rose-500/50 rounded-xl px-3 py-2 text-xs flex items-center gap-2 text-rose-200">
+          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+          <span>{error}</span>
         </div>
-      </div>
+      ) : (
+        <div className="bg-slate-900/90 border border-slate-800/80 rounded-xl px-3 py-2 text-xs flex items-start gap-2">
+          <Radio className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5 animate-pulse" />
+          <div className="flex-1 min-w-0">
+            <span className="text-slate-400 font-medium mr-1.5">Ouvindo:</span>
+            {transcript ? (
+              <span className="text-cyan-200 font-medium italic">"{transcript}"</span>
+            ) : (
+              <span className="text-slate-500 italic">Fale sua dúvida sobre clientes, defeitos ou envio...</span>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

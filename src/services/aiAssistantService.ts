@@ -1227,23 +1227,12 @@ export const aiAssistantService = {
       let finalConcessionCards: ConcessionShipment[] = [];
 
       if (compsWithPhotos.length > 0) {
-        finalPhotosCards = compsWithPhotos;
+        finalPhotosCards = compsWithPhotos.slice(0, 4);
+      } else if (custComplaints.length > 0) {
+        finalPhotosCards = custComplaints.slice(0, 3);
       }
       if (concsWithPhotos.length > 0) {
         finalConcessionCards = concsWithPhotos.slice(0, 3);
-      }
-
-      // Se o cliente não tem fotos, mas reclamou de defeitos específicos, puxar fotos da fábrica desse mesmo defeito para orientar o operador visualmente
-      if (finalPhotosCards.length === 0 && finalConcessionCards.length === 0 && custComplaints.length > 0) {
-        const defectIds = custComplaints.map(c => c.defectTypeId);
-        const refCompsWithPhotos = complaints.filter(c => defectIds.includes(c.defectTypeId) && c.photos && c.photos.length > 0);
-        const refConcsWithPhotos = (concessions || []).filter(c => defectIds.includes(c.defectTypeId) && c.photos && c.photos.length > 0);
-
-        if (refCompsWithPhotos.length > 0) {
-          finalPhotosCards = refCompsWithPhotos.slice(0, 2);
-        } else if (refConcsWithPhotos.length > 0) {
-          finalConcessionCards = refConcsWithPhotos.slice(0, 2);
-        }
       }
 
       const totalPhotos = finalPhotosCards.reduce((acc, c) => acc + (c.photos?.length || 0), 0) +
