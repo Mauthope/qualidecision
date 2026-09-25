@@ -78,6 +78,13 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
     severity?: DefectSeverity;
   } | null>(null);
 
+  const [isRefiningVoice, setIsRefiningVoice] = useState(false);
+  const [pendingVoiceData, setPendingVoiceData] = useState<{
+    audioUrl?: string;
+    audioDuration?: number;
+    isVoiceMessage?: boolean;
+  } | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const checkLiveConnection = useCallback(async () => {
@@ -182,36 +189,59 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
 
   const [localVoiceError, setLocalVoiceError] = useState<string | null>(null);
 
-  const handleStopVoiceToReview = async () => {
-    const res = await stopRecording();
-    if (res.transcript) {
-      setInputPrompt(res.transcript);
-      setLocalVoiceError(null);
-    } else {
-      setLocalVoiceError('Nenhuma fala foi detectada para preencher.');
-    }
-  };
-
-  const handleSendVoice = async () => {
+  const handleFinishVoiceRecording = async () => {
+    setIsRefiningVoice(true);
     setLocalVoiceError(null);
-    const res = await stopRecording();
-    const query = res.transcript.trim();
-    if (!query) {
-      setLocalVoiceError('Nenhuma fala detectada. Aproxime o microfone e fale claramente antes de enviar.');
-      return;
+    let stoppedResult: any = null;
+    try {
+      stoppedResult = await stopRecording();
+      const raw = (stoppedResult?.transcript || '').trim();
+      if (!raw) {
+        setLocalVoiceError('Nenhuma fala detectada. Aproxime o microfone e fale claramente antes de concluir.');
+        return;
+      }
+
+      if (stoppedResult?.audioUrl) {
+        setPendingVoiceData({
+          audioUrl: stoppedResult.audioUrl,
+          audioDuration: stoppedResult.duration,
+          isVoiceMessage: true
+        });
+      }
+
+      // Refinamento de áudio por IA: elimina repetições e gaguejos, aplicando pontuação e entidades corretas
+      const localKey = storageService.getGeminiApiKey();
+      const refineRes = await fetch('/api/ai/refine-speech', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: raw,
+          apiKey: localKey || undefined
+        })
+      });
+
+      if (refineRes.ok) {
+        const data = await refineRes.json();
+        setInputPrompt(data?.refinedText || raw);
+      } else {
+        setInputPrompt(raw);
+      }
+    } catch (err: any) {
+      console.warn('Erro ao refinar áudio com IA:', err);
+      if (stoppedResult?.transcript) {
+        setInputPrompt(stoppedResult.transcript);
+      }
+    } finally {
+      setIsRefiningVoice(false);
     }
-    await sendAiMessage(query, {
-      audioUrl: res.audioUrl || undefined,
-      audioDuration: res.duration,
-      isVoiceMessage: true
-    });
-    setInputPrompt('');
   };
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputPrompt.trim() || isAiTyping) return;
-    sendAiMessage(inputPrompt.trim());
+    if (!inputPrompt.trim() || isAiTyping || isRefiningVoice) return;
+    const currentVoice = pendingVoiceData;
+    setPendingVoiceData(null);
+    sendAiMessage(inputPrompt.trim(), currentVoice || undefined);
     setInputPrompt('');
   };
 
@@ -731,8 +761,8 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
         </div>
       )}
 
-      {/* Input Bar Fullscreen / Voice Recording Bar */}
-      {isRecording ? (
+      {/* Input Bar / Voice Recording Bar */}
+      {isRecording || isRefiningVoice ? (
         <div className="p-3 sm:p-5 border-t border-slate-800/80 bg-slate-900/90">
           <VoiceRecordingBar
             duration={recordingDuration}
@@ -740,43 +770,65 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
             audioLevel={recordingAudioLevel}
             error={recordingError || localVoiceError}
             isFinishing={isVoiceFinishing}
-            isTranscribing={isVoiceTranscribing}
+            isRefining={isRefiningVoice}
             onCancel={() => {
               setLocalVoiceError(null);
+              setPendingVoiceData(null);
               handleCancelVoice();
             }}
-            onSend={handleSendVoice}
-            onStop={handleStopVoiceToReview}
+            onFinish={handleFinishVoiceRecording}
           />
         </div>
       ) : (
-        <form onSubmit={handleSend} className="p-3.5 sm:p-5 border-t border-slate-800/80 bg-slate-900/70 flex items-center gap-2 sm:gap-3">
-          <button
-            type="button"
-            onClick={handleStartVoice}
-            disabled={isAiTyping}
-            className="p-3.5 rounded-2xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 hover:border-cyan-400/50 transition-all flex items-center justify-center shrink-0 cursor-pointer shadow-sm group active:scale-95 disabled:opacity-40"
-            title="Gravar mensagem de voz (Falar ao invés de digitar)"
-          >
-            <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
-          </button>
-          <input
-            type="text"
-            value={inputPrompt}
-            onChange={e => setInputPrompt(e.target.value)}
-            disabled={isAiTyping}
-            placeholder="Digite sua dúvida ou use o microfone para falar..."
-            className="flex-1 bg-slate-900 border border-slate-700/80 rounded-2xl px-4 sm:px-5 py-3.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/70 focus:ring-2 focus:ring-cyan-500/20 shadow-inner disabled:opacity-50"
-          />
-          <button
-            type="submit"
-            disabled={!inputPrompt.trim() || isAiTyping}
-            className="px-5 sm:px-7 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 font-bold hover:from-cyan-400 hover:to-teal-400 disabled:opacity-40 transition-all shadow-lg shadow-cyan-500/25 shrink-0 flex items-center gap-2 cursor-pointer"
-          >
-            <Send className="w-4 h-4" />
-            <span className="hidden sm:inline">Consultar</span>
-          </button>
-        </form>
+        <div className="p-3.5 sm:p-5 border-t border-slate-800/80 bg-slate-900/70">
+          {/* Badge when audio was interpreted and attached */}
+          {pendingVoiceData && (
+            <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-cyan-950/70 to-teal-950/70 border border-cyan-500/40 rounded-xl text-xs text-cyan-200 mb-2.5 shadow-sm animate-in fade-in duration-200">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-cyan-400 shrink-0 animate-pulse" />
+                <span className="font-medium">
+                  <strong className="text-white">Áudio interpretado com sucesso:</strong> Revise o texto abaixo e clique em <span className="text-cyan-300 font-bold">Consultar</span> para enviar.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPendingVoiceData(null)}
+                className="text-slate-400 hover:text-rose-400 text-[11px] underline ml-2 shrink-0 cursor-pointer"
+                title="Descartar áudio anexo"
+              >
+                Descartar áudio
+              </button>
+            </div>
+          )}
+
+          <form onSubmit={handleSend} className="flex items-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={handleStartVoice}
+              disabled={isAiTyping || isRefiningVoice}
+              className="p-3.5 rounded-2xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 hover:border-cyan-400/50 transition-all flex items-center justify-center shrink-0 cursor-pointer shadow-sm group active:scale-95 disabled:opacity-40"
+              title="Gravar mensagem de voz (Falar ao invés de digitar)"
+            >
+              <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
+            </button>
+            <input
+              type="text"
+              value={inputPrompt}
+              onChange={e => setInputPrompt(e.target.value)}
+              disabled={isAiTyping || isRefiningVoice}
+              placeholder="Digite sua dúvida ou use o microfone para falar..."
+              className="flex-1 bg-slate-900 border border-slate-700/80 rounded-2xl px-4 sm:px-5 py-3.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/70 focus:ring-2 focus:ring-cyan-500/20 shadow-inner disabled:opacity-50"
+            />
+            <button
+              type="submit"
+              disabled={!inputPrompt.trim() || isAiTyping || isRefiningVoice}
+              className="px-5 sm:px-7 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 font-bold hover:from-cyan-400 hover:to-teal-400 disabled:opacity-40 transition-all shadow-lg shadow-cyan-500/25 shrink-0 flex items-center gap-2 cursor-pointer"
+            >
+              <Send className="w-4 h-4" />
+              <span className="hidden sm:inline">Consultar</span>
+            </button>
+          </form>
+        </div>
       )}
 
       {/* Photo Viewer Zoom Modal */}

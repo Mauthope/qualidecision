@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Trash2, Send, StopCircle, Radio, AlertTriangle, Loader2, CheckCircle2 } from 'lucide-react';
+import { Trash2, Radio, AlertTriangle, Loader2, CheckCircle2, Sparkles } from 'lucide-react';
 
 interface VoiceRecordingBarProps {
   duration: number;
@@ -9,10 +9,9 @@ interface VoiceRecordingBarProps {
   audioLevel: number; // 0 to 100
   error?: string | null;
   isFinishing?: boolean;
-  isTranscribing?: boolean;
+  isRefining?: boolean;
   onCancel: () => void;
-  onSend: () => void;
-  onStop?: () => void;
+  onFinish: () => void;
 }
 
 export const VoiceRecordingBar: React.FC<VoiceRecordingBarProps> = ({
@@ -21,11 +20,12 @@ export const VoiceRecordingBar: React.FC<VoiceRecordingBarProps> = ({
   audioLevel,
   error,
   isFinishing = false,
-  isTranscribing = false,
+  isRefining = false,
   onCancel,
-  onSend,
-  onStop
+  onFinish
 }) => {
+  const isBusy = isFinishing || isRefining;
+
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
     const s = Math.floor(secs % 60);
@@ -45,12 +45,12 @@ export const VoiceRecordingBar: React.FC<VoiceRecordingBarProps> = ({
         {/* Recording Status & Timer */}
         <div className="flex items-center gap-2.5">
           <div className="relative flex items-center justify-center">
-            <span className={`w-3.5 h-3.5 rounded-full ${isFinishing ? 'bg-amber-500 animate-pulse' : 'bg-rose-500 animate-ping'} absolute`} />
-            <span className={`w-3 h-3 rounded-full ${isFinishing ? 'bg-amber-500' : 'bg-rose-500'} relative`} />
+            <span className={`w-3.5 h-3.5 rounded-full ${isBusy ? 'bg-amber-500 animate-pulse' : 'bg-rose-500 animate-ping'} absolute`} />
+            <span className={`w-3 h-3 rounded-full ${isBusy ? 'bg-amber-500' : 'bg-rose-500'} relative`} />
           </div>
           <div className="flex items-center gap-2">
-            <span className={`text-xs font-bold ${isFinishing ? 'text-amber-400' : 'text-rose-400'} uppercase tracking-wider hidden sm:inline`}>
-              {isFinishing ? 'Concluindo...' : 'Gravando Áudio'}
+            <span className={`text-xs font-bold ${isBusy ? 'text-amber-400' : 'text-rose-400'} uppercase tracking-wider hidden sm:inline`}>
+              {isRefining ? 'Interpretando IA...' : isFinishing ? 'Concluindo...' : 'Gravando Áudio'}
             </span>
             <span className="font-mono font-bold text-sm text-white bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800">
               {formatTime(duration)}
@@ -64,63 +64,50 @@ export const VoiceRecordingBar: React.FC<VoiceRecordingBarProps> = ({
             <div
               key={i}
               className={`flex-1 rounded-full transition-all duration-75 ${
-                isFinishing
+                isBusy
                   ? 'bg-amber-400'
                   : 'bg-gradient-to-t from-cyan-500 to-teal-300'
               }`}
               style={{
                 height: `${h}%`,
-                opacity: audioLevel > 5 || isFinishing ? 1 : 0.4
+                opacity: audioLevel > 5 || isBusy ? 1 : 0.4
               }}
             />
           ))}
         </div>
 
-        {/* Action Controls: Cancel, Stop & Review, Send */}
+        {/* Action Controls: Cancel, Concluir Gravação */}
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={onCancel}
-            disabled={isFinishing}
+            disabled={isBusy}
             className="p-2.5 rounded-xl bg-slate-900 hover:bg-rose-950/50 text-slate-400 hover:text-rose-400 border border-slate-800 hover:border-rose-800/40 transition-all cursor-pointer shadow-sm disabled:opacity-50"
             title="Descartar gravação de áudio"
           >
             <Trash2 className="w-4 h-4" />
           </button>
 
-          {onStop && (
-            <button
-              type="button"
-              onClick={onStop}
-              disabled={isFinishing}
-              className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition-all cursor-pointer shadow-sm flex items-center gap-1.5 disabled:opacity-50"
-              title="Parar e revisar texto antes de enviar"
-            >
-              <StopCircle className="w-4 h-4 text-amber-400" />
-              <span className="text-[11px] font-medium hidden md:inline">Revisar</span>
-            </button>
-          )}
-
           <button
             type="button"
-            onClick={onSend}
-            disabled={isFinishing}
+            onClick={onFinish}
+            disabled={isBusy}
             className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-md active:scale-95 ${
-              isFinishing
+              isBusy
                 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 cursor-wait'
-                : 'bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 hover:from-cyan-400 hover:to-teal-300 shadow-cyan-500/25 cursor-pointer'
+                : 'bg-gradient-to-r from-emerald-400 to-teal-400 text-slate-950 hover:from-emerald-300 hover:to-teal-300 shadow-emerald-500/25 cursor-pointer'
             }`}
-            title="Enviar mensagem de voz"
+            title="Concluir gravação e interpretar com IA"
           >
-            {isFinishing ? (
+            {isBusy ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin text-amber-300" />
-                <span>Finalizando...</span>
+                <span>Interpretando com IA...</span>
               </>
             ) : (
               <>
-                <Send className="w-4 h-4 fill-slate-950" />
-                <span className="hidden sm:inline">Enviar Voz</span>
+                <CheckCircle2 className="w-4 h-4 text-slate-950" />
+                <span>Concluir Gravação</span>
               </>
             )}
           </button>
@@ -133,36 +120,29 @@ export const VoiceRecordingBar: React.FC<VoiceRecordingBarProps> = ({
           <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
           <span>{error}</span>
         </div>
+      ) : isRefining ? (
+        <div className="bg-cyan-950/40 border border-cyan-500/40 rounded-xl px-3 py-2 text-xs flex items-center gap-2 text-cyan-200 animate-pulse">
+          <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0 animate-spin" />
+          <span className="font-medium">Sensei IA refinando o áudio e formatando a pergunta perfeita...</span>
+        </div>
       ) : isFinishing ? (
         <div className="bg-amber-950/40 border border-amber-500/40 rounded-xl px-3 py-2 text-xs flex items-center gap-2 text-amber-200 animate-pulse">
           <Loader2 className="w-3.5 h-3.5 text-amber-400 shrink-0 animate-spin" />
-          <span className="font-medium">Capturando e decodificando as últimas palavras do áudio...</span>
+          <span className="font-medium">Finalizando captura e decodificando áudio...</span>
         </div>
       ) : (
         <div className="bg-slate-900/90 border border-slate-800/80 rounded-xl px-3 py-2 text-xs flex items-start gap-2">
-          {isTranscribing ? (
-            <Radio className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5 animate-pulse" />
-          ) : transcript ? (
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-          ) : (
-            <Radio className="w-3.5 h-3.5 text-slate-500 shrink-0 mt-0.5" />
-          )}
-
+          <Radio className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5 animate-pulse" />
           <div className="flex-1 min-w-0">
-            {isTranscribing ? (
+            {transcript ? (
               <>
-                <span className="text-cyan-400 font-bold mr-1.5">⚡ Transcrevendo:</span>
+                <span className="text-cyan-400 font-bold mr-1.5">Ouvindo:</span>
                 <span className="text-cyan-100 font-medium italic">"{transcript}"</span>
-              </>
-            ) : transcript ? (
-              <>
-                <span className="text-emerald-400 font-bold mr-1.5">✓ Pronto:</span>
-                <span className="text-slate-100 font-medium italic">"{transcript}"</span>
               </>
             ) : (
               <>
                 <span className="text-slate-400 font-medium mr-1.5">Ouvindo:</span>
-                <span className="text-slate-500 italic">Fale sua dúvida sobre clientes, defeitos ou envio...</span>
+                <span className="text-slate-500 italic">Fale sua dúvida sobre clientes, defeitos ou envio... Clique em "Concluir Gravação" ao terminar.</span>
               </>
             )}
           </div>

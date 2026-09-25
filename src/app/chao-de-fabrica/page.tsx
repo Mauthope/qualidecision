@@ -81,6 +81,12 @@ export default function ChaoDeFabricaPage() {
   const [isTyping, setIsTyping] = useState(false);
   const [activePhoto, setActivePhoto] = useState<ComplaintPhoto | null>(null);
   const [activePhotoTitle, setActivePhotoTitle] = useState<string>('');
+  const [isRefiningVoice, setIsRefiningVoice] = useState(false);
+  const [pendingVoiceData, setPendingVoiceData] = useState<{
+    audioUrl?: string;
+    audioDuration?: number;
+    isVoiceMessage?: boolean;
+  } | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -265,29 +271,51 @@ export default function ChaoDeFabricaPage() {
 
   const [localVoiceError, setLocalVoiceError] = useState<string | null>(null);
 
-  const handleStopVoiceToReview = async () => {
-    const res = await stopRecording();
-    if (res.transcript) {
-      setInputPrompt(res.transcript);
-      setLocalVoiceError(null);
-    } else {
-      setLocalVoiceError('Nenhuma fala foi detectada para preencher.');
-    }
-  };
-
-  const handleSendVoice = async () => {
+  const handleFinishVoiceRecording = async () => {
+    setIsRefiningVoice(true);
     setLocalVoiceError(null);
-    const res = await stopRecording();
-    const query = res.transcript.trim();
-    if (!query) {
-      setLocalVoiceError('Nenhuma fala detectada. Aproxime o microfone e fale claramente antes de enviar.');
-      return;
+    let stoppedResult: any = null;
+    try {
+      stoppedResult = await stopRecording();
+      const raw = (stoppedResult?.transcript || '').trim();
+      if (!raw) {
+        setLocalVoiceError('Nenhuma fala detectada. Aproxime o microfone e fale claramente antes de concluir.');
+        return;
+      }
+
+      if (stoppedResult?.audioUrl) {
+        setPendingVoiceData({
+          audioUrl: stoppedResult.audioUrl,
+          audioDuration: stoppedResult.duration,
+          isVoiceMessage: true
+        });
+      }
+
+      // Refinamento de áudio por IA: elimina repetições e gaguejos, aplicando pontuação e entidades corretas
+      const localKey = storageService.getGeminiApiKey();
+      const refineRes = await fetch('/api/ai/refine-speech', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: raw,
+          apiKey: localKey || undefined
+        })
+      });
+
+      if (refineRes.ok) {
+        const data = await refineRes.json();
+        setInputPrompt(data?.refinedText || raw);
+      } else {
+        setInputPrompt(raw);
+      }
+    } catch (err: any) {
+      console.warn('Erro ao refinar áudio com IA no chão de fábrica:', err);
+      if (stoppedResult?.transcript) {
+        setInputPrompt(stoppedResult.transcript);
+      }
+    } finally {
+      setIsRefiningVoice(false);
     }
-    await handleSendMessage(query, {
-      audioUrl: res.audioUrl || undefined,
-      audioDuration: res.duration,
-      isVoiceMessage: true
-    });
   };
 
   const handleClearChat = () => {
@@ -812,76 +840,101 @@ export default function ChaoDeFabricaPage() {
             </div>
           )}
 
-          {isRecording ? (
+          {isRecording || isRefiningVoice ? (
             <VoiceRecordingBar
               duration={recordingDuration}
               transcript={recordingTranscript}
               audioLevel={recordingAudioLevel}
               error={recordingError || localVoiceError}
               isFinishing={isVoiceFinishing}
-              isTranscribing={isVoiceTranscribing}
+              isRefining={isRefiningVoice}
               onCancel={() => {
                 setLocalVoiceError(null);
+                setPendingVoiceData(null);
                 handleCancelVoice();
               }}
-              onSend={handleSendVoice}
-              onStop={handleStopVoiceToReview}
+              onFinish={handleFinishVoiceRecording}
             />
           ) : (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSendMessage();
-              }}
-              className="flex items-center gap-2"
-            >
-              <button
-                type="button"
-                onClick={handleStartVoice}
-                disabled={isTyping}
-                className="p-3.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 hover:border-cyan-400/50 transition-all flex items-center justify-center shrink-0 cursor-pointer shadow-sm group active:scale-95 disabled:opacity-40"
-                title="Gravar mensagem de voz (Falar ao invés de digitar)"
-              >
-                <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
-              </button>
+            <div className="w-full">
+              {/* Badge when audio was interpreted and attached */}
+              {pendingVoiceData && (
+                <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-cyan-950/70 to-teal-950/70 border border-cyan-500/40 rounded-xl text-xs text-cyan-200 mb-2.5 shadow-sm animate-in fade-in duration-200">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-cyan-400 shrink-0 animate-pulse" />
+                    <span className="font-medium">
+                      <strong className="text-white">Áudio interpretado com sucesso:</strong> Revise a pergunta abaixo e clique em <span className="text-cyan-300 font-bold">Enviar</span>.
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPendingVoiceData(null)}
+                    className="text-slate-400 hover:text-rose-400 text-[11px] underline ml-2 shrink-0 cursor-pointer"
+                    title="Descartar áudio anexo"
+                  >
+                    Descartar áudio
+                  </button>
+                </div>
+              )}
 
-              <div className="relative flex-1">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={inputPrompt}
-                  onChange={(e) => setInputPrompt(e.target.value)}
-                  placeholder="Pergunte ao Sensei (Ex: 'Quais os cuidados para o cliente Aurora?')..."
-                  disabled={isTyping}
-                  className="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-3.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all disabled:opacity-50 shadow-inner"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={!inputPrompt.trim() || isTyping}
-                className="px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-500 text-slate-950 font-bold text-xs sm:text-sm hover:from-cyan-400 hover:to-emerald-400 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/20 cursor-pointer active:scale-95 shrink-0"
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!inputPrompt.trim() || isTyping || isRefiningVoice) return;
+                  const currentVoice = pendingVoiceData;
+                  setPendingVoiceData(null);
+                  handleSendMessage(inputPrompt.trim(), currentVoice || undefined);
+                }}
+                className="flex items-center gap-2"
               >
-                {isTyping ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" />
-                    <span className="hidden sm:inline">Enviar</span>
-                  </>
-                )}
-              </button>
+                <button
+                  type="button"
+                  onClick={handleStartVoice}
+                  disabled={isTyping || isRefiningVoice}
+                  className="p-3.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 hover:border-cyan-400/50 transition-all flex items-center justify-center shrink-0 cursor-pointer shadow-sm group active:scale-95 disabled:opacity-40"
+                  title="Gravar mensagem de voz (Falar ao invés de digitar)"
+                >
+                  <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
+                </button>
 
-              <button
-                type="button"
-                onClick={handleClearChat}
-                disabled={messages.length <= 1 || isTyping}
-                className="p-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0 shadow-sm"
-                title="Reiniciar conversa e limpar histórico"
-              >
-                <RotateCcw className="w-4 h-4" />
-              </button>
-            </form>
+                <div className="relative flex-1">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={inputPrompt}
+                    onChange={(e) => setInputPrompt(e.target.value)}
+                    placeholder="Pergunte ao Sensei (Ex: 'Quais os cuidados para o cliente Aurora?')..."
+                    disabled={isTyping || isRefiningVoice}
+                    className="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-3.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all disabled:opacity-50 shadow-inner"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={!inputPrompt.trim() || isTyping || isRefiningVoice}
+                  className="px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-500 text-slate-950 font-bold text-xs sm:text-sm hover:from-cyan-400 hover:to-emerald-400 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/20 cursor-pointer active:scale-95 shrink-0"
+                >
+                  {isTyping ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      <span className="hidden sm:inline">Enviar</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleClearChat}
+                  disabled={messages.length <= 1 || isTyping || isRefiningVoice}
+                  className="p-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0 shadow-sm"
+                  title="Reiniciar conversa e limpar histórico"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+              </form>
+            </div>
           )}
 
           <div className="flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 px-1 gap-1">
