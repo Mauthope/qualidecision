@@ -16,16 +16,27 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: (newCustomer: Customer) => void;
+  initialName?: string;
 }
 
-export const NewCustomerModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
+export const NewCustomerModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, initialName }) => {
   const { customers, addCustomer } = useQuality();
 
-  const [name, setName] = useState('');
+  const [name, setName] = useState(initialName || '');
   const [code, setCode] = useState('');
   const [location, setLocation] = useState('');
   const [segment, setSegment] = useState('Agroindústria / Grãos & Cereais');
   const [initialProfile, setInitialProfile] = useState<'padrao' | 'exigente' | 'flexivel'>('padrao');
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setName(initialName || '');
+      setCode('');
+      setLocation('');
+      setSegment('Agroindústria / Grãos & Cereais');
+      setInitialProfile('padrao');
+    }
+  }, [isOpen, initialName]);
 
   if (!isOpen) return null;
 

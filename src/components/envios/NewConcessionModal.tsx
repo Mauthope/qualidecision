@@ -38,6 +38,7 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
   const [technicalNotes, setTechnicalNotes] = useState('');
   const [approvedBy, setApprovedBy] = useState('Mauricio Grigol (Qualidade)');
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [customerModalInitialName, setCustomerModalInitialName] = useState('');
   const [isDefectModalOpen, setIsDefectModalOpen] = useState(false);
   const [defectModalInitialName, setDefectModalInitialName] = useState('');
   const [photos, setPhotos] = useState<ComplaintPhoto[]>([]);
@@ -135,7 +136,10 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
                 </label>
                 <button
                   type="button"
-                  onClick={() => setIsCustomerModalOpen(true)}
+                  onClick={() => {
+                    setCustomerModalInitialName('');
+                    setIsCustomerModalOpen(true);
+                  }}
                   className="text-[11px] font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors"
                 >
                   <UserPlus className="w-3 h-3" />
@@ -146,6 +150,10 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
                 customers={customers}
                 selectedCustomerId={customerId}
                 onSelectCustomer={setCustomerId}
+                onCreateNew={term => {
+                  setCustomerModalInitialName(term || '');
+                  setIsCustomerModalOpen(true);
+                }}
                 placeholder="Pesquisar cliente por nome ou código..."
                 required
               />
@@ -412,10 +420,16 @@ export const NewConcessionModal: React.FC<Props> = ({ isOpen, onClose, defaultCu
       {isCustomerModalOpen && (
         <NewCustomerModal
           isOpen={isCustomerModalOpen}
-          onClose={() => setIsCustomerModalOpen(false)}
+          onClose={() => {
+            setIsCustomerModalOpen(false);
+            setCustomerModalInitialName('');
+          }}
           onSuccess={newCust => {
             setCustomerId(newCust.id);
+            setIsCustomerModalOpen(false);
+            setCustomerModalInitialName('');
           }}
+          initialName={customerModalInitialName}
         />
       )}
 
