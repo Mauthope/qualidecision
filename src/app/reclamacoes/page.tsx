@@ -31,7 +31,8 @@ import {
   AlertTriangle,
   ChevronDown,
   ChevronUp,
-  Trash2
+  Trash2,
+  Package
 } from 'lucide-react';
 import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
 import { NewComplaintModal } from '@/components/reclamacoes/NewComplaintModal';
@@ -549,16 +550,18 @@ export default function ReclamacoesPage() {
                     </span>
                   )}
                   {item.bales && item.bales.length > 0 ? (
-                    <span className="px-2 py-0.5 rounded text-xs font-mono font-medium bg-rose-500/10 text-rose-300 border border-rose-500/25" title={`Fardos reclamados: ${item.bales.join(', ')}`}>
-                      📦 {item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 4).join(', ')}{item.bales.length > 4 ? ` (+${item.bales.length - 4})` : ''}
+                    <span className="px-2 py-0.5 rounded text-xs font-mono font-medium bg-rose-500/10 text-rose-300 border border-rose-500/25 inline-flex items-center gap-1" title={`Fardos reclamados: ${item.bales.join(', ')}`}>
+                      <Package className="w-3 h-3 text-rose-400 shrink-0" />
+                      <span>{item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 4).join(', ')}{item.bales.length > 4 ? ` (+${item.bales.length - 4})` : ''}</span>
                     </span>
                   ) : item.lotNumber ? (
                     <span className="text-xs text-slate-400 font-mono">
                       {item.lotNumber.startsWith('Fardo') ? item.lotNumber : `Fardo/Lote: ${item.lotNumber}`}
                     </span>
                   ) : null}
-                  <span className="px-2 py-0.5 rounded text-xs font-mono font-bold bg-amber-500/10 text-amber-300 border border-amber-500/25">
-                    ⚖️ {item.quantityAffected?.toLocaleString('pt-BR')} kg
+                  <span className="px-2 py-0.5 rounded text-xs font-mono font-bold bg-amber-500/10 text-amber-300 border border-amber-500/25 inline-flex items-center gap-1">
+                    <Scale className="w-3 h-3 text-amber-400 shrink-0" />
+                    <span>{item.quantityAffected?.toLocaleString('pt-BR')} kg</span>
                   </span>
                 </div>
 

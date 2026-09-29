@@ -38,9 +38,9 @@ import { TtsSpeakerButton } from '@/components/chat/TtsSpeakerButton';
 const INITIAL_MESSAGE: AiChatMessage = {
   id: 'msg-welcome-shopfloor',
   sender: 'assistant',
-  text: `👋 Olá! Sou o **Sensei**, seu especialista em Qualidade e Prevenção Operacional no Chão de Fábrica da Rafitec (*Desenvolvido por Mauricio Grigol*).\n\n` +
+  text: `Olá! Sou o **Sensei**, seu especialista em Qualidade e Prevenção Operacional no Chão de Fábrica da Rafitec (*Desenvolvido por Mauricio Grigol*).\n\n` +
     `Estou conectado em tempo real à base de dados para orientar operadores de máquinas, revisores, líderes de turno e inspetores sobre **cuidados operacionais de produção** (extrusão, tecelagem, laminação, impressão, corte, costura, solda valvulada e paletização) e **histórico de reclamações SAC** dos clientes.\n\n` +
-    `💡 **Como posso orientar sua linha hoje?**\n` +
+    `**Como posso orientar sua linha hoje?**\n` +
     `• Digite o nome de um cliente para ver a sequência cirúrgica de cuidados (Ex: *"Aurora"*, *"Copacol"*, *"Bunge"*, *"Alisul"*)\n` +
     `• Tire dúvidas sobre um tipo de defeito ou máquina (Ex: *"Como evitar problemas de linner ou solda?"* ou *"Cuidados no corte e refilamento"*)\n` +
     `• Consulte as reclamações mais frequentes registradas pelo SAC.`,
@@ -411,9 +411,10 @@ export default function ChaoDeFabricaPage() {
             type="button"
             onClick={() => handleSendMessage('Quais são os defeitos mais reclamados no SAC?')}
             disabled={isTyping}
-            className="px-3 py-1 rounded-xl text-xs font-medium bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:border-amber-500/50 transition-all whitespace-nowrap disabled:opacity-50 cursor-pointer ml-1"
+            className="px-3 py-1 rounded-xl text-xs font-medium bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:border-amber-500/50 transition-all whitespace-nowrap disabled:opacity-50 cursor-pointer ml-1 inline-flex items-center gap-1"
           >
-            ⚠️ Top Defeitos SAC
+            <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" />
+            <span>Top Defeitos SAC</span>
           </button>
         </div>
       </div>
@@ -522,10 +523,10 @@ export default function ChaoDeFabricaPage() {
                             : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
                         }`}>
                           {msg.customerCard.overallToleranceScore <= 60
-                            ? '⭐ Ranking A (Crítico)'
+                            ? 'Ranking A (Crítico)'
                             : msg.customerCard.overallToleranceScore <= 75
-                            ? '🥈 Ranking B'
-                            : '🥉 Ranking C'}
+                            ? 'Ranking B'
+                            : 'Ranking C'}
                         </span>
                       </div>
                     </div>

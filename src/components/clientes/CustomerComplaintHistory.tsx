@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Customer, Complaint, ComplaintPhoto } from '@/types';
-import { AlertCircle, Camera, Eye, Calendar, Wrench, CheckCircle2, Database } from 'lucide-react';
+import { AlertCircle, Camera, Eye, Calendar, Wrench, CheckCircle2, Database, Package, Scale } from 'lucide-react';
 import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
 
 interface Props {
@@ -66,16 +66,18 @@ export const CustomerComplaintHistory: React.FC<Props> = ({ customer, complaints
                       </span>
                     )}
                     {item.bales && item.bales.length > 0 ? (
-                      <span className="px-2 py-0.5 rounded text-xs font-mono font-medium bg-rose-500/10 text-rose-300 border border-rose-500/25" title={`Fardos: ${item.bales.join(', ')}`}>
-                        📦 {item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 4).join(', ')}{item.bales.length > 4 ? ` (+${item.bales.length - 4})` : ''}
+                      <span className="px-2 py-0.5 rounded text-xs font-mono font-medium bg-rose-500/10 text-rose-300 border border-rose-500/25 inline-flex items-center gap-1" title={`Fardos: ${item.bales.join(', ')}`}>
+                        <Package className="w-3 h-3 text-rose-400 shrink-0" />
+                        <span>{item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 4).join(', ')}{item.bales.length > 4 ? ` (+${item.bales.length - 4})` : ''}</span>
                       </span>
                     ) : item.lotNumber ? (
                       <span className="text-xs font-semibold text-white">
                         {item.lotNumber.startsWith('Fardo') ? item.lotNumber : `Lote: ${item.lotNumber}`}
                       </span>
                     ) : null}
-                    <span className="text-xs font-mono font-bold text-amber-300 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
-                      ⚖️ {item.quantityAffected?.toLocaleString('pt-BR')} kg
+                    <span className="text-xs font-mono font-bold text-amber-300 bg-slate-950 px-2 py-0.5 rounded border border-slate-800 inline-flex items-center gap-1">
+                      <Scale className="w-3 h-3 text-amber-400 shrink-0" />
+                      <span>{item.quantityAffected?.toLocaleString('pt-BR')} kg</span>
                     </span>
                   </div>
 

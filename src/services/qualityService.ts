@@ -174,12 +174,12 @@ export const qualityService = {
         if (claimInfo.count >= 3 || claimInfo.kg > 200 || overallToleranceScore < 35) {
           toleranceRatings[defect.id] = {
             level: 'intolerante',
-            notes: `🚨 Histórico de ${claimInfo.count} reclamação(ões) no ERP (${claimInfo.kg.toLocaleString('pt-BR')} kg afetados). Não enviar lotes com este desvio.`
+            notes: `Histórico de ${claimInfo.count} reclamação(ões) no ERP (${claimInfo.kg.toLocaleString('pt-BR')} kg afetados). Não enviar lotes com este desvio.`
           };
         } else {
           toleranceRatings[defect.id] = {
             level: 'baixa',
-            notes: `⚠️ Reclamado ${claimInfo.count}x no ERP (${claimInfo.kg.toLocaleString('pt-BR')} kg afetados). Exige alinhamento prévio.`
+            notes: `Reclamado ${claimInfo.count}x no ERP (${claimInfo.kg.toLocaleString('pt-BR')} kg afetados). Exige alinhamento prévio.`
           };
         }
       } else {

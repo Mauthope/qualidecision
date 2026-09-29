@@ -171,8 +171,9 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
                     )}
 
                     {item.bales && item.bales.length > 0 ? (
-                      <span className="px-2 py-0.5 rounded-md text-[11px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-800/50" title={`Fardos: ${item.bales.join(', ')}`}>
-                        📦 {item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 4).join(', ')}{item.bales.length > 4 ? ` (+${item.bales.length - 4})` : ''}
+                      <span className="px-2 py-0.5 rounded-md text-[11px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-800/50 inline-flex items-center gap-1" title={`Fardos: ${item.bales.join(', ')}`}>
+                        <Package className="w-3 h-3 text-cyan-400 shrink-0" />
+                        <span>{item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 4).join(', ')}{item.bales.length > 4 ? ` (+${item.bales.length - 4})` : ''}</span>
                       </span>
                     ) : item.lotNumber ? (
                       <span className="text-xs text-slate-400 font-mono">
@@ -292,7 +293,7 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
                   <div className="p-4 rounded-xl bg-rose-950/50 border-2 border-rose-500/60 text-xs text-rose-100 space-y-2 animate-in fade-in duration-200">
                     <div className="flex items-center gap-2 font-bold text-rose-200 text-sm">
                       <FileWarning className="w-4 h-4 text-rose-400 shrink-0" />
-                      <span>🚨 AVISO: Reclamação aberta pelo cliente a partir da data de envio!</span>
+                      <span>AVISO: Reclamação aberta pelo cliente a partir da data de envio!</span>
                     </div>
 
                     <p className="text-xs leading-relaxed text-rose-200/95">
@@ -414,8 +415,9 @@ export const CustomerConcessionsHistory: React.FC<Props> = ({
               </div>
             </div>
 
-            <p className="text-xs text-rose-300/90 bg-rose-950/30 p-2.5 rounded-xl border border-rose-900/40">
-              ⚠️ <strong>Atenção:</strong> A exclusão é definitiva no sistema e no banco de dados.
+            <p className="text-xs text-rose-300/90 bg-rose-950/30 p-2.5 rounded-xl border border-rose-900/40 flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+              <span><strong>Atenção:</strong> A exclusão é definitiva no sistema e no banco de dados.</span>
             </p>
 
             <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-800">

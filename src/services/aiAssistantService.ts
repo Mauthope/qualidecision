@@ -258,7 +258,7 @@ export const aiAssistantService = {
         defectsCount[dName].qty += c.quantity || 0;
       });
 
-      let text = `📦 **Resumo de Envios com Concessão para ${activeCustomer.name}** (${activeCustomer.code})${targetYear ? ` no ano de **${targetYear}**` : ''}:\n\n` +
+      let text = ` **Resumo de Envios com Concessão para ${activeCustomer.name}** (${activeCustomer.code})${targetYear ? ` no ano de **${targetYear}**` : ''}:\n\n` +
         `• **Total de Concessões Expedidas:** **${totalLots} ${totalLots === 1 ? 'lote' : 'lotes'}**\n` +
         `• **Volume Total Liberado:** **${totalUnits.toLocaleString('pt-BR')} unidades**\n` +
         `• **Scrap Evitado (Economia Real):** **R$ ${totalSaved.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}**\n` +
@@ -305,7 +305,7 @@ export const aiAssistantService = {
       const totalUnits = filteredByYear.reduce((acc, c) => acc + (c.quantity || 0), 0);
       const totalSaved = filteredByYear.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0);
 
-      let text = `🏷️ **Resumo de Envios com Desvio de ${activeDefect.name}**${targetYear ? ` em **${targetYear}**` : ''}:\n\n` +
+      let text = ` **Resumo de Envios com Desvio de ${activeDefect.name}**${targetYear ? ` em **${targetYear}**` : ''}:\n\n` +
         `• **Lotes Liberados em Concessão:** **${totalLots} envios**\n` +
         `• **Volume Total Salvo de Descarte:** **${totalUnits.toLocaleString('pt-BR')} unidades**\n` +
         `• **Scrap Preservado:** **R$ ${totalSaved.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}**\n` +
@@ -351,11 +351,11 @@ export const aiAssistantService = {
       const units2025 = conc2025.reduce((acc, c) => acc + (c.quantity || 0), 0);
       const saved2025 = conc2025.reduce((acc, c) => acc + (c.totalSavedValue || 0), 0);
 
-      let text = `📦 **Resumo Consolidado de Envios com Concessão (Ano Atual - 2026)**\n\n` +
+      let text = ` **Resumo Consolidado de Envios com Concessão (Ano Atual - 2026)**\n\n` +
         `No ano corrente (**2026**), foram registrados **${conc2026.length} ${conc2026.length === 1 ? 'envio com concessão' : 'envios com concessão'}**, totalizando **${units2026.toLocaleString('pt-BR')} unidades** liberadas e **R$ ${saved2026.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}** de refugo/scrap evitado na fábrica.\n\n`;
 
       if (conc2026.length > 0) {
-        text += `🚚 **Detalhamento dos Envios de 2026:**\n`;
+        text += ` **Detalhamento dos Envios de 2026:**\n`;
         conc2026.forEach(c => {
           text += `• **[${c.code}]** Cliente: **${c.customerName}** (${new Date(c.date).toLocaleDateString('pt-BR')})\n` +
             `  - Desvio: *${c.defectTypeName}* (Gravidade: **${c.severity.toUpperCase()}**)\n` +
@@ -364,14 +364,14 @@ export const aiAssistantService = {
         });
       }
 
-      text += `📊 **Contexto do Histórico Consolidado (Ano Base 2025):**\n` +
+      text += ` **Contexto do Histórico Consolidado (Ano Base 2025):**\n` +
         `Para comparação gerencial com o histórico completo de **2025**:\n` +
         `• **Total de Concessões em 2025:** **${conc2025.length} lotes** liberados\n` +
         `• **Volume Total Salvo:** **${units2025.toLocaleString('pt-BR')} unidades**\n` +
         `• **Scrap Evitado em 2025:** **R$ ${saved2025.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}**\n` +
         `• **Top Clientes de 2025:** Copacol (12 envios), Bunge (9 envios), Aurora (8 envios), Alisul (7 envios)\n` +
         `• **Principais Desvios em 2025:** Vinco (28 lotes), Borrão de impressão (24 lotes), Variação de tonalidade (18 lotes)\n\n` +
-        `🎯 **Total Geral Acumulado no Sistema:** **${totalAllConcessions} concessões** | **${totalAllUnits.toLocaleString('pt-BR')} sacarias/bags** | **R$ ${totalAllSaved.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}** salvos.`;
+        ` **Total Geral Acumulado no Sistema:** **${totalAllConcessions} concessões** | **${totalAllUnits.toLocaleString('pt-BR')} sacarias/bags** | **R$ ${totalAllSaved.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}** salvos.`;
 
       const displayCards = conc2026.length > 0 ? [...conc2026, ...conc2025.slice(0, 2)] : conc2025.slice(0, 4);
 
@@ -415,17 +415,17 @@ export const aiAssistantService = {
       });
       const topCusts2025 = Object.values(custMap).sort((a, b) => b.qty - a.qty).slice(0, 4);
 
-      let text = `📦 **Resumo Consolidado de Envios com Concessão (Ano Base 2025)**\n\n` +
+      let text = ` **Resumo Consolidado de Envios com Concessão (Ano Base 2025)**\n\n` +
         `Em **2025**, a fábrica registrou um total de **${conc2025.length} envios com concessão técnica**:\n\n` +
         `• **Volume Total Liberado:** **${units2025.toLocaleString('pt-BR')} unidades** (~33.000 kg de polipropileno)\n` +
         `• **Scrap Evitado (Economia Real):** **R$ ${saved2025.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}**\n` +
         `• **Média por Envio:** ~${Math.round(units2025 / Math.max(conc2025.length, 1)).toLocaleString('pt-BR')} sacarias/bags por lote\n` +
         `• **Índice de Aceitação dos Clientes:** **96,7%** dos lotes aceitos sem registro de devolução\n\n` +
-        `🏭 **Top Clientes que Mais Receberam Concessão em 2025:**\n` +
+        ` **Top Clientes que Mais Receberam Concessão em 2025:**\n` +
         topCusts2025.map(c => `• **${c.name}:** ${c.count} lotes (${c.qty.toLocaleString('pt-BR')} un)`).join('\n') + '\n\n' +
-        `🏷️ **Principais Desvios Liberados em 2025:**\n` +
+        ` **Principais Desvios Liberados em 2025:**\n` +
         topDefects2025.map(d => `• **${d.name}:** ${d.count} envios (${d.qty.toLocaleString('pt-BR')} un)`).join('\n') + '\n\n' +
-        `💡 *Para ver os envios do ano corrente (2026) ou detalhes de um cliente específico, basta perguntar.*`;
+        ` *Para ver os envios do ano corrente (2026) ou detalhes de um cliente específico, basta perguntar.*`;
 
       return {
         id: messageId,
@@ -443,14 +443,14 @@ export const aiAssistantService = {
     }
 
     // Default All Years Shipments Summary
-    let text = `📦 **Panorama Consolidado de Todos os Envios com Concessão**\n\n` +
+    let text = ` **Panorama Consolidado de Todos os Envios com Concessão**\n\n` +
       `• **Total de Concessões Registradas:** **${totalAllConcessions} lotes**\n` +
       `• **Volume Total de Sacarias/Bags Salvos:** **${totalAllUnits.toLocaleString('pt-BR')} unidades**\n` +
       `• **Scrap Evitado Acumulado:** **R$ ${totalAllSaved.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}**\n\n` +
-      `📅 **Distribuição por Ano de Expedição:**\n` +
+      ` **Distribuição por Ano de Expedição:**\n` +
       `• **2026 (Ano Atual):** ${conc2026.length} lotes (${conc2026.reduce((acc, c) => acc + (c.quantity || 0), 0).toLocaleString('pt-BR')} un)\n` +
       `• **2025:** ${conc2025.length} lotes (${conc2025.reduce((acc, c) => acc + (c.quantity || 0), 0).toLocaleString('pt-BR')} un)\n\n` +
-      `💡 *Deseja ver o detalhe de algum ano específico (ex: "envios de 2026") ou por cliente?*`;
+      ` *Deseja ver o detalhe de algum ano específico (ex: "envios de 2026") ou por cliente?*`;
 
     return {
       id: messageId,
@@ -494,7 +494,7 @@ export const aiAssistantService = {
       const totalKg = filtered.reduce((acc, c) => acc + (c.quantityAffected || 0), 0);
       const severas = filtered.filter(c => c.severity === 'severa').length;
 
-      let text = `🚨 **Histórico de Reclamações SAC de ${activeCustomer.name}** (${activeCustomer.code})${targetYear ? ` em **${targetYear}**` : ''}:\n\n` +
+      let text = ` **Histórico de Reclamações SAC de ${activeCustomer.name}** (${activeCustomer.code})${targetYear ? ` em **${targetYear}**` : ''}:\n\n` +
         `• **Total de Ocorrências:** **${totalComp} ${totalComp === 1 ? 'reclamação' : 'reclamações'}**\n` +
         `• **Volume/Peso Reclamado:** **${totalKg.toLocaleString('pt-BR')} kg**\n` +
         `• **Queixas Severas (Alto Risco):** **${severas}**\n` +
@@ -518,7 +518,7 @@ export const aiAssistantService = {
         const refComps = complaints.filter(c => defectIds.includes(c.defectTypeId) && c.photos && c.photos.length > 0 && !matchesCustomer(c, activeCustomer));
         if (refComps.length > 0) {
           referenceComplaintCards = refComps.slice(0, 2);
-          text += `📷 **Evidências Fotográficas**: O cliente **${activeCustomer.name}** não possui fotos registradas nos laudos destas ocorrências. Abaixo são exibidas fotos de **referência técnica de problemas semelhantes** registrados em outros clientes para apoio visual.\n\n`;
+          text += ` **Evidências Fotográficas**: O cliente **${activeCustomer.name}** não possui fotos registradas nos laudos destas ocorrências. Abaixo são exibidas fotos de **referência técnica de problemas semelhantes** registrados em outros clientes para apoio visual.\n\n`;
         }
       }
 
@@ -547,7 +547,7 @@ export const aiAssistantService = {
       const totalKg = filtered.reduce((acc, c) => acc + (c.quantityAffected || 0), 0);
       const severas = filtered.filter(c => c.severity === 'severa').length;
 
-      let text = `🚨 **Histórico de Reclamações pelo Desvio de ${activeDefect.name}**${targetYear ? ` em **${targetYear}**` : ''}:\n\n` +
+      let text = ` **Histórico de Reclamações pelo Desvio de ${activeDefect.name}**${targetYear ? ` em **${targetYear}**` : ''}:\n\n` +
         `• **Total de Ocorrências no SAC:** **${totalComp} queixas**\n` +
         `• **Volume/Peso Total Afetado:** **${totalKg.toLocaleString('pt-BR')} kg**\n` +
         `• **Ocorrências Severas:** **${severas}**\n` +
@@ -607,18 +607,18 @@ export const aiAssistantService = {
     });
     const topClients = Object.entries(clientMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-    let text = `🚨 **Resumo Analítico de Reclamações de Clientes (SAC)**${targetYear ? ` - Ano **${targetYear}**` : ''}\n\n` +
+    let text = ` **Resumo Analítico de Reclamações de Clientes (SAC)**${targetYear ? ` - Ano **${targetYear}**` : ''}\n\n` +
       `• **Total de Ocorrências:** **${totalComp} queixas registradas**\n` +
       `• **Peso Total Afetado:** **${totalKg.toLocaleString('pt-BR')} kg** de embalagens\n\n` +
-      `⚖️ **Distribuição por Grau de Severidade:**\n` +
-      `• 🟢 **Leves:** **${leveCount}** (${Math.round((leveCount / totalComp) * 100)}%)\n` +
-      `• 🟡 **Moderadas:** **${modCount}** (${Math.round((modCount / totalComp) * 100)}%)\n` +
-      `• 🔴 **Severas:** **${sevCount}** (${Math.round((sevCount / totalComp) * 100)}%) - *Queixas de risco crítico*\n\n` +
-      `🔍 **Top 5 Defeitos Mais Reclamados:**\n` +
+      ` **Distribuição por Grau de Severidade:**\n` +
+      `• **Leves:** **${leveCount}** (${Math.round((leveCount / totalComp) * 100)}%)\n` +
+      `• **Moderadas:** **${modCount}** (${Math.round((modCount / totalComp) * 100)}%)\n` +
+      `• **Severas:** **${sevCount}** (${Math.round((sevCount / totalComp) * 100)}%) - *Queixas de risco crítico*\n\n` +
+      ` **Top 5 Defeitos Mais Reclamados:**\n` +
       topDefects.map(([dName, count], idx) => `${idx + 1}. **${dName}:** ${count} ocorrências`).join('\n') + '\n\n' +
-      `👥 **Top 5 Clientes com Mais Apontamentos:**\n` +
+      ` **Top 5 Clientes com Mais Apontamentos:**\n` +
       topClients.map(([cName, count], idx) => `${idx + 1}. **${cName}:** ${count} queixas`).join('\n') + '\n\n' +
-      `📅 **Distribuição por Período:**\n` +
+      ` **Distribuição por Período:**\n` +
       `• **2025:** ${comp2025.length} queixas\n` +
       `• **2024:** ${comp2024.length} queixas`;
 
@@ -658,18 +658,18 @@ export const aiAssistantService = {
     const testedCount = concessions.filter(c => c.customerFeedbackStatus !== 'em_transito').length;
     const acceptanceRate = testedCount > 0 ? (acceptedCount / testedCount) * 100 : 96.7;
 
-    const text = `🎯 **Balanço Executivo Geral da Qualidade & Gestão de Concessões**\n\n` +
-      `📊 **Indicadores de Liberação de Lotes (Concessões):**\n` +
+    const text = ` **Balanço Executivo Geral da Qualidade & Gestão de Concessões**\n\n` +
+      ` **Indicadores de Liberação de Lotes (Concessões):**\n` +
       `• **Total de Concessões Expedidas:** **${totalConcessions} lotes**\n` +
       `• **Sacarias / Big Bags Salvos do Refugo:** **${totalUnitsSaved.toLocaleString('pt-BR')} unidades**\n` +
       `• **Scrap Evitado (Economia Real em R$):** **R$ ${totalSavedAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}**\n` +
       `• **Índice de Sucesso / Aceitação:** **${acceptanceRate.toFixed(1)}%** dos envios aceitos sem problemas\n\n` +
-      `🚨 **Indicadores de Reclamações SAC:**\n` +
+      ` **Indicadores de Reclamações SAC:**\n` +
       `• **Total de Ocorrências no Histórico:** **${totalComplaints} queixas** (2024-2025)\n` +
       `• **Volume/Peso Afetado:** **${totalKgClaimed.toLocaleString('pt-BR')} kg**\n` +
       `• **Queixas Severas (Atenção Crítica):** **${severeComplaints} ocorrências** (${Math.round((severeComplaints / totalComplaints) * 100)}%)\n\n` +
-      `🏭 **Base Cadastrada:** **${customers.length} clientes** ativos no ERP e **${defects.length} desvios** catalogados.\n\n` +
-      `💡 *Você pode consultar dados específicos perguntando sobre um ano ("envios deste ano"), um cliente ("perfil da Copacol") ou um desvio ("quem aceita vinco").*`;
+      ` **Base Cadastrada:** **${customers.length} clientes** ativos no ERP e **${defects.length} desvios** catalogados.\n\n` +
+      ` *Você pode consultar dados específicos perguntando sobre um ano ("envios deste ano"), um cliente ("perfil da Copacol") ou um desvio ("quem aceita vinco").*`;
 
     return {
       id: messageId,
@@ -727,10 +727,10 @@ export const aiAssistantService = {
       const matchingComp = complaints.filter(c => c.bales && c.bales.some(b => b.toLowerCase() === targetBale || b.toLowerCase().includes(targetBale)));
 
       if (matchingConc.length > 0 || matchingComp.length > 0) {
-        let text = `📦 **Rastreabilidade Completa do Fardo #${targetBale.toUpperCase()}:**\n\n`;
+        let text = ` **Rastreabilidade Completa do Fardo #${targetBale.toUpperCase()}:**\n\n`;
 
         if (matchingConc.length > 0) {
-          text += `**🚚 Envios com Concessão / Desvio Encontrados (${matchingConc.length}):**\n`;
+          text += `** Envios com Concessão / Desvio Encontrados (${matchingConc.length}):**\n`;
           matchingConc.forEach(c => {
             text += `• **[${c.code}]** Expedido em **${new Date(c.date).toLocaleDateString('pt-BR')}** para o cliente **${c.customerName}**\n` +
               `  - Lote: \`${c.lotNumber}\`${c.opNumber ? ` • OP: \`${c.opNumber}\`` : ''}\n` +
@@ -741,7 +741,7 @@ export const aiAssistantService = {
         }
 
         if (matchingComp.length > 0) {
-          text += `**⚠️ Reclamações SAC Encontradas para este Fardo (${matchingComp.length}):**\n`;
+          text += `** Reclamações SAC Encontradas para este Fardo (${matchingComp.length}):**\n`;
           matchingComp.forEach(c => {
             text += `• **[${c.code}]** Aberta em **${new Date(c.date).toLocaleDateString('pt-BR')}** por **${c.customerName}**\n` +
               `  - Lote reclamado: \`${c.lotNumber}\` • Defeito: *${c.defectTypeName}*\n` +
@@ -766,7 +766,7 @@ export const aiAssistantService = {
         return {
           id: messageId,
           sender: 'assistant',
-          text: `🔍 Pesquisei na base de dados e o **Fardo #${targetBale.toUpperCase()}** não possui registro de concessão nem reclamação associada.\n\n` +
+          text: ` Pesquisei na base de dados e o **Fardo #${targetBale.toUpperCase()}** não possui registro de concessão nem reclamação associada.\n\n` +
             `Ele pode fazer parte de um lote padrão sem desvio, ou o número do fardo não foi lançado individualmente.\n\n` +
             `Deseja buscar por número de **Lote**, **OP** ou simular uma decisão para este fardo?`,
           timestamp,
@@ -880,20 +880,20 @@ export const aiAssistantService = {
         })
         .slice(0, 3);
 
-      let text = `🎯 **Simulação de Decisão & Avaliação de Risco da Qualidade**\n\n`;
+      let text = ` **Simulação de Decisão & Avaliação de Risco da Qualidade**\n\n`;
       text += `• **Cliente Destino:** **${activeCustomer.name}** (${activeCustomer.code})\n`;
       text += `• **Desvio / Não-Conformidade:** **${activeDefect.name}**\n`;
       text += `• **Volume Simulado:** **${activeQuantity.toLocaleString('pt-BR')} unidades** (~${sackWeightKg.toFixed(1)} kg) | Severidade: **${activeSeverity.toUpperCase()}**\n`;
       text += `• **Scrap Evitado (Economia Estimada):** **R$ ${savedProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}**\n\n`;
 
       if (riskResult.riskLevel === 'baixo') {
-        text += `🟢 **PARECER DA IA: LIBERAÇÃO RECOMENDADA (Baixo Risco de Rejeição)**\n\n` +
+        text += ` **PARECER DA IA: LIBERAÇÃO RECOMENDADA (Baixo Risco de Rejeição)**\n\n` +
           `1. **Tolerância Cadastrada:** O cliente possui perfil de tolerância **${toleranceLevel.toUpperCase()}** para este desvio (Score Geral: ${activeCustomer.overallToleranceScore}/100).\n` +
           `2. **Histórico no ERP:** ${customerComplaintsForDefect.length === 0 ? 'Nenhuma queixa anterior registrada deste defeito.' : `Apenas ${customerComplaintsForDefect.length} queixa isolada com resolução amigável.`}\n` +
           `3. **Concessões Anteriores:** ${customerConcessionsForDefect.length > 0 ? `${customerConcessionsForDefect.length} lotes com desvio já foram recebidos e aceitos sem ressalvas.` : 'Cliente costuma receber embalagens industriais sem apontamentos operacionais.'}\n` +
           `4. **Recomendação Técnica:** Pode liberar para expedição. Registrar o envio no sistema para manter o histórico de rastreabilidade de fardos ativo.`;
       } else if (riskResult.riskLevel === 'moderado') {
-        text += `🟡 **PARECER DA IA: LIBERAÇÃO CONDICIONADA (Risco Moderado - Ações Preventivas)**\n\n` +
+        text += ` **PARECER DA IA: LIBERAÇÃO CONDICIONADA (Risco Moderado - Ações Preventivas)**\n\n` +
           `1. **Tolerância Cadastrada:** Perfil **${toleranceLevel.toUpperCase()}** para este desvio (Score Geral: ${activeCustomer.overallToleranceScore}/100).\n` +
           `2. **Ponto de Atenção:** O volume de ${activeQuantity.toLocaleString('pt-BR')} unidades ou a severidade requer cautela.\n` +
           `3. **Plano de Ação Recomendado:**\n` +
@@ -901,7 +901,7 @@ export const aiAssistantService = {
           `   - Notificar o comercial/atendimento para alinhar previamente a aceitação do desvio com o cliente.\n` +
           `   - Acompanhar a entrega e obter confirmação no ato do recebimento.`;
       } else {
-        text += `🔴 **PARECER DA IA: NÃO ENVIAR / CONCESSÃO NÃO RECOMENDADA (Risco ${riskResult.riskLevel.toUpperCase()})**\n\n` +
+        text += ` **PARECER DA IA: NÃO ENVIAR / CONCESSÃO NÃO RECOMENDADA (Risco ${riskResult.riskLevel.toUpperCase()})**\n\n` +
           `1. **Alerta de Intolerância:** **${activeCustomer.name}** possui classificação rígida para este tipo de problema (${customerComplaintsForDefect.length} reclamações anteriores registradas no ERP).\n` +
           `2. **Risco Operacional e Financeiro:** Alta probabilidade de devolução total do lote, custos de frete reverso e desgaste comercial.\n` +
           `3. **Alternativa Recomendada:** Direcionar este lote com desvio de *${activeDefect.name}* para clientes com perfil flexível/tolerante que utilizam o produto para ração/fertilizante:\n`;
@@ -915,7 +915,7 @@ export const aiAssistantService = {
         }
       }
 
-      text += `\n📝 **Sugestão de Parecer Técnico para o Envio:**\n` +
+      text += `\n **Sugestão de Parecer Técnico para o Envio:**\n` +
         `*"Envio autorizado em regime de concessão técnica controlada com desvio de ${activeDefect.name} (${activeSeverity}). Lote inspecionado e liberado para consumo seguro."*`;
 
       const suggestedPrompts: string[] = [];
@@ -945,7 +945,7 @@ export const aiAssistantService = {
         riskRecommendation: riskResult,
         suggestedPrompts,
         actionButton: {
-          label: '🚀 Criar Envio com Concessão (Pré-Preenchido)',
+          label: 'Criar Envio com Concessão (Pré-Preenchido)',
           type: 'open_concession',
           payload: {
             customerId: activeCustomer.id,
@@ -973,19 +973,19 @@ export const aiAssistantService = {
         .map(([defId]) => defects.find(d => d.id === defId)?.name)
         .filter(Boolean);
 
-      let text = `👤 **Perfil de Tolerância & Histórico de ${activeCustomer.name}** (${activeCustomer.code}):\n\n` +
-        `• **Score de Tolerância Geral:** **${activeCustomer.overallToleranceScore}/100** ${activeCustomer.overallToleranceScore >= 70 ? '🟢 (Cliente Flexível)' : activeCustomer.overallToleranceScore >= 45 ? '🟡 (Moderado)' : '🔴 (Exigente/Rígido)'}\n` +
+      let text = ` **Perfil de Tolerância & Histórico de ${activeCustomer.name}** (${activeCustomer.code}):\n\n` +
+        `• **Score de Tolerância Geral:** **${activeCustomer.overallToleranceScore}/100** ${activeCustomer.overallToleranceScore >= 70 ? ' (Cliente Flexível)' : activeCustomer.overallToleranceScore >= 45 ? ' (Moderado)' : ' (Exigente/Rígido)'}\n` +
         `• **Reclamações Registradas no ERP:** **${clientComplaints.length} ocorrências**\n` +
         `• **Concessões Já Recebidas:** **${clientConcessions.length} lotes** aceitos com desvio\n\n`;
 
       if (toleratedDefects.length > 0) {
-        text += `✅ **Desvios com Alta Aceitação:** ${toleratedDefects.slice(0, 4).join(', ')}.\n`;
+        text += ` **Desvios com Alta Aceitação:** ${toleratedDefects.slice(0, 4).join(', ')}.\n`;
       }
       if (strictDefects.length > 0) {
-        text += `⚠️ **Desvios Críticos / Intolerantes:** ${strictDefects.slice(0, 4).join(', ')}.\n\n`;
+        text += ` **Desvios Críticos / Intolerantes:** ${strictDefects.slice(0, 4).join(', ')}.\n\n`;
       }
 
-      text += `💡 **Qual desvio você gostaria de simular para ${activeCustomer.name}?**\n` +
+      text += ` **Qual desvio você gostaria de simular para ${activeCustomer.name}?**\n` +
         `Informe o defeito e quantidade (ex: *"Posso mandar 5.000 sacos com vinco?"* ou *"E se for borrão de impressão?"*).`;
 
       const compsWithPhotos = clientComplaints.filter(c => c.photos && c.photos.length > 0);
@@ -997,7 +997,7 @@ export const aiAssistantService = {
         const refComps = complaints.filter(c => defectIds.includes(c.defectTypeId) && c.photos && c.photos.length > 0 && !matchesCustomer(c, activeCustomer));
         if (refComps.length > 0) {
           referenceComplaintCards = refComps.slice(0, 2);
-          text += `\n\n📷 **Evidências Fotográficas**: O cliente **${activeCustomer.name}** não possui fotos arquivadas no sistema. Exibindo abaixo **amostras de referência de defeitos semelhantes** de outros clientes para apoio visual.`;
+          text += `\n\n **Evidências Fotográficas**: O cliente **${activeCustomer.name}** não possui fotos arquivadas no sistema. Exibindo abaixo **amostras de referência de defeitos semelhantes** de outros clientes para apoio visual.`;
         }
       }
 
@@ -1032,21 +1032,21 @@ export const aiAssistantService = {
         .filter(c => c.toleranceRatings?.[activeDefect!.id]?.level === 'intolerante' || c.overallToleranceScore < 40)
         .slice(0, 4);
 
-      let text = `🏷️ **Análise de Mercado para o Desvio: ${activeDefect.name}**\n\n` +
+      let text = ` **Análise de Mercado para o Desvio: ${activeDefect.name}**\n\n` +
         `• **Categoria:** ${activeDefect.category.toUpperCase()} • Custo Médio Unitário de Refugo: R$ ${activeDefect.defaultUnitLoss.toFixed(2)}\n` +
         `• **Descrição:** ${activeDefect.description || 'Não-conformidade de processo industrial'}\n\n`;
 
       if (topTolerant.length > 0) {
-        text += `🟢 **Clientes Mais Tolerantes (Ideais para Concessão deste Desvio):**\n` +
+        text += ` **Clientes Mais Tolerantes (Ideais para Concessão deste Desvio):**\n` +
           topTolerant.map(c => `• **${c.name}** (Tolerância: ${c.overallToleranceScore}%)`).join('\n') + '\n\n';
       }
 
       if (topIntolerant.length > 0) {
-        text += `🔴 **Clientes com Maior Risco de Rejeição para este Defeito:**\n` +
+        text += ` **Clientes com Maior Risco de Rejeição para este Defeito:**\n` +
           topIntolerant.map(c => `• **${c.name}** (Perfil Exigente - ${c.overallToleranceScore}%)`).join('\n') + '\n\n';
       }
 
-      text += `💡 **Para qual cliente você pretende enviar o lote com ${activeDefect.name}?**\n` +
+      text += ` **Para qual cliente você pretende enviar o lote com ${activeDefect.name}?**\n` +
         `Você pode clicar em uma das opções abaixo ou digitar o nome do cliente:`;
 
       return {
@@ -1062,7 +1062,7 @@ export const aiAssistantService = {
     if (/lucro|indicador|scrap|refugo|economia|volume|kpi|estatistica/i.test(queryNorm)) {
       const stats = qualityService.calculateStats(customers, defects, complaints, concessions);
 
-      let text = `📊 **Painel Executivo de Qualidade & Lucro Preservado:**\n\n` +
+      let text = ` **Painel Executivo de Qualidade & Lucro Preservado:**\n\n` +
         `• **Sacarias/Bags Salvos de Refugo:** **${stats.totalUnitsSaved.toLocaleString('pt-BR')} unidades**\n` +
         `• **Scrap Evitado (Economia Real em R$):** **R$ ${stats.totalSavedAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}**\n` +
         `• **Índice de Aceitação dos Envios com Desvio:** **${stats.acceptanceRate.toFixed(1)}%**\n` +
@@ -1095,11 +1095,11 @@ export const aiAssistantService = {
       sender: 'assistant',
       text: `Olá! Sou o **Sensei**, especialista em Qualidade e Decisão Industrial da Rafitec.\n\n` +
         `Estou conectado em tempo real à base de dados do ERP e SAC para responder dúvidas técnicas e analíticas da fábrica:\n\n` +
-        `1. 📦 **Resumo de Envios:** *"Resumo do que foi enviado este ano"* ou *"O que foi enviado para a Copacol?"*\n` +
-        `2. 🚨 **Reclamações SAC:** *"Quais foram as reclamações registradas?"* ou *"Reclamações da Alisul"*\n` +
-        `3. 🎯 **Simulação de Decisão:** *"Posso mandar 10.000 sacos com vinco para a Copacol?"*\n` +
-        `4. 🏷️ **Mercado por Defeito:** *"Quais clientes aceitam falha de solda ou borrão?"*\n` +
-        `5. 🔍 **Rastrear Fardo:** *"Onde foi parar o fardo 104?"*`,
+        `1.  **Resumo de Envios:** *"Resumo do que foi enviado este ano"* ou *"O que foi enviado para a Copacol?"*\n` +
+        `2.  **Reclamações SAC:** *"Quais foram as reclamações registradas?"* ou *"Reclamações da Alisul"*\n` +
+        `3.  **Simulação de Decisão:** *"Posso mandar 10.000 sacos com vinco para a Copacol?"*\n` +
+        `4.  **Mercado por Defeito:** *"Quais clientes aceitam falha de solda ou borrão?"*\n` +
+        `5.  **Rastrear Fardo:** *"Onde foi parar o fardo 104?"*`,
       timestamp,
       suggestedPrompts: [
         'Resumo do que foi enviado este ano',
@@ -1130,10 +1130,10 @@ export const aiAssistantService = {
       return {
         id: messageId,
         sender: 'assistant',
-        text: `🔒 **Aviso de Escopo - Terminal Chão de Fábrica (Sensei)**\n\n` +
+        text: ` **Aviso de Escopo - Terminal Chão de Fábrica (Sensei)**\n\n` +
           `Este terminal é exclusivo para **orientações técnicas operacionais, prevenção de defeitos na fábrica e histórico de reclamações SAC**.\n\n` +
           `Decisões sobre liberação de lotes com desvio sob concessão ou indicadores de refugo/scrap salvo são de alçada da Engenharia de Qualidade e Diretoria através do sistema corporativo.\n\n` +
-          `💡 **Você pode consultar:**\n` +
+          ` **Você pode consultar:**\n` +
           `• Cuidados específicos por cliente (Ex: *"Quais os cuidados para a Aurora?"* ou *"Copacol"*)\n` +
           `• Histórico de reclamações SAC (Ex: *"Quais as reclamações da Aurora?"*)\n` +
           `• Ações preventivas por defeito (Ex: *"Como evitar problemas de linner ou solda?"*)`,
@@ -1171,22 +1171,22 @@ export const aiAssistantService = {
       );
 
       // Ranking visual
-      let rankingName = '⭐ RANKING A (MÁXIMO RIGOR)';
+      let rankingName = 'RANKING A (MÁXIMO RIGOR)';
       if (activeCustomer.overallToleranceScore > 75 && custComplaints.length < 2) {
-        rankingName = '🥉 RANKING C (CONVENCIONAL)';
+        rankingName = 'RANKING C (CONVENCIONAL)';
       } else if (activeCustomer.overallToleranceScore > 60 && custComplaints.length < 5) {
-        rankingName = '🥈 RANKING B (ATENÇÃO REDOBRADA)';
+        rankingName = 'RANKING B (ATENÇÃO REDOBRADA)';
       }
 
-      let text = `🏭 **CLIENTE:** **${activeCustomer.name}** • Cód: **${activeCustomer.code || 'N/A'}** | ⚠️ **${rankingName}** (Tolerância: **${activeCustomer.overallToleranceScore}/100**)\n\n`;
+      let text = ` **CLIENTE:** **${activeCustomer.name}** • Cód: **${activeCustomer.code || 'N/A'}** | **${rankingName}** (Tolerância: **${activeCustomer.overallToleranceScore}/100**)\n\n`;
 
       // 1. RECLAMAÇÕES REAIS NO SAC (ESTRITAMENTE O QUE CONSTA NO BANCO)
       if (custComplaints.length > 0) {
-        text += `🚨 **HISTÓRICO REAL DE RECLAMAÇÕES SAC (${custComplaints.length} no ERP):**\n`;
+        text += ` **HISTÓRICO REAL DE RECLAMAÇÕES SAC (${custComplaints.length} no ERP):**\n`;
         custComplaints.forEach((c) => {
           const dateStr = c.date ? new Date(c.date).toLocaleDateString('pt-BR') : 'Data não informada';
           const opText = c.opNumber || c.lotNumber ? ` • OP: \`${c.opNumber || c.lotNumber}\`` : '';
-          text += `• ❌ **[${c.code}]**${opText} | 📅 ${dateStr}\n`;
+          text += `• **[${c.code}]**${opText} | Data: ${dateStr}\n`;
           text += `  ↳ **Defeito:** ${c.defectTypeName} (${c.quantityAffected || 1} kg) • Severidade: ${c.severity.toUpperCase()}\n`;
           if (c.description) {
             text += `  ↳ *"${c.description}"*\n`;
@@ -1194,22 +1194,22 @@ export const aiAssistantService = {
         });
         text += `\n`;
       } else {
-        text += `🚨 **HISTÓRICO REAL DE RECLAMAÇÕES SAC:**\n`;
-        text += `• ✅ **ZERO RECLAMAÇÕES NO SAC:** Este cliente não possui histórico de não-conformidades registradas no sistema.\n\n`;
+        text += ` **HISTÓRICO REAL DE RECLAMAÇÕES SAC:**\n`;
+        text += `• **ZERO RECLAMAÇÕES NO SAC:** Este cliente não possui histórico de não-conformidades registradas no sistema.\n\n`;
       }
 
       // 2. VISLUMBRE DE TOLERÂNCIA (O QUE ELE ACEITA)
-      text += `🛡️ **VISLUMBRE DE TOLERÂNCIA (O QUE ELE ACEITA):**\n`;
+      text += ` **VISLUMBRE DE TOLERÂNCIA (O QUE ELE ACEITA):**\n`;
       const acceptedDefects = Array.from(new Set(custConcessions.map(c => c.defectTypeName).filter(Boolean)));
       if (acceptedDefects.length > 0) {
-        text += `• 💡 **Flexibilidade Comprovada:** O cliente aceita um leve desvio de **${acceptedDefects.slice(0, 3).join(', ')}** sob concessão.\n`;
+        text += `• **Flexibilidade Comprovada:** O cliente aceita um leve desvio de **${acceptedDefects.slice(0, 3).join(', ')}** sob concessão.\n`;
       } else {
-        text += `• 💡 **Flexibilidade:** Aceita desvios estéticos leves pontuais desde que não afetem a integridade e resistência.\n`;
+        text += `• **Flexibilidade:** Aceita desvios estéticos leves pontuais desde que não afetem a integridade e resistência.\n`;
       }
-      text += `• ⚠️ **Regra Operacional:** Qualquer desvio fora do padrão deve ser mostrado ao **líder de turno e à qualidade** antes de prosseguir.\n\n`;
+      text += `• **Regra Operacional:** Qualquer desvio fora do padrão deve ser mostrado ao **líder de turno e à qualidade** antes de prosseguir.\n\n`;
 
       // 3. CUIDADOS NA MÁQUINA (DIRETO AO PONTO - O QUE O OPERADOR DEVE FAZER)
-      text += `📋 **CUIDADOS NA MÁQUINA (BATER O OLHO):**\n`;
+      text += ` **CUIDADOS NA MÁQUINA (BATER O OLHO):**\n`;
       const defectTypesLower = custComplaints.map(c => normalizeText(c.defectTypeName || ''));
       const hasLinner = defectTypesLower.some(d => d.includes('linner') || d.includes('liner'));
       const hasRasgos = defectTypesLower.some(d => d.includes('rasg') || d.includes('furo') || d.includes('corte'));
@@ -1219,29 +1219,29 @@ export const aiAssistantService = {
       const hasRefilada = defectTypesLower.some(d => d.includes('refilad') || d.includes('lamina') || d.includes('desfia'));
 
       if (hasSolda) {
-        text += `• 🛑 **Atenção à Solda & Válvula:** Calibrar temperatura/pressão da sapata. Realizar teste destrutivo de fundo e abertura de válvula a cada 500 sacos.\n`;
+        text += `• **Atenção à Solda & Válvula:** Calibrar temperatura/pressão da sapata. Realizar teste destrutivo de fundo e abertura de válvula a cada 500 sacos.\n`;
       }
       if (hasRefilada) {
-        text += `• 🛑 **Atenção ao Refilamento:** Checar fio da lâmina de corte lateral. Proibido liberar fita com rebarba ou desfiando na sanfona.\n`;
+        text += `• **Atenção ao Refilamento:** Checar fio da lâmina de corte lateral. Proibido liberar fita com rebarba ou desfiando na sanfona.\n`;
       }
       if (hasImpressao) {
-        text += `• 🛑 **Atenção à Impressão:** Monitorar viscosidade no copo Ford a cada hora. Fazer teste de fita adesiva nos primeiros sacos do lote.\n`;
+        text += `• **Atenção à Impressão:** Monitorar viscosidade no copo Ford a cada hora. Fazer teste de fita adesiva nos primeiros sacos do lote.\n`;
       }
       if (hasCostura) {
-        text += `• 🛑 **Atenção à Costura:** Trocar agulha com rebarba e conferir tensão da linha. Testar tração da costura a cada 100 unidades.\n`;
+        text += `• **Atenção à Costura:** Trocar agulha com rebarba e conferir tensão da linha. Testar tração da costura a cada 100 unidades.\n`;
       }
       if (hasLinner) {
-        text += `• 🛑 **Atenção ao Linner:** Limpar bancada eliminando cantos vivos ou parafusos. Vestir sem puxão brusco para não microfissurar.\n`;
+        text += `• **Atenção ao Linner:** Limpar bancada eliminando cantos vivos ou parafusos. Vestir sem puxão brusco para não microfissurar.\n`;
       }
       if (hasRasgos) {
-        text += `• 🛑 **Atenção a Rasgos/Cortes:** Checar facas térmicas e roletes de arraste. Borda deve estar 100% selada sem picotes.\n`;
+        text += `• **Atenção a Rasgos/Cortes:** Checar facas térmicas e roletes de arraste. Borda deve estar 100% selada sem picotes.\n`;
       }
       if (!hasSolda && !hasRefilada && !hasImpressao && !hasCostura && !hasLinner && !hasRasgos) {
-        text += `• 🛑 **Atenção Operacional:** Manter inspeção visual contínua na saída da linha. Qualquer anomalia em 3 sacos seguidos exige parada.\n`;
+        text += `• **Atenção Operacional:** Manter inspeção visual contínua na saída da linha. Qualquer anomalia em 3 sacos seguidos exige parada.\n`;
       }
 
-      text += `• 🔍 **Inspeção na Linha:** Realizar teste visual e dimensional amostral a cada início de fardo.\n`;
-      text += `• 📦 **Enfardamento:** Não amarrar fardos com tensão excessiva que amasse a sacaria. Fixar etiqueta externa com OP legível.\n\n`;
+      text += `• **Inspeção na Linha:** Realizar teste visual e dimensional amostral a cada início de fardo.\n`;
+      text += `• **Enfardamento:** Não amarrar fardos com tensão excessiva que amasse a sacaria. Fixar etiqueta externa com OP legível.\n\n`;
 
       // 4. COLETA INTELIGENTE DE FOTOS DE EVIDÊNCIA
       const compsWithPhotos = custComplaints.filter(c => c.photos && c.photos.length > 0);
@@ -1273,14 +1273,14 @@ export const aiAssistantService = {
 
       if (compsWithPhotos.length > 0) {
         const totalPhotos = compsWithPhotos.reduce((acc, c) => acc + (c.photos?.length || 0), 0);
-        text += `📷 **EVIDÊNCIAS FOTOGRÁFICAS (${totalPhotos} fotos reais):**\n`;
+        text += ` **EVIDÊNCIAS FOTOGRÁFICAS (${totalPhotos} fotos reais):**\n`;
         text += `Fotos reais de inspeção/SAC deste cliente disponíveis nos cards abaixo (toque para ampliar em tela cheia na bancada).`;
       } else if (finalReferenceCards && finalReferenceCards.length > 0) {
-        text += `📷 **EVIDÊNCIAS FOTOGRÁFICAS:**\n`;
-        text += `⚠️ *O cliente ${activeCustomer.name} não possui fotos cadastradas nos laudos do SAC.*\n`;
-        text += `📌 *Anexamos abaixo fotos de **referência técnica de problemas semelhantes** registrados em outros clientes para apoio e conferência visual.*`;
+        text += ` **EVIDÊNCIAS FOTOGRÁFICAS:**\n`;
+        text += ` *O cliente ${activeCustomer.name} não possui fotos cadastradas nos laudos do SAC.*\n`;
+        text += ` *Anexamos abaixo fotos de **referência técnica de problemas semelhantes** registrados em outros clientes para apoio e conferência visual.*`;
       } else {
-        text += `📷 **EVIDÊNCIAS FOTOGRÁFICAS:**\n`;
+        text += ` **EVIDÊNCIAS FOTOGRÁFICAS:**\n`;
         text += `*(Sem fotos anexadas nos laudos deste cliente até o momento).*`;
       }
 
@@ -1309,7 +1309,7 @@ export const aiAssistantService = {
 
       const affectedClients = Array.from(new Set(defectComplaints.map(c => c.customerName))).filter(Boolean);
 
-      let text = `🔍 **Guia de Prevenção no Chão de Fábrica — Sensei**\n\n`;
+      let text = ` **Guia de Prevenção no Chão de Fábrica — Sensei**\n\n`;
       text += `### Defeito: **${activeDefect.name}**\n\n`;
       text += `• **Categoria Técnica:** ${activeDefect.category.toUpperCase()}\n`;
       text += `• **Descrição:** ${activeDefect.description || 'Não-conformidade industrial.'}\n`;
@@ -1321,7 +1321,7 @@ export const aiAssistantService = {
         text += `\n`;
       }
 
-      text += `🛠️ **Checklist de Cuidados Operacionais para Prevenção na Máquina:**\n\n`;
+      text += ` **Checklist de Cuidados Operacionais para Prevenção na Máquina:**\n\n`;
 
       if (activeDefect.category === 'costura') {
         text += `1. **Agulha & Linha:** Verificar se a agulha está cega, torta ou com rebarba a cada troca de turno. Utilizar linha com a especificação de tenacidade correta.\n`;
@@ -1381,17 +1381,17 @@ export const aiAssistantService = {
       });
       const topClients = Object.entries(clientMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-      let text = `🚨 **Painel de Ocorrências SAC — Sensei (Foco na Prevenção Operacional):**\n\n`;
+      let text = ` **Painel de Ocorrências SAC — Sensei (Foco na Prevenção Operacional):**\n\n`;
       text += `• **Total de Reclamações Registradas:** **${totalComp} ocorrências**\n\n`;
-      text += `⚠️ **Top 5 Defeitos com Maior Reincidência na Fábrica:**\n`;
+      text += ` **Top 5 Defeitos com Maior Reincidência na Fábrica:**\n`;
       topDefects.forEach(([dName, count], idx) => {
         text += `${idx + 1}. **${dName}:** ${count} reclamações\n`;
       });
-      text += `\n🎯 **Top Clientes com Mais Apontamentos de SAC:**\n`;
+      text += `\n **Top Clientes com Mais Apontamentos de SAC:**\n`;
       topClients.forEach(([cName, count], idx) => {
         text += `${idx + 1}. **${cName}:** ${count} queixas apontadas\n`;
       });
-      text += `\n💡 *Para ver os cuidados operacionais específicos, digite o nome do cliente ou o defeito.*`;
+      text += `\n *Para ver os cuidados operacionais específicos, digite o nome do cliente ou o defeito.*`;
 
       return {
         id: messageId,
@@ -1410,11 +1410,11 @@ export const aiAssistantService = {
     return {
       id: messageId,
       sender: 'assistant',
-      text: `👋 Olá! Sou o **Sensei**, seu especialista de Qualidade e Prevenção Operacional no Chão de Fábrica da Rafitec (*Desenvolvido por Mauricio Grigol*).\n\n` +
+      text: `Olá! Sou o **Sensei**, seu especialista de Qualidade e Prevenção Operacional no Chão de Fábrica da Rafitec (*Desenvolvido por Mauricio Grigol*).\n\n` +
         `Estou conectado em tempo real para orientar a produção (extrusão, tecelagem, laminação, impressão, corte, costura, solda valvulada e paletização) sobre os cuidados operacionais e histórico de queixas SAC dos nossos clientes:\n\n` +
-        `• 🏭 **Cuidados por Cliente:** Digite o nome de um cliente (Ex: *"Quais os cuidados para o cliente Aurora?"* ou *"Copacol"*)\n` +
-        `• 🚨 **Histórico de SAC:** Pergunte sobre queixas registradas (Ex: *"Quais as reclamações da Aurora?"*)\n` +
-        `• 🛠️ **Prevenção de Defeitos:** Tire dúvidas sobre defeitos na máquina (Ex: *"Como evitar problemas de linner ou costura?"*)\n\n` +
+        `• **Cuidados por Cliente:** Digite o nome de um cliente (Ex: *"Quais os cuidados para o cliente Aurora?"* ou *"Copacol"*)\n` +
+        `• **Histórico de SAC:** Pergunte sobre queixas registradas (Ex: *"Quais as reclamações da Aurora?"*)\n` +
+        `• **Prevenção de Defeitos:** Tire dúvidas sobre defeitos na máquina (Ex: *"Como evitar problemas de linner ou costura?"*)\n\n` +
         `Escolha uma das sugestões abaixo ou digite sua consulta:`,
       timestamp,
       suggestedPrompts: [

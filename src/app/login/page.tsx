@@ -57,7 +57,7 @@ function LoginContent() {
     const errorParam = searchParams.get('error_description') || searchParams.get('error');
 
     if (confirmed === 'true') {
-      setSuccessMsg('🎉 E-mail corporativo confirmado com sucesso! Você já pode entrar com sua senha.');
+      setSuccessMsg('E-mail corporativo confirmado com sucesso! Você já pode entrar com sua senha.');
       setMode('signin');
     }
 

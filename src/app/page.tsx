@@ -527,7 +527,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ========================================================================= */}
-      {/* 🛠️ BARRA DE FILTROS AVANÇADOS DO DASHBOARD                              */}
+      {/* BARRA DE FILTROS AVANÇADOS DO DASHBOARD                                  */}
       {/* ========================================================================= */}
       <div className="glow-card p-4 sm:p-5 rounded-2xl bg-slate-950/80 border border-slate-800/90 shadow-xl space-y-3.5">
         
@@ -564,7 +564,7 @@ export default function DashboardPage() {
                 onChange={e => setPeriod(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-8 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
               >
-                <option value="todos">📅 Período: Todo o Histórico</option>
+                <option value="todos">Período: Todo o Histórico</option>
                 <option value="ano_2026">Ano de 2026</option>
                 <option value="ano_2025">Ano de 2025</option>
                 <option value="ultimos_30">Últimos 30 Dias</option>
@@ -586,7 +586,7 @@ export default function DashboardPage() {
                 onChange={e => setSelectedCustomerId(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-8 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer truncate"
               >
-                <option value="todos">🏢 Cliente: Todos ({customers.length})</option>
+                <option value="todos">Cliente: Todos ({customers.length})</option>
                 {customers.map(c => (
                   <option key={c.id} value={c.id}>
                     {c.name}

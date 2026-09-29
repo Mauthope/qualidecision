@@ -10,7 +10,8 @@ import {
   Sparkles,
   Bot,
   MapPin,
-  Pencil
+  Pencil,
+  Scale
 } from 'lucide-react';
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
 import { ConcessionDecisionModal } from '@/components/clientes/ConcessionDecisionModal';
@@ -93,8 +94,9 @@ export const CustomerProfileHeader: React.FC<Props> = ({ customer, complaints, c
                     {customer.segment}
                   </span>
                 )}
-                <span className={`px-2.5 py-0.5 rounded-lg text-xs font-medium border ${volumeRiskColor}`}>
-                  ⚖️ {volumeRiskTag}
+                <span className={`px-2.5 py-0.5 rounded-lg text-xs font-medium border flex items-center gap-1 ${volumeRiskColor}`}>
+                  <Scale className="w-3 h-3 text-cyan-400" />
+                  <span>{volumeRiskTag}</span>
                 </span>
               </div>
 

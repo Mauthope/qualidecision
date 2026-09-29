@@ -312,10 +312,10 @@ export const EditConcessionModal: React.FC<Props> = ({ isOpen, onClose, concessi
                 onChange={e => setCustomerFeedbackStatus(e.target.value as any)}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-slate-100 focus:outline-none focus:border-cyan-500/50"
               >
-                <option value="em_transito">🕒 Em Trânsito / Aguardando Parecer</option>
-                <option value="aceito_sem_ressalvas">✅ Aceito sem Ressalvas (Aprovado)</option>
-                <option value="aceito_com_observacao">⚠️ Aceito com Observação / Ressalva</option>
-                <option value="reclamado_posteriormente">🚨 Reclamado Posteriormente (Gerou SAC)</option>
+                <option value="em_transito">Em Trânsito / Aguardando Parecer</option>
+                <option value="aceito_sem_ressalvas">Aceito sem Ressalvas (Aprovado)</option>
+                <option value="aceito_com_observacao">Aceito com Observação / Ressalva</option>
+                <option value="reclamado_posteriormente">Reclamado Posteriormente (Gerou SAC)</option>
               </select>
             </div>
           </div>

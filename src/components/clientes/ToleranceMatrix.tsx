@@ -274,10 +274,11 @@ export const ToleranceMatrix: React.FC<Props> = ({ customer, defects, complaints
                       {defectComplaints.map(comp => (
                         <span
                           key={comp.id}
-                          className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/20 text-rose-100 border border-rose-500/40"
+                          className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/20 text-rose-100 border border-rose-500/40 inline-flex items-center gap-1"
                           title={`Chamado: ${comp.code} - Lote: ${comp.lotNumber} - "${comp.description}"`}
                         >
-                          📅 {new Date(comp.date).toLocaleDateString('pt-BR')} {comp.quantityAffected ? `(${comp.quantityAffected.toLocaleString('pt-BR')} kg)` : ''}
+                          <Calendar className="w-3 h-3 text-rose-300 shrink-0" />
+                          <span>{new Date(comp.date).toLocaleDateString('pt-BR')} {comp.quantityAffected ? `(${comp.quantityAffected.toLocaleString('pt-BR')} kg)` : ''}</span>
                         </span>
                       ))}
                     </div>
@@ -340,8 +341,9 @@ export const ToleranceMatrix: React.FC<Props> = ({ customer, defects, complaints
                         {rawNotes}
                       </p>
                     ) : isClaimed ? (
-                      <p className="text-xs text-rose-200 bg-rose-950/30 p-2.5 rounded-lg border border-rose-500/20 leading-relaxed italic">
-                        🚨 Defeito reclamado no SAC. Evitar liberação de lotes com este desvio.
+                      <p className="text-xs text-rose-200 bg-rose-950/30 p-2.5 rounded-lg border border-rose-500/20 leading-relaxed italic flex items-center gap-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                        <span>Defeito reclamado no SAC. Evitar liberação de lotes com este desvio.</span>
                       </p>
                     ) : (
                       <div className="text-[11px] text-slate-500 italic bg-slate-950/30 p-2.5 rounded-lg border border-slate-800/40 flex items-center justify-between">
@@ -358,10 +360,13 @@ export const ToleranceMatrix: React.FC<Props> = ({ customer, defects, complaints
 
                     {/* Footer Row */}
                     <div className="flex items-center justify-between text-[11px] pt-1">
-                      <span className={`font-medium ${isClaimed ? 'text-rose-400' : 'text-slate-500'}`}>
-                        {isClaimed
-                          ? `⚠️ ${defectComplaints.length} reclamação(ões) no ERP`
-                          : 'Nenhuma reclamação no ERP'}
+                      <span className={`font-medium flex items-center gap-1 ${isClaimed ? 'text-rose-400' : 'text-slate-500'}`}>
+                        {isClaimed && <AlertTriangle className="w-3 h-3 shrink-0" />}
+                        <span>
+                          {isClaimed
+                            ? `${defectComplaints.length} reclamação(ões) no ERP`
+                            : 'Nenhuma reclamação no ERP'}
+                        </span>
                       </span>
 
                       <button

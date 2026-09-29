@@ -278,9 +278,9 @@ export const UserManagementModal: React.FC<Props> = ({ isOpen, onClose }) => {
                             : 'bg-slate-950 border-slate-800 text-slate-300'
                         }`}
                       >
-                        <option value="visualizador">👁️ Visualizador (Apenas Leitura)</option>
-                        <option value="editor">✏️ Editor (Criar e Excluir)</option>
-                        <option value="admin">👑 Administrador (Acesso Total)</option>
+                        <option value="visualizador">Visualizador (Apenas Leitura)</option>
+                        <option value="editor">Editor (Criar e Excluir)</option>
+                        <option value="admin">Administrador (Acesso Total)</option>
                       </select>
                     </div>
                   </div>

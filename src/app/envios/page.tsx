@@ -18,7 +18,8 @@ import {
   Eye,
   Trash2,
   Scale,
-  Pencil
+  Pencil,
+  Package
 } from 'lucide-react';
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
 import { EditConcessionModal } from '@/components/envios/EditConcessionModal';
@@ -304,8 +305,9 @@ export default function EnviosPage() {
                       </div>
                       <div className="font-mono text-[11px] text-slate-400 flex flex-wrap items-center gap-1.5 mt-0.5">
                         {c.bales && c.bales.length > 0 ? (
-                          <span className="text-[10px] font-mono font-medium text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/50" title={`Fardos: ${c.bales.join(', ')}`}>
-                            📦 {c.bales.length} fardo{c.bales.length > 1 ? 's' : ''}: {c.bales.slice(0, 4).join(', ')}{c.bales.length > 4 ? ` (+${c.bales.length - 4})` : ''}
+                          <span className="text-[10px] font-mono font-medium text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/50 inline-flex items-center gap-1" title={`Fardos: ${c.bales.join(', ')}`}>
+                            <Package className="w-3 h-3 text-cyan-400 shrink-0" />
+                            <span>{c.bales.length} fardo{c.bales.length > 1 ? 's' : ''}: {c.bales.slice(0, 4).join(', ')}{c.bales.length > 4 ? ` (+${c.bales.length - 4})` : ''}</span>
                           </span>
                         ) : c.lotNumber ? (
                           <span>{c.lotNumber.startsWith('Fardo') ? c.lotNumber : `Fardo/Lote: ${c.lotNumber}`}</span>
@@ -474,8 +476,9 @@ export default function EnviosPage() {
               </div>
             </div>
 
-            <p className="text-xs text-rose-300/90 bg-rose-950/30 p-2.5 rounded-xl border border-rose-900/40">
-              ⚠️ <strong>Atenção:</strong> A exclusão é definitiva no sistema e no banco de dados.
+            <p className="text-xs text-rose-300/90 bg-rose-950/30 p-2.5 rounded-xl border border-rose-900/40 flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+              <span><strong>Atenção:</strong> A exclusão é definitiva no sistema e no banco de dados.</span>
             </p>
 
             <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-800">

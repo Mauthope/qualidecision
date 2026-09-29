@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useQuality } from '@/context/QualityContext';
 import Link from 'next/link';
-import { Send, CheckCircle2, Clock, AlertTriangle, ArrowRight, ExternalLink, ShieldCheck, Trash2, Pencil } from 'lucide-react';
+import { Send, CheckCircle2, Clock, AlertTriangle, ArrowRight, ExternalLink, ShieldCheck, Trash2, Pencil, Package } from 'lucide-react';
 import { NewConcessionModal } from '@/components/envios/NewConcessionModal';
 import { EditConcessionModal } from '@/components/envios/EditConcessionModal';
 import { ConcessionShipment } from '@/types';
@@ -130,8 +130,9 @@ export const RecentConcessionsTable: React.FC = () => {
                         </div>
                         <div className="font-mono text-[11px] text-slate-400 flex flex-wrap items-center gap-1.5 mt-0.5">
                           {item.bales && item.bales.length > 0 ? (
-                            <span className="text-[10px] font-mono font-medium text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/50" title={`Fardos: ${item.bales.join(', ')}`}>
-                              📦 {item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 4).join(', ')}{item.bales.length > 4 ? ` (+${item.bales.length - 4})` : ''}
+                            <span className="text-[10px] font-mono font-medium text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/50 inline-flex items-center gap-1" title={`Fardos: ${item.bales.join(', ')}`}>
+                              <Package className="w-3 h-3 text-cyan-400 shrink-0" />
+                              <span>{item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 4).join(', ')}{item.bales.length > 4 ? ` (+${item.bales.length - 4})` : ''}</span>
                             </span>
                           ) : item.lotNumber ? (
                             <span>{item.lotNumber.startsWith('Fardo') ? item.lotNumber : `Fardo/Lote: ${item.lotNumber}`}</span>
@@ -251,8 +252,9 @@ export const RecentConcessionsTable: React.FC = () => {
               </div>
             </div>
 
-            <p className="text-xs text-rose-300/90 bg-rose-950/30 p-2.5 rounded-xl border border-rose-900/40">
-              ⚠️ <strong>Atenção:</strong> A exclusão é definitiva no sistema e no banco de dados.
+            <p className="text-xs text-rose-300/90 bg-rose-950/30 p-2.5 rounded-xl border border-rose-900/40 flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+              <span><strong>Atenção:</strong> A exclusão é definitiva no sistema e no banco de dados.</span>
             </p>
 
             <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-800">

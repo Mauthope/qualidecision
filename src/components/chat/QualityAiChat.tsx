@@ -24,7 +24,8 @@ import {
   Key,
   Database,
   Loader2,
-  Mic
+  Mic,
+  Package
 } from 'lucide-react';
 import { storageService } from '@/services/storageService';
 import { useVoiceRecording } from '@/hooks/useVoiceRecording';
@@ -418,7 +419,7 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                             }}
                             className="text-[11px] text-cyan-400 hover:text-cyan-300 underline font-medium inline-block cursor-pointer pt-0.5"
                           >
-                            ⚡ Abrir teste e diagnóstico da chave
+                            Abrir teste e diagnóstico da chave
                           </button>
                         </div>
                       </div>
@@ -478,8 +479,9 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                                 {complaint.code}
                               </span>
                               {complaint.bales && complaint.bales.length > 0 ? (
-                                <span className="text-xs font-semibold text-rose-300 font-mono">
-                                  📦 Fardo{complaint.bales.length > 1 ? 's' : ''}: {complaint.bales.slice(0, 3).join(', ')}{complaint.bales.length > 3 ? '...' : ''}
+                                <span className="text-xs font-semibold text-rose-300 font-mono inline-flex items-center gap-1">
+                                  <Package className="w-3 h-3 text-rose-400 shrink-0" />
+                                  <span>Fardo{complaint.bales.length > 1 ? 's' : ''}: {complaint.bales.slice(0, 3).join(', ')}{complaint.bales.length > 3 ? '...' : ''}</span>
                                 </span>
                               ) : complaint.lotNumber ? (
                                 <span className="text-xs font-semibold text-white">
@@ -659,7 +661,10 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                             <div className="font-bold text-slate-200">{c.customerName}</div>
                             <div className="text-[11px] text-slate-400 mt-0.5">
                               {c.bales && c.bales.length > 0 ? (
-                                <span className="text-cyan-300 font-mono">📦 Fardo{c.bales.length > 1 ? 's' : ''}: {c.bales.slice(0, 3).join(', ')}{c.bales.length > 3 ? '...' : ''}</span>
+                                <span className="text-cyan-300 font-mono inline-flex items-center gap-1">
+                                  <Package className="w-3 h-3 text-cyan-400 shrink-0" />
+                                  <span>Fardo{c.bales.length > 1 ? 's' : ''}: {c.bales.slice(0, 3).join(', ')}{c.bales.length > 3 ? '...' : ''}</span>
+                                </span>
                               ) : (
                                 <span>{c.lotNumber}</span>
                               )} • {c.defectTypeName} ({c.quantity.toLocaleString('pt-BR')} un)
@@ -927,7 +932,7 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                 ) : (
                   <>
                     <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>⚡ Testar Conexão com Gemini</span>
+                    <span>Testar Conexão com Gemini</span>
                   </>
                 )}
               </button>
@@ -951,7 +956,7 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                   <p>• Resposta recebida: <span className="text-emerald-300 font-semibold">"{testKeyDetails?.reply}"</span></p>
                 </div>
                 <p className="text-[11px] text-emerald-300 font-sans">
-                  ✨ O Gemini está pronto para sintetizar as respostas técnicas em conjunto com os dados do QualiDecision.
+                  O Gemini está pronto para sintetizar as respostas técnicas em conjunto com os dados do QualiDecision.
                 </p>
               </div>
             )}
@@ -969,7 +974,7 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                   {testKeyMessage.toLowerCase().includes('blocked') ? (
                     <div className="space-y-1.5 text-amber-200 bg-amber-950/40 p-2.5 rounded-lg border border-amber-500/30">
                       <p className="font-semibold text-amber-300">
-                        🚫 O Google bloqueou o método da API (API_KEY_SERVICE_BLOCKED):
+                        O Google bloqueou o método da API (API_KEY_SERVICE_BLOCKED):
                       </p>
                       <p className="text-[11px] leading-relaxed text-amber-200">
                         Isso acontece quando a chave possui <strong>Restrições de API</strong> ativadas no Google Cloud Console e a <em>Generative Language API</em> não está autorizada, ou quando pertence a uma conta/projeto corporativo com bloqueio de IA.
@@ -983,15 +988,15 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                     </div>
                   ) : testKeyMessage.toLowerCase().includes('not valid') || testKeyMessage.toLowerCase().includes('invalid') ? (
                     <p className="text-amber-300">
-                      👉 <strong>Motivo provável:</strong> A chave informada não é reconhecida pelo Google Gemini. Gere uma nova chave no <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-cyan-400 underline font-semibold">Google AI Studio</a> e cole-a aqui.
+                      <strong>Motivo provável:</strong> A chave informada não é reconhecida pelo Google Gemini. Gere uma nova chave no <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-cyan-400 underline font-semibold">Google AI Studio</a> e cole-a aqui.
                     </p>
                   ) : testKeyMessage.toLowerCase().includes('disabled') || testKeyMessage.toLowerCase().includes('not been used') ? (
                     <p className="text-amber-300">
-                      👉 <strong>Motivo provável:</strong> A "Generative Language API" está desativada no seu projeto Google Cloud. Acesse a URL indicada na mensagem para ativá-la.
+                      <strong>Motivo provável:</strong> A "Generative Language API" está desativada no seu projeto Google Cloud. Acesse a URL indicada na mensagem para ativá-la.
                     </p>
                   ) : testKeyMessage.toLowerCase().includes('nenhuma chave') ? (
                     <p className="text-amber-300">
-                      👉 <strong>Motivo provável:</strong> Nenhuma chave foi encontrada. Cole a chave do Google AI Studio no campo acima ou cadastre a variável <code className="bg-slate-800 px-1 py-0.5 rounded text-cyan-300 font-mono">GEMINI_API_KEY</code> na Vercel e faça um <strong>Redeploy</strong>.
+                      <strong>Motivo provável:</strong> Nenhuma chave foi encontrada. Cole a chave do Google AI Studio no campo acima ou cadastre a variável <code className="bg-slate-800 px-1 py-0.5 rounded text-cyan-300 font-mono">GEMINI_API_KEY</code> na Vercel e faça um <strong>Redeploy</strong>.
                     </p>
                   ) : null}
                 </div>

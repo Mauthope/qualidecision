@@ -23,13 +23,14 @@ interface RichChatMessageProps {
   isUser?: boolean;
 }
 
-// Limpa vazamentos de metadados internos de prompts
+// Limpa vazamentos de metadados internos de prompts e remove emojis
 function sanitizeText(raw: string): string {
   if (!raw) return '';
   return raw
     .replace(/\s*\([^)]*CLIENTE EM CONTEXTO[^)]*\)/gi, '')
     .replace(/\s*\([^)]*DADOS OFICIAIS[^)]*\)/gi, '')
     .replace(/\s*SUGESTOES:\s*\[[\s\S]*?\]/gi, '')
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '')
     .trim();
 }
 
@@ -78,10 +79,10 @@ function renderValueWithBadges(valueStr: string) {
       : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
     
     const label = scoreVal <= 45 
-      ? '⭐ Ranking A (Crítico / Rígido)' 
+      ? 'Ranking A (Crítico / Rígido)' 
       : scoreVal <= 74 
-      ? '🥈 Ranking B (Moderado)' 
-      : '🥉 Ranking C (Flexível)';
+      ? 'Ranking B (Moderado)' 
+      : 'Ranking C (Flexível)';
 
     const before = valueStr.substring(0, scoreMatch.index);
     const after = valueStr.substring((scoreMatch.index || 0) + scoreMatch[0].length);
@@ -139,28 +140,27 @@ export const RichChatMessage: React.FC<RichChatMessageProps> = ({ text, isUser =
           let borderTheme = 'border-cyan-500 bg-gradient-to-r from-cyan-950/60 via-cyan-900/20 to-transparent text-cyan-100';
           let icon = <Info className="w-4 h-4 text-cyan-400 shrink-0" />;
 
-          if (title.includes('🚨') || /reclamac|queixa|ocorrencia|alerta/i.test(title)) {
+          if (/reclamac|queixa|ocorrencia|alerta/i.test(title)) {
             borderTheme = 'border-rose-500 bg-gradient-to-r from-rose-950/60 via-rose-900/20 to-transparent text-rose-100';
             icon = <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />;
-          } else if (title.includes('📊') || /visao\s+geral|resumo|estatistica/i.test(title)) {
+          } else if (/visao\s+geral|resumo|estatistica|painel/i.test(title)) {
             borderTheme = 'border-cyan-500 bg-gradient-to-r from-cyan-950/60 via-cyan-900/20 to-transparent text-cyan-100';
             icon = <BarChart3 className="w-4 h-4 text-cyan-400 shrink-0" />;
-          } else if (title.includes('🔍') || /contexto|tolerancia/i.test(title)) {
+          } else if (/contexto|tolerancia/i.test(title)) {
             borderTheme = 'border-teal-500 bg-gradient-to-r from-teal-950/60 via-teal-900/20 to-transparent text-teal-100';
             icon = <Search className="w-4 h-4 text-teal-400 shrink-0" />;
-          } else if (title.includes('⚠️') || /implicac|cuidado|risco/i.test(title)) {
+          } else if (/implicac|cuidado|risco/i.test(title)) {
             borderTheme = 'border-amber-500 bg-gradient-to-r from-amber-950/60 via-amber-900/20 to-transparent text-amber-100';
             icon = <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />;
-          } else if (title.includes('🏭') || /cliente|unidade/i.test(title)) {
+          } else if (/cliente|unidade/i.test(title)) {
             borderTheme = 'border-purple-500 bg-gradient-to-r from-purple-950/60 via-purple-900/20 to-transparent text-purple-100';
             icon = <Building2 className="w-4 h-4 text-purple-400 shrink-0" />;
-          } else if (title.includes('🛡️') || title.includes('✅')) {
+          } else if (/vislumbre|concess|aprovad|libera/i.test(title)) {
             borderTheme = 'border-emerald-500 bg-gradient-to-r from-emerald-950/60 via-emerald-900/20 to-transparent text-emerald-100';
             icon = <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />;
           }
 
-          // Remove emojis redundantes já cobertos pelo ícone para deixar o visual limpo
-          const cleanTitle = title.replace(/^[🚨📊🔍⚠️🏭🛡️✅🛑📦📋📷💡📈]+\s*/, '');
+          const cleanTitle = title.trim();
 
           return (
             <div
@@ -181,12 +181,12 @@ export const RichChatMessage: React.FC<RichChatMessageProps> = ({ text, isUser =
           const subTitle = h4Match[1].trim();
           let icon = <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />;
 
-          if (subTitle.includes('📊')) icon = <BarChart3 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />;
-          else if (subTitle.includes('🔍')) icon = <Search className="w-3.5 h-3.5 text-teal-400 shrink-0" />;
-          else if (subTitle.includes('⚠️')) icon = <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />;
-          else if (subTitle.includes('🚨')) icon = <ShieldAlert className="w-3.5 h-3.5 text-rose-400 shrink-0" />;
+          if (/visao\s+geral|resumo|estatistica|painel/i.test(subTitle)) icon = <BarChart3 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />;
+          else if (/contexto|tolerancia/i.test(subTitle)) icon = <Search className="w-3.5 h-3.5 text-teal-400 shrink-0" />;
+          else if (/implicac|cuidado|risco/i.test(subTitle)) icon = <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />;
+          else if (/reclamac|queixa|ocorrencia|alerta/i.test(subTitle)) icon = <ShieldAlert className="w-3.5 h-3.5 text-rose-400 shrink-0" />;
 
-          const cleanSub = subTitle.replace(/^[🚨📊🔍⚠️🏭🛡️✅🛑📦📋📷💡📈]+\s*/, '');
+          const cleanSub = subTitle.trim();
 
           return (
             <div key={lIdx} className="pt-2 pb-1">
@@ -279,23 +279,35 @@ export const RichChatMessage: React.FC<RichChatMessageProps> = ({ text, isUser =
           );
         }
 
-        // 6. Chamadas especiais de chão de fábrica (🏭, 🚨, 🛡️, 📋, 📷)
-        const isClientSection = trimmed.startsWith('🏭');
-        const isAlertSection = trimmed.startsWith('🚨');
-        const isShieldSection = trimmed.startsWith('🛡️');
-        const isChecklistSection = trimmed.startsWith('📋');
-        const isCameraSection = trimmed.startsWith('📷');
+        // 6. Chamadas especiais de chão de fábrica
+        const isClientSection = /^\*{0,2}(CLIENTE|UNIDADE):/i.test(trimmed);
+        const isAlertSection = /^\*{0,2}(HISTÓRICO REAL DE RECLAMAÇÕES|RECLAMAÇÕES SAC|ALERTA|NÃO ENVIAR|PARECER DA IA: NÃO ENVIAR)/i.test(trimmed);
+        const isShieldSection = /^\*{0,2}(VISLUMBRE DE TOLERÂNCIA|TOLERÂNCIA|PARECER DA IA)/i.test(trimmed);
+        const isChecklistSection = /^\*{0,2}(CUIDADOS NA MÁQUINA|CHECKLIST)/i.test(trimmed);
+        const isCameraSection = /^\*{0,2}(EVIDÊNCIAS FOTOGRÁFICAS|FOTOS)/i.test(trimmed);
 
         if (isClientSection || isAlertSection || isShieldSection || isChecklistSection || isCameraSection) {
           let calloutTheme = 'border-l-4 border-cyan-400 bg-gradient-to-r from-cyan-950/50 to-transparent text-cyan-100 p-2.5 rounded-r-xl my-1.5 font-semibold';
-          if (isAlertSection) calloutTheme = 'border-l-4 border-rose-500 bg-gradient-to-r from-rose-950/40 to-transparent text-rose-100 p-2 rounded-r-lg my-1.5 font-bold uppercase';
-          if (isShieldSection) calloutTheme = 'border-l-4 border-cyan-500 bg-gradient-to-r from-cyan-950/40 to-transparent text-cyan-100 p-2 rounded-r-lg my-1.5 font-bold uppercase';
-          if (isChecklistSection) calloutTheme = 'border-l-4 border-emerald-500 bg-gradient-to-r from-emerald-950/40 to-transparent text-emerald-100 p-2 rounded-r-lg my-1.5 font-bold uppercase';
-          if (isCameraSection) calloutTheme = 'border-l-4 border-purple-500 bg-gradient-to-r from-purple-950/40 to-transparent text-purple-100 p-2 rounded-r-lg my-1.5 font-bold uppercase';
+          let icon = <Building2 className="w-4 h-4 text-cyan-400 shrink-0" />;
+
+          if (isAlertSection) {
+            calloutTheme = 'border-l-4 border-rose-500 bg-gradient-to-r from-rose-950/40 to-transparent text-rose-100 p-2 rounded-r-lg my-1.5 font-bold uppercase';
+            icon = <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />;
+          } else if (isShieldSection) {
+            calloutTheme = 'border-l-4 border-cyan-500 bg-gradient-to-r from-cyan-950/40 to-transparent text-cyan-100 p-2 rounded-r-lg my-1.5 font-bold uppercase';
+            icon = <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />;
+          } else if (isChecklistSection) {
+            calloutTheme = 'border-l-4 border-emerald-500 bg-gradient-to-r from-emerald-950/40 to-transparent text-emerald-100 p-2 rounded-r-lg my-1.5 font-bold uppercase';
+            icon = <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />;
+          } else if (isCameraSection) {
+            calloutTheme = 'border-l-4 border-purple-500 bg-gradient-to-r from-purple-950/40 to-transparent text-purple-100 p-2 rounded-r-lg my-1.5 font-bold uppercase';
+            icon = <Camera className="w-4 h-4 text-purple-400 shrink-0" />;
+          }
 
           return (
-            <div key={lIdx} className={calloutTheme}>
-              {renderInlineText(trimmed)}
+            <div key={lIdx} className={`${calloutTheme} flex items-center gap-2.5`}>
+              {icon}
+              <div className="flex-1">{renderInlineText(trimmed)}</div>
             </div>
           );
         }

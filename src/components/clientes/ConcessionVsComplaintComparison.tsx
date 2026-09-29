@@ -15,7 +15,8 @@ import {
   ShieldCheck,
   TrendingDown,
   TrendingUp,
-  FileWarning
+  FileWarning,
+  Package
 } from 'lucide-react';
 
 interface Props {
@@ -95,12 +96,14 @@ export const ConcessionVsComplaintComparison: React.FC<Props> = ({
                 Comparativo Cruzado: Enviado sob Concessão vs Reclamado
               </h3>
               {reclaimedCount > 0 ? (
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse">
-                  ⚠️ {reclaimedCount} Reclamação(ões) Pós-Envio
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3 text-rose-400" />
+                  <span>{reclaimedCount} Reclamação(ões) Pós-Envio</span>
                 </span>
               ) : (
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  ✅ 100% Concessões Aceitas
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                  <span>100% Concessões Aceitas</span>
                 </span>
               )}
             </div>
@@ -170,8 +173,9 @@ export const ConcessionVsComplaintComparison: React.FC<Props> = ({
                     {item.productName}
                   </span>
                   {item.bales && item.bales.length > 0 ? (
-                    <span className="px-2 py-0.5 rounded text-xs font-mono font-medium text-cyan-300 bg-cyan-950/60 border border-cyan-800/50" title={`Fardos: ${item.bales.join(', ')}`}>
-                      📦 {item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 3).join(', ')}{item.bales.length > 3 ? '...' : ''}
+                    <span className="px-2 py-0.5 rounded text-xs font-mono font-medium text-cyan-300 bg-cyan-950/60 border border-cyan-800/50 inline-flex items-center gap-1" title={`Fardos: ${item.bales.join(', ')}`}>
+                      <Package className="w-3 h-3 text-cyan-400 shrink-0" />
+                      <span>{item.bales.length} fardo{item.bales.length > 1 ? 's' : ''}: {item.bales.slice(0, 3).join(', ')}{item.bales.length > 3 ? '...' : ''}</span>
                     </span>
                   ) : item.lotNumber ? (
                     <span className="text-xs text-slate-400 font-mono">

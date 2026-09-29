@@ -433,7 +433,8 @@ export default function MemorialPage() {
               'bg-cyan-950/25 border-cyan-500/40 text-cyan-300'
             }`}>
               <div className="font-mono font-bold text-sm flex items-center gap-2">
-                <span>Score Final = max(5, min(98, {rawScore})) ➔</span>
+                <span>Score Final = max(5, min(98, {rawScore}))</span>
+                <ArrowRight className="w-3.5 h-3.5" />
                 <span className="px-2.5 py-0.5 rounded-lg bg-black/40 border border-current text-white font-extrabold text-base">
                   {finalScore} / 100
                 </span>
@@ -442,15 +443,15 @@ export default function MemorialPage() {
               <p className="mt-2 text-xs text-slate-300 leading-relaxed font-sans">
                 {isClampedMin ? (
                   <>
-                    💡 <strong>Por que virou {finalScore}?</strong> O resultado bruto deu <strong>{rawScore} (negativo)</strong> porque as condições são ultra favoráveis. Como na vida real <em>não existe risco negativo</em> (menor que zero), o sistema aplica a trava do <strong>Piso de Segurança Mínimo de 5%</strong> (a menor nota possível de risco).
+                    <strong>Por que virou {finalScore}?</strong> O resultado bruto deu <strong>{rawScore} (negativo)</strong> porque as condições são ultra favoráveis. Como na vida real <em>não existe risco negativo</em> (menor que zero), o sistema aplica a trava do <strong>Piso de Segurança Mínimo de 5%</strong> (a menor nota possível de risco).
                   </>
                 ) : isClampedMax ? (
                   <>
-                    ⚠️ <strong>Por que virou {finalScore}?</strong> O resultado bruto deu <strong>{rawScore}</strong>. O sistema delimita o teto em <strong>98%</strong> de risco estatístico crítico.
+                    <strong>Por que virou {finalScore}?</strong> O resultado bruto deu <strong>{rawScore}</strong>. O sistema delimita o teto em <strong>98%</strong> de risco estatístico crítico.
                   </>
                 ) : (
                   <>
-                    ✅ <strong>Resultado exato:</strong> Como o resultado bruto de <strong>{rawScore}</strong> está dentro da faixa industrial válida [5 a 98], ele é adotado diretamente como o Score Final de {finalScore}/100.
+                    <strong>Resultado exato:</strong> Como o resultado bruto de <strong>{rawScore}</strong> está dentro da faixa industrial válida [5 a 98], ele é adotado diretamente como o Score Final de {finalScore}/100.
                   </>
                 )}
               </p>
@@ -466,9 +467,9 @@ export default function MemorialPage() {
                 finalScore >= 50 ? 'text-orange-400' :
                 finalScore >= 30 ? 'text-amber-400' : 'text-emerald-400'
               }`}>
-                {finalScore >= 75 ? '🔴 Risco Crítico (Não Enviar)' :
-                 finalScore >= 50 ? '🟠 Risco Elevado' :
-                 finalScore >= 30 ? '🟡 Risco Moderado' : '🟢 Baixo Risco (Liberado)'}
+                {finalScore >= 75 ? 'Risco Crítico (Não Enviar)' :
+                 finalScore >= 50 ? 'Risco Elevado' :
+                 finalScore >= 30 ? 'Risco Moderado' : 'Baixo Risco (Liberado)'}
               </div>
             </div>
 
@@ -492,7 +493,7 @@ export default function MemorialPage() {
         <div className="space-y-3 pt-2">
           <div className="flex items-center gap-2 text-sm font-bold text-white">
             <BookOpenCheck className="w-4 h-4 text-cyan-400" />
-            <span>📖 Dicionário Didático: De onde vem cada número e o que ele significa?</span>
+            <span>Dicionário Didático: De onde vem cada número e o que ele significa?</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs">
@@ -651,10 +652,10 @@ export default function MemorialPage() {
                 </span>
               </div>
               <p className="text-slate-300 leading-relaxed">
-                {finalScore < 30 ? '✅ Lote seguro para liberação sem ressalvas.' :
-                 finalScore < 50 ? '⚠️ Liberação autorizada com monitoramento pós-entrega.' :
-                 finalScore < 75 ? '🟠 Notificar comprador antes de despachar.' :
-                 '⛔ NÃO ENVIAR! Risco crítico de rejeição. Redirecionar lote.'}
+                {finalScore < 30 ? 'Lote seguro para liberação sem ressalvas.' :
+                 finalScore < 50 ? 'Liberação autorizada com monitoramento pós-entrega.' :
+                 finalScore < 75 ? 'Notificar comprador antes de despachar.' :
+                 'NÃO ENVIAR! Risco crítico de rejeição. Redirecionar lote.'}
               </p>
               <div className="text-[11px] text-purple-300/90 pt-1 border-t border-purple-500/30 font-semibold">
                 Baseado em inteligência cruzada de qualidade e dados históricos.
@@ -694,25 +695,25 @@ export default function MemorialPage() {
             </thead>
             <tbody className="divide-y divide-slate-800/60">
               <tr className="hover:bg-slate-900/40">
-                <td className="py-3 pr-4 font-bold text-emerald-400">🟢 Alta Tolerância</td>
+                <td className="py-3 pr-4 font-bold text-emerald-400">Alta Tolerância</td>
                 <td className="py-3 px-4 text-center font-mono font-bold text-slate-200">100 pontos</td>
                 <td className="py-3 px-4 text-slate-300">Cliente aceita o desvio sem restrições ou impacto no processo de envase.</td>
                 <td className="py-3 pl-4 text-center text-emerald-400 font-semibold text-[11px]">Envio Liberado</td>
               </tr>
               <tr className="hover:bg-slate-900/40">
-                <td className="py-3 pr-4 font-bold text-amber-400">🟡 Tolerância Moderada</td>
+                <td className="py-3 pr-4 font-bold text-amber-400">Tolerância Moderada</td>
                 <td className="py-3 px-4 text-center font-mono font-bold text-slate-200">70 pontos</td>
                 <td className="py-3 px-4 text-slate-300">Aceita com ressalvas desde que o defeito seja leve/estético.</td>
                 <td className="py-3 pl-4 text-center text-amber-400 font-semibold text-[11px]">Monitorar Entrega</td>
               </tr>
               <tr className="hover:bg-slate-900/40">
-                <td className="py-3 pr-4 font-bold text-orange-400">🟠 Baixa Tolerância</td>
+                <td className="py-3 pr-4 font-bold text-orange-400">Baixa Tolerância</td>
                 <td className="py-3 px-4 text-center font-mono font-bold text-slate-200">40 pontos</td>
                 <td className="py-3 px-4 text-slate-300">Risco elevado de devolução; requer alinhamento prévio ou validação da qualidade.</td>
                 <td className="py-3 pl-4 text-center text-orange-400 font-semibold text-[11px]">Alinhamento Prévio</td>
               </tr>
               <tr className="hover:bg-slate-900/40">
-                <td className="py-3 pr-4 font-bold text-rose-400">🔴 Zero Tolerância / Intolerante</td>
+                <td className="py-3 pr-4 font-bold text-rose-400">Zero Tolerância / Intolerante</td>
                 <td className="py-3 px-4 text-center font-mono font-bold text-slate-200">10 pontos</td>
                 <td className="py-3 px-4 text-slate-300">Rejeição imediata por comprometer estanqueidade, embalagem ou esteiras automáticas.</td>
                 <td className="py-3 pl-4 text-center text-rose-400 font-semibold text-[11px]">Bloqueado / Não Enviar</td>
