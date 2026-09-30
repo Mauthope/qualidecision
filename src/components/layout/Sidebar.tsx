@@ -91,6 +91,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Sensei (Chão de Fábrica)',
       href: '/chao-de-fabrica',
       icon: <Factory className="w-5 h-5 shrink-0" />
+    },
+    {
+      label: 'Plano de Segurança',
+      href: '/seguranca',
+      icon: <ShieldCheck className="w-5 h-5 shrink-0" />
     }
   ];
 
@@ -513,7 +518,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <>
       {/* Desktop Persistent Collapsible Sidebar */}
       <aside
-        className={`hidden lg:flex flex-col fixed top-0 bottom-0 left-0 z-40 bg-slate-950/95 border-r border-slate-800/80 backdrop-blur-xl transition-[width] duration-300 ease-in-out shadow-2xl shadow-black/40 ${
+        className={`hidden lg:flex flex-col fixed top-0 bottom-0 left-0 z-40 bg-slate-950/95 border-r border-slate-800/80 backdrop-blur-xl transition-[width] duration-300 ease-in-out shadow-2xl shadow-black/40 print:hidden ${
           isCollapsed ? 'w-20' : 'w-64'
         }`}
       >
@@ -524,14 +529,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {isMobileOpen && (
         <div
           onClick={onCloseMobile}
-          className="lg:hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm transition-opacity animate-in fade-in duration-200"
+          className="lg:hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm transition-opacity animate-in fade-in duration-200 print:hidden"
           aria-hidden="true"
         />
       )}
 
       {/* Mobile Off-canvas Drawer Panel */}
       <aside
-        className={`lg:hidden fixed top-0 bottom-0 left-0 z-50 w-72 max-w-[85vw] bg-slate-950 border-r border-slate-800 shadow-2xl shadow-cyan-950/30 transition-transform duration-300 ease-in-out ${
+        className={`lg:hidden fixed top-0 bottom-0 left-0 z-50 w-72 max-w-[85vw] bg-slate-950 border-r border-slate-800 shadow-2xl shadow-cyan-950/30 transition-transform duration-300 ease-in-out print:hidden ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

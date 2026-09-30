@@ -70,3 +70,58 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .animate-pulse-glow {
   animation: pulse-glow 3s infinite ease-in-out;
 }
+
+/* ========================================================
+   PDF & PRINT ENGINE (A4 FORMATTER)
+   ======================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 8mm 12mm 8mm;
+  }
+
+  html, body {
+    background-color: #060a13 !important;
+    background-image: none !important;
+    color: #f1f5f9 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    font-size: 11pt !important;
+  }
+
+  .no-print,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Force page breaks in PDF planner */
+  .pdf-page {
+    page-break-after: always !important;
+    break-after: page !important;
+    break-inside: avoid !important;
+    min-height: 260mm !important;
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding-bottom: 8mm !important;
+  }
+
+  .pdf-page:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  .pdf-avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .glow-card, .glass-panel {
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    background: #0b1120 !important;
+    border: 1px solid #1e293b !important;
+  }
+}
+

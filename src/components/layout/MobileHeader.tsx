@@ -17,7 +17,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({ onOpenSidebar }) => 
 
   return (
     <>
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 z-30 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-xl px-3 sm:px-4 flex items-center justify-between shadow-lg shadow-black/20">
+      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 z-30 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-xl px-3 sm:px-4 flex items-center justify-between shadow-lg shadow-black/20 print:hidden">
         {/* Left: Menu trigger & Logo */}
         <div className="flex items-center gap-2.5">
           <button

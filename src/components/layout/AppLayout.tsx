@@ -86,9 +86,9 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
       <div
         className={`flex-1 flex flex-col min-w-0 transition-[margin] duration-300 ease-in-out ${
           isCollapsed ? 'lg:ml-20' : 'lg:ml-64'
-        } pt-16 lg:pt-0`}
+        } pt-16 lg:pt-0 print:ml-0 print:pt-0`}
       >
-        <main className="flex-1 max-w-[1700px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 pb-28">
+        <main className="flex-1 max-w-[1700px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 pb-28 print:p-0 print:m-0 print:max-w-none print:pb-0">
           {children}
         </main>
       </div>
