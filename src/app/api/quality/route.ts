@@ -1,25 +1,28 @@
 import { NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabaseServer';
+import { supabaseServer, createUserSupabaseClient } from '@/lib/supabaseServer';
 
 export const dynamic = 'force-dynamic';
 
 async function authenticateRequest(req: Request) {
   const authHeader = req.headers.get('authorization');
   if (!authHeader) {
-    return { authenticated: false, error: 'Token de autenticação ausente', status: 401 };
+    return { authenticated: false, error: 'Token de autenticação ausente', status: 401, token: '', userDb: supabaseServer };
   }
 
   const token = authHeader.replace(/^Bearer\s+/i, '').trim();
   if (!token) {
-    return { authenticated: false, error: 'Formato de token inválido', status: 401 };
+    return { authenticated: false, error: 'Formato de token inválido', status: 401, token: '', userDb: supabaseServer };
   }
 
   const { data: { user }, error } = await supabaseServer.auth.getUser(token);
   if (error || !user) {
-    return { authenticated: false, error: 'Sessão inválida ou expirada', status: 401 };
+    return { authenticated: false, error: 'Sessão inválida ou expirada', status: 401, token: '', userDb: supabaseServer };
   }
 
-  const { data: profile } = await supabaseServer
+  // Cliente autenticado com a identidade (JWT) do usuário para respeitar RLS e triggers
+  const userDb = createUserSupabaseClient(token);
+
+  const { data: profile } = await userDb
     .from('profiles')
     .select('id, email, full_name, role')
     .eq('id', user.id)
@@ -28,6 +31,8 @@ async function authenticateRequest(req: Request) {
   return {
     authenticated: true,
     user,
+    token,
+    userDb,
     profile: profile || {
       id: user.id,
       email: user.email || '',
@@ -44,12 +49,14 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: false, error: auth.error }, { status: auth.status || 401 });
     }
 
+    const { userDb } = auth;
+
     const fetchSupabaseData = Promise.all([
-      supabaseServer.from('customers').select('*').order('name', { ascending: true }),
-      supabaseServer.from('defects').select('*').order('name', { ascending: true }),
-      supabaseServer.from('complaints').select('*').order('date', { ascending: false }),
-      supabaseServer.from('concessions').select('*').order('date', { ascending: false }),
-      supabaseServer.from('quality_settings').select('*').eq('id', 'default').maybeSingle()
+      userDb.from('customers').select('*').order('name', { ascending: true }),
+      userDb.from('defects').select('*').order('name', { ascending: true }),
+      userDb.from('complaints').select('*').order('date', { ascending: false }),
+      userDb.from('concessions').select('*').order('date', { ascending: false }),
+      userDb.from('quality_settings').select('*').eq('id', 'default').maybeSingle()
     ]);
 
     const timeoutPromise = new Promise<never>((_, reject) =>
@@ -176,6 +183,7 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { action, payload } = body;
+    const { userDb } = auth;
 
     // Ações de alteração de dados exigem papel de editor ou admin
     if (!canEdit) {
@@ -187,7 +195,7 @@ export async function POST(req: Request) {
 
     switch (action) {
       case 'saveCustomer': {
-        const { error } = await supabaseServer.from('customers').upsert({
+        const { error } = await userDb.from('customers').upsert({
           id: payload.id,
           name: payload.name,
           code: payload.code,
@@ -205,7 +213,7 @@ export async function POST(req: Request) {
       }
 
       case 'saveDefect': {
-        const { error } = await supabaseServer.from('defects').upsert({
+        const { error } = await userDb.from('defects').upsert({
           id: payload.id,
           name: payload.name,
           category: payload.category,
@@ -219,7 +227,7 @@ export async function POST(req: Request) {
       }
 
       case 'saveComplaint': {
-        const { error } = await supabaseServer.from('complaints').upsert({
+        const { error } = await userDb.from('complaints').upsert({
           id: payload.id,
           code: payload.code,
           customer_id: payload.customerId,
@@ -250,7 +258,7 @@ export async function POST(req: Request) {
         // Grava o autor real a partir da sessão autenticada, nunca de texto arbitrário do cliente
         const authorName = auth.profile?.full_name || auth.user?.email || 'Colaborador Qualidade';
 
-        const { error } = await supabaseServer.from('concessions').upsert({
+        const { error } = await userDb.from('concessions').upsert({
           id: payload.id,
           code: payload.code,
           customer_id: payload.customerId,
@@ -280,7 +288,7 @@ export async function POST(req: Request) {
 
       case 'updateCustomerTolerance': {
         const { customerId, toleranceRatings, overallToleranceScore } = payload;
-        const { error } = await supabaseServer.from('customers').update({
+        const { error } = await userDb.from('customers').update({
           tolerance_ratings: toleranceRatings,
           overall_tolerance_score: overallToleranceScore,
           updated_at: new Date().toISOString()
@@ -299,7 +307,7 @@ export async function POST(req: Request) {
         }
 
         const { sackWeightGrams, costPerKg } = payload;
-        const { error } = await supabaseServer.from('quality_settings').upsert({
+        const { error } = await userDb.from('quality_settings').upsert({
           id: 'default',
           sack_weight_grams: Number(sackWeightGrams) || 77.73,
           cost_per_kg: Number(costPerKg) || 1.50,
@@ -322,7 +330,7 @@ export async function POST(req: Request) {
         if (!id) {
           return NextResponse.json({ success: false, error: 'ID da concessão não informado' }, { status: 400 });
         }
-        const { error } = await supabaseServer.from('concessions').delete().eq('id', id);
+        const { error } = await userDb.from('concessions').delete().eq('id', id);
         if (error) throw error;
         return NextResponse.json({ success: true, id });
       }
@@ -339,7 +347,7 @@ export async function POST(req: Request) {
         if (!id) {
           return NextResponse.json({ success: false, error: 'ID da reclamação não informado' }, { status: 400 });
         }
-        const { error } = await supabaseServer.from('complaints').delete().eq('id', id);
+        const { error } = await userDb.from('complaints').delete().eq('id', id);
         if (error) throw error;
         return NextResponse.json({ success: true, id });
       }
