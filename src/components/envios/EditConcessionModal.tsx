@@ -24,6 +24,7 @@ import { PhotoUploadCamera } from '@/components/common/PhotoUploadCamera';
 import { SearchableCustomerSelect } from '@/components/common/SearchableCustomerSelect';
 import { SearchableDefectSelect } from '@/components/common/SearchableDefectSelect';
 import { BaleListInput } from '@/components/common/BaleListInput';
+import { useAuth } from '@/context/AuthContext';
 
 interface Props {
   isOpen: boolean;
@@ -33,6 +34,7 @@ interface Props {
 
 export const EditConcessionModal: React.FC<Props> = ({ isOpen, onClose, concession }) => {
   const { customers, defects, updateConcession, evaluateRisk, settings } = useQuality();
+  const { user, profile } = useAuth();
 
   const [customerId, setCustomerId] = useState('');
   const [date, setDate] = useState('');
@@ -44,7 +46,6 @@ export const EditConcessionModal: React.FC<Props> = ({ isOpen, onClose, concessi
   const [severity, setSeverity] = useState<DefectSeverity | ''>('');
   const [customerFeedbackStatus, setCustomerFeedbackStatus] = useState<ConcessionShipment['customerFeedbackStatus']>('em_transito');
   const [technicalNotes, setTechnicalNotes] = useState('');
-  const [approvedBy, setApprovedBy] = useState('');
   const [photos, setPhotos] = useState<ComplaintPhoto[]>([]);
 
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
@@ -65,7 +66,6 @@ export const EditConcessionModal: React.FC<Props> = ({ isOpen, onClose, concessi
       setSeverity(concession.severity || 'leve');
       setCustomerFeedbackStatus(concession.customerFeedbackStatus || 'em_transito');
       setTechnicalNotes(concession.technicalNotes || '');
-      setApprovedBy(concession.approvedBy || 'Mauricio Grigol (Qualidade)');
       setPhotos(concession.photos || []);
     }
   }, [isOpen, concession]);
@@ -108,7 +108,7 @@ export const EditConcessionModal: React.FC<Props> = ({ isOpen, onClose, concessi
       customerFeedbackStatus,
       unitSavedValue: (settings.sackWeightGrams / 1000) * settings.costPerKg,
       technicalNotes: technicalNotes.trim() || `Envio autorizado com desvio de ${selectedDefect?.name}.`,
-      approvedBy,
+      approvedBy: concession.approvedBy || (profile?.fullName ? `${profile.fullName} (${profile.department || 'Qualidade'})` : (user?.email || 'Colaborador Qualidade')),
       photos
     });
 
@@ -335,17 +335,25 @@ export const EditConcessionModal: React.FC<Props> = ({ isOpen, onClose, concessi
             />
           </div>
 
-          {/* Approved By */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Responsável pela Liberação
-            </label>
-            <input
-              type="text"
-              value={approvedBy}
-              onChange={e => setApprovedBy(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-slate-100 focus:outline-none focus:border-cyan-500/50 text-xs"
-            />
+          {/* Approved By - Autoria Auditavel ISO 9001 */}
+          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-semibold text-slate-300">
+                Responsável pela Liberação
+              </label>
+              <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-semibold">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                ISO 9001 (Auditoria)
+              </span>
+            </div>
+            <div className="mt-1.5 flex items-center justify-between">
+              <span className="text-xs font-medium text-slate-100">
+                {concession.approvedBy || (profile?.fullName ? `${profile.fullName} (${profile.department || 'Qualidade'})` : (user?.email || 'Colaborador Qualidade'))}
+              </span>
+              <span className="text-[11px] text-slate-500 font-mono">
+                Gravado pelo banco via login
+              </span>
+            </div>
           </div>
 
           {/* Photo Evidence Component */}

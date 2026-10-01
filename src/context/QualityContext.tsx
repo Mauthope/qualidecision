@@ -378,7 +378,9 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const baleList = data.bales || [];
     const resolvedLotOrBale = data.lotNumber?.trim() || (baleList.length > 0 ? (baleList.length === 1 ? `Fardo #${baleList[0]}` : `Fardos ${baleList.join(', ')}`) : 'Fardo N/I');
 
-    const approverName = data.approvedBy || (profile?.fullName ? `${profile.fullName} (${profile.department || 'Qualidade'})` : 'Mauricio Grigol (Qualidade)');
+    const approverName = profile?.fullName 
+      ? `${profile.fullName} (${profile.department || 'Qualidade'})` 
+      : (user?.email ? `${user.email} (Qualidade)` : 'Colaborador Qualidade');
 
     const newConcession: ConcessionShipment = {
       id: `env-${Date.now()}`,
