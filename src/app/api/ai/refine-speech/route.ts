@@ -58,78 +58,57 @@ function cleanSpeechLocally(raw: string): string {
     'aurora': 'Aurora',
     'caramuru': 'Caramuru',
     'cargill': 'Cargill',
-    'ambev': 'Ambev',
-    'lar': 'Lar',
     'c.vale': 'C.Vale',
-    'big bag': 'Big Bag',
-    'bigbag': 'Big Bag',
-    'sacaria': 'sacaria',
-    'erp': 'ERP',
-    'sac': 'SAC'
+    'cvale': 'C.Vale',
+    'lar': 'Lar',
+    'ambev': 'Ambev',
+    'jbs': 'JBS',
+    'brf': 'BRF',
+    'seara': 'Seara',
+    'frimesa': 'Frimesa'
   };
 
-  Object.entries(knownEntities).forEach(([lower, proper]) => {
-    const reg = new RegExp(`\\b${lower.replace('.', '\\.')}\\b`, 'gi');
-    text = text.replace(reg, proper);
-  });
-
-  // 5. Sintetizador de Intenções para perguntas industriais naturais
   const lower = text.toLowerCase();
 
-  // Caso: Reclamações de cliente (Ex: "reclamações do cliente alisul" ou "reclamações alisul")
-  const reclamacoesMatch = text.match(/(?:quais\s+(?:as|são\s+as)\s+)?reclamações\s+(?:do\s+cliente\s+|da\s+|de\s+|para\s+o\s+cliente\s+|para\s+a\s+|do\s+)?([A-Za-zÀ-ÿ\.\s]+)/i);
-  if (reclamacoesMatch && (lower.includes('reclamaç') || lower.includes('reclamac'))) {
-    const cliente = reclamacoesMatch[1].trim().replace(/[?\.\,!]+$/, '').trim();
-    if (cliente) {
-      const properClient = knownEntities[cliente.toLowerCase()] || (cliente.charAt(0).toUpperCase() + cliente.slice(1));
-      return `Quais são as reclamações registradas do cliente ${properClient}?`;
+  // Caso: Reclamações
+  if (lower.includes('reclamac') || lower.includes('ocorrencia') || lower.includes('queixa')) {
+    for (const [key, properName] of Object.entries(knownEntities)) {
+      if (lower.includes(key)) {
+        return `Quais são as reclamações registradas do cliente ${properName}?`;
+      }
+    }
+    return 'Quais são as principais reclamações registradas no sistema?';
+  }
+
+  // Caso: Fotos de defeito
+  if (lower.includes('foto') || lower.includes('imagem') || lower.includes('amostra')) {
+    for (const [key, properName] of Object.entries(knownEntities)) {
+      if (lower.includes(key)) {
+        return `Existem fotos de ocorrências registradas para ${properName}?`;
+      }
+    }
+    return 'Existem fotos de evidência registradas para este defeito?';
+  }
+
+  // Caso: Posso enviar lote / concessão
+  if (lower.includes('posso mandar') || lower.includes('posso enviar') || lower.includes('concessao') || lower.includes('liberar')) {
+    for (const [key, properName] of Object.entries(knownEntities)) {
+      if (lower.includes(key)) {
+        return `Posso enviar lote com desvio para ${properName}?`;
+      }
     }
   }
 
-  // Caso: Fotos de cliente ou fotos de defeito
-  if (lower.startsWith('fotos') || lower.startsWith('foto') || lower.includes('mostrar foto') || lower.includes('ver foto') || lower.includes('tem foto')) {
-    let cleanSub = text.replace(/^(?:existem\s+|tem\s+|mostrar\s+|ver\s+)?fotos?\s+(?:de\s+|do\s+|da\s+|dos\s+|defeito\s+de\s+|defeito\s+)?(?:cliente\s+)?/i, '').trim();
-    cleanSub = cleanSub.replace(/[?\.\,!]+$/, '').trim();
-    if (cleanSub) {
-      const properSub = knownEntities[cleanSub.toLowerCase()] || (cleanSub.charAt(0).toUpperCase() + cleanSub.slice(1));
-      return `Existem fotos de ocorrências registradas para ${properSub}?`;
-    }
-    return `Existem fotos registradas para essa ocorrência?`;
-  }
-
-  // Caso: Envio de lote / Concessão
-  if (lower.includes('posso enviar') || lower.includes('posso mandar') || lower.includes('liberar lote')) {
-    let clean = text.replace(/posso\s+mandar/i, 'Posso enviar');
-    Object.values(knownEntities).forEach(ent => {
-      const regex = new RegExp(`(?<!para\\s+(?:a|o)?\\s*)\\b${ent}\\b`, 'gi');
-      clean = clean.replace(regex, `para a ${ent}`);
-    });
-    clean = clean.replace(/\s+/g, ' ').trim();
-    if (!clean.endsWith('?')) clean += '?';
-    return clean.charAt(0).toUpperCase() + clean.slice(1);
-  }
-
-  // Caso: Perfil / Tolerância de cliente
-  if (lower.includes('perfil') || lower.includes('tolerância') || lower.includes('tolerancia')) {
-    const match = text.match(/(?:perfil|tolerância|tolerancia)(?:\s+de\s+tolerância)?(?:\s+do\s+cliente|\s+da|\s+de)?\s+([A-Za-zÀ-ÿ\.\s]+)/i);
-    if (match) {
-      const client = match[1].trim().replace(/[?\.\,!]+$/, '');
-      const properClient = knownEntities[client.toLowerCase()] || (client.charAt(0).toUpperCase() + client.slice(1));
-      return `Qual é o perfil de tolerância e histórico do cliente ${properClient}?`;
+  // Caso: Perfil de tolerância
+  if (lower.includes('perfil') || lower.includes('tolerancia')) {
+    for (const [key, properName] of Object.entries(knownEntities)) {
+      if (lower.includes(key)) {
+        return `Qual é o perfil de tolerância e histórico do cliente ${properName}?`;
+      }
     }
   }
 
-  // Caso: Cuidados operacionais
-  if (lower.includes('cuidados') || lower.includes('cuidado')) {
-    const match = text.match(/cuidados?\s+(?:para\s+(?:o\s+cliente\s+|a\s+)?|no\s+|na\s+)?([A-Za-zÀ-ÿ\.\s]+)/i);
-    if (match) {
-      const target = match[1].trim().replace(/[?\.\,!]+$/, '');
-      const properTarget = knownEntities[target.toLowerCase()] || (target.charAt(0).toUpperCase() + target.slice(1));
-      return `Quais são os cuidados operacionais para ${properTarget}?`;
-    }
-  }
-
-  // Fallback padrão: capitalizar e pontuar adequadamente
+  // Fallback: capitalizar e pontuar
   text = text.charAt(0).toUpperCase() + text.slice(1);
   if (/^(quais|qual|como|posso|quanto|quantos|onde|tem|existe|devo)/i.test(text) && !text.endsWith('?')) {
     text += '?';
@@ -138,74 +117,20 @@ function cleanSpeechLocally(raw: string): string {
   return text.trim();
 }
 
+/**
+ * Endpoint de refinamento de voz 100% local.
+ * Desconectado de IAs externas não homologadas (Gemini suspenso conforme PSI).
+ */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
     const rawText = (body.text || '').trim();
-    const clientApiKey = body.apiKey;
-    const apiKey = clientApiKey || process.env.GEMINI_API_KEY;
 
     if (!rawText) {
       return NextResponse.json({ refinedText: '' });
     }
 
     const localCleaned = cleanSpeechLocally(rawText);
-
-    // Se não tiver chave de API disponível, retorna o texto limpo e interpretado localmente
-    if (!apiKey) {
-      return NextResponse.json({ refinedText: localCleaned, source: 'local_cleaner' });
-    }
-
-    // Se tiver chave do Gemini, tenta os modelos em ordem de disponibilidade
-    const candidateModels = [
-      'gemini-1.5-flash-latest',
-      'gemini-2.0-flash',
-      'gemini-1.5-flash',
-      'gemini-1.5-pro-latest'
-    ];
-
-    const prompt = `Você é o assistente sênior de inteligência operacional e qualidade da Rafitec (indústria de embalagens, sacarias e Big Bags).
-O operador ou gestor falou por microfone no chão de fábrica: "${rawText}".
-
-Sua missão é interpretar a intenção da fala e convertê-la em uma pergunta/consulta técnica clara, formal, direta e perfeita para ser enviada ao assistente de qualidade.
-Regras fundamentais:
-1. Elimine todas as repetições, gaguejos ou trechos duplicados gerados pelo motor de reconhecimento de voz (ex: "recalamações recalamações alisul" -> "Quais são as reclamações registradas do cliente Alisul?").
-2. Identifique o cliente industrial (ex: Alisul, Copacol, Bunge, Aurora, Caramuru, Cargill, C.Vale, Lar, Ambev) e o assunto (reclamações, tolerância, fotos, envios, solda, vinco, refugo).
-3. Formate como uma frase ou pergunta técnica bem escrita em português brasileiro.
-4. Responda ESTRITAMENTE com a frase/pergunta final, sem aspas, explicações, saudações ou notas.`;
-
-    for (const model of candidateModels) {
-      try {
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
-        const geminiRes = await fetch(geminiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': apiKey
-          },
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: 0.1,
-              maxOutputTokens: 120
-            }
-          }),
-          signal: AbortSignal.timeout(3000)
-        });
-
-        if (geminiRes.ok) {
-          const data = await geminiRes.json();
-          const geminiText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-          if (geminiText) {
-            const cleanResult = geminiText.replace(/^["'`]+|["'`]+$/g, '').trim();
-            return NextResponse.json({ refinedText: cleanResult, source: `gemini_${model}` });
-          }
-        }
-      } catch (err) {
-        // Tenta o próximo modelo
-      }
-    }
-
     return NextResponse.json({ refinedText: localCleaned, source: 'local_cleaner' });
   } catch (err: any) {
     console.error('Erro na rota refine-speech:', err);

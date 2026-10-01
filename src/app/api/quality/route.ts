@@ -1,11 +1,49 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
-import { DEFAULT_CUSTOMERS, DEFAULT_DEFECTS, DEFAULT_COMPLAINTS, DEFAULT_CONCESSIONS } from '@/data/defaultQualityData';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+async function authenticateRequest(req: Request) {
+  const authHeader = req.headers.get('authorization');
+  if (!authHeader) {
+    return { authenticated: false, error: 'Token de autenticação ausente', status: 401 };
+  }
+
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+  if (!token) {
+    return { authenticated: false, error: 'Formato de token inválido', status: 401 };
+  }
+
+  const { data: { user }, error } = await supabaseServer.auth.getUser(token);
+  if (error || !user) {
+    return { authenticated: false, error: 'Sessão inválida ou expirada', status: 401 };
+  }
+
+  const { data: profile } = await supabaseServer
+    .from('profiles')
+    .select('id, email, full_name, role')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  return {
+    authenticated: true,
+    user,
+    profile: profile || {
+      id: user.id,
+      email: user.email || '',
+      full_name: (user.user_metadata as any)?.full_name || user.email?.split('@')[0] || 'Usuário',
+      role: 'visualizador'
+    }
+  };
+}
+
+export async function GET(req: Request) {
   try {
+    const auth = await authenticateRequest(req);
+    if (!auth.authenticated) {
+      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status || 401 });
+    }
+
     const fetchSupabaseData = Promise.all([
       supabaseServer.from('customers').select('*').order('name', { ascending: true }),
       supabaseServer.from('defects').select('*').order('name', { ascending: true }),
@@ -15,89 +53,81 @@ export async function GET() {
     ]);
 
     const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Supabase request timeout')), 6000)
+      setTimeout(() => reject(new Error('Supabase request timeout')), 8000)
     );
 
     const [custRes, defRes, compRes, concRes, settingsRes] = await Promise.race([fetchSupabaseData, timeoutPromise]);
 
-    const customers = (custRes.data && custRes.data.length > 0)
-      ? custRes.data.map(c => ({
-          id: c.id,
-          name: c.name,
-          code: c.code,
-          segment: c.segment || 'Sacaria e Big Bags',
-          location: c.location || c.city_state || undefined,
-          cityState: c.city_state || c.location || undefined,
-          toleranceRatings: c.tolerance_ratings || {},
-          overallToleranceScore: Number(c.overall_tolerance_score) || 70,
-          avatarColor: c.avatar_color || 'from-cyan-500 to-blue-600',
-          createdAt: c.created_at ? new Date(c.created_at).toISOString().split('T')[0] : '2026-01-01'
-        }))
-      : DEFAULT_CUSTOMERS;
+    const customers = (custRes.data || []).map(c => ({
+      id: c.id,
+      name: c.name,
+      code: c.code,
+      segment: c.segment || 'Sacaria e Big Bags',
+      location: c.location || c.city_state || undefined,
+      cityState: c.city_state || c.location || undefined,
+      toleranceRatings: c.tolerance_ratings || {},
+      overallToleranceScore: Number(c.overall_tolerance_score) || 70,
+      avatarColor: c.avatar_color || 'from-cyan-500 to-blue-600',
+      createdAt: c.created_at ? new Date(c.created_at).toISOString().split('T')[0] : '2026-01-01'
+    }));
 
-    const defects = (defRes.data && defRes.data.length > 0)
-      ? defRes.data.map(d => ({
-          id: d.id,
-          name: d.name,
-          category: d.category,
-          description: d.description || '',
-          defaultUnitLoss: Number(d.default_unit_loss) || 15,
-          color: d.color || '#06b6d4'
-        }))
-      : DEFAULT_DEFECTS;
+    const defects = (defRes.data || []).map(d => ({
+      id: d.id,
+      name: d.name,
+      category: d.category,
+      description: d.description || '',
+      defaultUnitLoss: Number(d.default_unit_loss) || 15,
+      color: d.color || '#06b6d4'
+    }));
 
-    const complaints = (compRes.data && compRes.data.length > 0)
-      ? compRes.data.map(c => ({
-          id: c.id,
-          code: c.code,
-          customerId: c.customer_id,
-          customerName: c.customer_name,
-          customerNumber: c.customer_number || undefined,
-          date: c.date,
-          lotNumber: c.lot_number,
-          opNumber: c.op_number || (c.lot_number ? c.lot_number.replace(/^OP\s*/i, '') : undefined),
-          bales: Array.isArray(c.bales) ? c.bales : [],
-          defectTypeId: c.defect_type_id || '',
-          defectTypeName: c.defect_type_name,
-          quantityAffected: Number(c.quantity_affected) || 0,
-          severity: c.severity || 'moderada',
-          description: c.description || '',
-          rootCause: c.root_cause || '',
-          correctiveAction: c.corrective_action || '',
-          status: c.status || 'aberta',
-          origin: c.origin || 'sac_manual',
-          costImpact: Number(c.cost_impact) || 0,
-          photos: Array.isArray(c.photos) ? c.photos : []
-        }))
-      : DEFAULT_COMPLAINTS.map(c => ({ ...c, photos: [] }));
+    const complaints = (compRes.data || []).map(c => ({
+      id: c.id,
+      code: c.code,
+      customerId: c.customer_id,
+      customerName: c.customer_name,
+      customerNumber: c.customer_number || undefined,
+      date: c.date,
+      lotNumber: c.lot_number,
+      opNumber: c.op_number || (c.lot_number ? c.lot_number.replace(/^OP\s*/i, '') : undefined),
+      bales: Array.isArray(c.bales) ? c.bales : [],
+      defectTypeId: c.defect_type_id || '',
+      defectTypeName: c.defect_type_name,
+      quantityAffected: Number(c.quantity_affected) || 0,
+      severity: c.severity || 'moderada',
+      description: c.description || '',
+      rootCause: c.root_cause || '',
+      correctiveAction: c.corrective_action || '',
+      status: c.status || 'aberta',
+      origin: c.origin || 'sac_manual',
+      costImpact: Number(c.cost_impact) || 0,
+      photos: Array.isArray(c.photos) ? c.photos : []
+    }));
 
-    const concessions = (concRes.data && concRes.data.length > 0)
-      ? concRes.data
-          .filter(c => !['conc-001', 'conc-002-braskem', 'conc-003', 'conc-004'].includes(c.id))
-          .map(c => ({
-          id: c.id,
-          code: c.code,
-          customerId: c.customer_id,
-          customerName: c.customer_name,
-          customerNumber: c.customer_number || undefined,
-          opNumber: c.op_number || undefined,
-          date: c.date,
-          lotNumber: c.lot_number,
-          bales: Array.isArray(c.bales) ? c.bales : [],
-          productName: c.product_name || 'Sacaria',
-          defectTypeId: c.defect_type_id || '',
-          defectTypeName: c.defect_type_name,
-          quantity: Number(c.quantity) || 0,
-          severity: c.severity || 'leve',
-          unitSavedValue: Number(c.unit_saved_value) || 0.116595,
-          totalSavedValue: Number(c.total_saved_value) || 0,
-          riskScore: c.risk_score || 'baixo',
-          customerFeedbackStatus: c.customer_feedback_status || 'em_transito',
-          technicalNotes: c.technical_notes || '',
-          approvedBy: c.approved_by || 'Mauricio Grigol (Qualidade)',
-          photos: Array.isArray(c.photos) ? c.photos : []
-        }))
-      : DEFAULT_CONCESSIONS.map(c => ({ ...c, photos: [] }));
+    const concessions = (concRes.data || [])
+      .filter(c => !['conc-001', 'conc-002-braskem', 'conc-003', 'conc-004'].includes(c.id))
+      .map(c => ({
+        id: c.id,
+        code: c.code,
+        customerId: c.customer_id,
+        customerName: c.customer_name,
+        customerNumber: c.customer_number || undefined,
+        opNumber: c.op_number || undefined,
+        date: c.date,
+        lotNumber: c.lot_number,
+        bales: Array.isArray(c.bales) ? c.bales : [],
+        productName: c.product_name || 'Sacaria',
+        defectTypeId: c.defect_type_id || '',
+        defectTypeName: c.defect_type_name,
+        quantity: Number(c.quantity) || 0,
+        severity: c.severity || 'leve',
+        unitSavedValue: Number(c.unit_saved_value) || 0.116595,
+        totalSavedValue: Number(c.total_saved_value) || 0,
+        riskScore: c.risk_score || 'baixo',
+        customerFeedbackStatus: c.customer_feedback_status || 'em_transito',
+        technicalNotes: c.technical_notes || '',
+        approvedBy: c.approved_by || 'Colaborador Qualidade',
+        photos: Array.isArray(c.photos) ? c.photos : []
+      }));
 
     const settings = (settingsRes && settingsRes.data)
       ? {
@@ -121,32 +151,39 @@ export async function GET() {
       }
     }, {
       headers: {
-        'Cache-Control': 'public, s-maxage=20, stale-while-revalidate=120'
+        'Cache-Control': 'private, no-cache, no-store, must-revalidate'
       }
     });
   } catch (error: unknown) {
     console.error('Erro na API /api/quality:', error);
     return NextResponse.json({
       success: false,
-      error: error instanceof Error ? error.message : 'Erro interno do servidor',
-      data: {
-        customers: DEFAULT_CUSTOMERS,
-        defects: DEFAULT_DEFECTS,
-        complaints: DEFAULT_COMPLAINTS.map(c => ({ ...c, photos: [] })),
-        concessions: DEFAULT_CONCESSIONS.map(c => ({ ...c, photos: [] })),
-        settings: {
-          sackWeightGrams: 77.73,
-          costPerKg: 1.50
-        }
-      }
-    });
+      error: error instanceof Error ? error.message : 'Erro interno do servidor'
+    }, { status: 500 });
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const body = await request.json();
+    const auth = await authenticateRequest(req);
+    if (!auth.authenticated) {
+      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status || 401 });
+    }
+
+    const userRole = auth.profile?.role || 'visualizador';
+    const canEdit = ['editor', 'admin'].includes(userRole);
+    const isAdmin = userRole === 'admin';
+
+    const body = await req.json();
     const { action, payload } = body;
+
+    // Ações de alteração de dados exigem papel de editor ou admin
+    if (!canEdit) {
+      return NextResponse.json({
+        success: false,
+        error: 'Acesso negado: seu perfil não tem permissão para cadastrar ou modificar registros.'
+      }, { status: 403 });
+    }
 
     switch (action) {
       case 'saveCustomer': {
@@ -210,6 +247,9 @@ export async function POST(request: Request) {
       }
 
       case 'saveConcession': {
+        // Grava o autor real a partir da sessão autenticada, nunca de texto arbitrário do cliente
+        const authorName = auth.profile?.full_name || auth.user?.email || 'Colaborador Qualidade';
+
         const { error } = await supabaseServer.from('concessions').upsert({
           id: payload.id,
           code: payload.code,
@@ -230,12 +270,12 @@ export async function POST(request: Request) {
           risk_score: payload.riskScore,
           customer_feedback_status: payload.customerFeedbackStatus,
           technical_notes: payload.technicalNotes,
-          approved_by: payload.approvedBy,
+          approved_by: authorName,
           photos: payload.photos || []
         }, { onConflict: 'id' });
 
         if (error) throw error;
-        return NextResponse.json({ success: true, item: payload });
+        return NextResponse.json({ success: true, item: { ...payload, approvedBy: authorName } });
       }
 
       case 'updateCustomerTolerance': {
@@ -251,6 +291,13 @@ export async function POST(request: Request) {
       }
 
       case 'saveSettings': {
+        if (!isAdmin) {
+          return NextResponse.json({
+            success: false,
+            error: 'Apenas administradores podem calibrar fórmulas industriais e custos de refugo.'
+          }, { status: 403 });
+        }
+
         const { sackWeightGrams, costPerKg } = payload;
         const { error } = await supabaseServer.from('quality_settings').upsert({
           id: 'default',
@@ -264,6 +311,13 @@ export async function POST(request: Request) {
       }
 
       case 'deleteConcession': {
+        if (!isAdmin) {
+          return NextResponse.json({
+            success: false,
+            error: 'Apenas administradores podem excluir concessões registradas.'
+          }, { status: 403 });
+        }
+
         const { id } = payload;
         if (!id) {
           return NextResponse.json({ success: false, error: 'ID da concessão não informado' }, { status: 400 });
@@ -274,6 +328,13 @@ export async function POST(request: Request) {
       }
 
       case 'deleteComplaint': {
+        if (!isAdmin) {
+          return NextResponse.json({
+            success: false,
+            error: 'Apenas administradores podem excluir reclamações registradas.'
+          }, { status: 403 });
+        }
+
         const { id } = payload;
         if (!id) {
           return NextResponse.json({ success: false, error: 'ID da reclamação não informado' }, { status: 400 });

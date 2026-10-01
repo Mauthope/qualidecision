@@ -91,11 +91,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Sensei (Chão de Fábrica)',
       href: '/chao-de-fabrica',
       icon: <Factory className="w-5 h-5 shrink-0" />
-    },
-    {
-      label: 'Plano de Segurança',
-      href: '/seguranca',
-      icon: <ShieldCheck className="w-5 h-5 shrink-0" />
     }
   ];
 

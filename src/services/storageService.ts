@@ -228,23 +228,24 @@ export const storageService = {
 
   getGeminiApiKey(): string {
     if (!isBrowser) return '';
-    try {
-      return localStorage.getItem('qualitrack_gemini_api_key') || '';
-    } catch {
-      return '';
-    }
+    return '';
   },
 
-  saveGeminiApiKey(key: string): void {
+  saveGeminiApiKey(_key: string): void {
+    // Desativado conforme diretriz de SecOps: nenhuma chave de IA é salva no navegador
+  },
+
+  clearAll(): void {
     if (!isBrowser) return;
     try {
-      if (key && key.trim()) {
-        localStorage.setItem('qualitrack_gemini_api_key', key.trim());
-      } else {
-        localStorage.removeItem('qualitrack_gemini_api_key');
-      }
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('qualitrack_') || key.startsWith('perfilcliente_')) {
+          localStorage.removeItem(key);
+        }
+      });
+      sessionStorage.clear();
     } catch (e) {
-      console.warn('Erro ao salvar chave da API do Gemini:', e);
+      console.warn('Erro ao limpar cache local no logout:', e);
     }
   }
 };

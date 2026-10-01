@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { UserProfile, UserRole } from '@/types';
+import { storageService } from '@/services/storageService';
 
 interface AuthContextType {
   user: User | null;
@@ -118,6 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } else {
             setUser(null);
             setProfile(null);
+            storageService.clearAll();
           }
         }
       } catch (err) {
@@ -142,6 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setUser(null);
         setProfile(null);
+        storageService.clearAll();
       }
       setIsLoading(false);
     });
@@ -209,8 +212,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     }
 
-    if (password.length < 6) {
-      return { success: false, error: 'A senha de segurança deve conter no mínimo 6 caracteres.' };
+    if (password.length < 12) {
+      return { success: false, error: 'A senha de segurança corporativa deve conter no mínimo 12 caracteres.' };
     }
 
     try {
@@ -287,8 +290,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updatePassword = async (newPassword: string): Promise<{ success: boolean; error?: string }> => {
-    if (!newPassword || newPassword.length < 6) {
-      return { success: false, error: 'A nova senha deve ter no mínimo 6 caracteres.' };
+    if (!newPassword || newPassword.length < 12) {
+      return { success: false, error: 'A nova senha deve ter no mínimo 12 caracteres conforme política de segurança corporativa.' };
     }
 
     try {
@@ -309,12 +312,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
+      storageService.clearAll();
       await supabase.auth.signOut();
     } catch (err) {
       console.warn('Erro ao encerrar sessão:', err);
     } finally {
       setUser(null);
       setProfile(null);
+      storageService.clearAll();
       if (typeof window !== 'undefined') {
         window.location.href = '/login';
       }

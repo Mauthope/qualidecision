@@ -213,8 +213,9 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // 1. Hidratação Instantânea do Cache Local (0ms - executada imediatamente no browser)
+  // 1. Hidratação do Cache Local apenas para usuário autenticado
   useEffect(() => {
+    if (!user) return;
     try {
       const cCust = storageService.getCustomers();
       const cDef = storageService.getDefects();
@@ -234,7 +235,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } catch (e) {
       console.warn('Erro ao hidratar cache instantâneo:', e);
     }
-  }, []);
+  }, [user]);
 
   const showToast = useCallback((message: string, type: 'success' | 'info' | 'warning' | 'error' = 'info') => {
     const id = `toast-${Date.now()}-${Math.random()}`;
@@ -308,9 +309,17 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   useEffect(() => {
-    // Sincroniza dados do Supabase na inicialização
-    loadData();
-  }, [loadData]);
+    // Sincroniza dados do Supabase apenas quando o usuário estiver autenticado
+    if (user) {
+      loadData();
+    } else {
+      setCustomers([]);
+      setDefects([]);
+      setComplaints([]);
+      setConcessions([]);
+      setIsLoaded(false);
+    }
+  }, [user, loadData]);
 
   // Derived KPIs memoizados para evitar renderizações pesadas
   const stats = useMemo(() => {
