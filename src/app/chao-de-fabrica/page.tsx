@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useQuality } from '@/context/QualityContext';
 import { storageService } from '@/services/storageService';
@@ -41,31 +42,32 @@ const INITIAL_MESSAGE: AiChatMessage = {
   text: `Olá! Sou o **Sensei**, seu especialista em Qualidade e Prevenção Operacional no Chão de Fábrica da Rafitec (*Desenvolvido por Mauricio Grigol*).\n\n` +
     `Estou conectado em tempo real à base de dados para orientar operadores de máquinas, revisores, líderes de turno e inspetores sobre **cuidados operacionais de produção** (extrusão, tecelagem, laminação, impressão, corte, costura, solda valvulada e paletização) e **histórico de reclamações SAC** dos clientes.\n\n` +
     `**Como posso orientar sua linha hoje?**\n` +
-    `• Digite o nome de um cliente para ver a sequência cirúrgica de cuidados (Ex: *"Aurora"*, *"Copacol"*, *"Bunge"*, *"Alisul"*)\n` +
+    `• Digite o nome de qualquer cliente cadastrado para ver a sequência cirúrgica de cuidados com a sua ordem de produção\n` +
     `• Tire dúvidas sobre um tipo de defeito ou máquina (Ex: *"Como evitar problemas de linner ou solda?"* ou *"Cuidados no corte e refilamento"*)\n` +
     `• Consulte as reclamações mais frequentes registradas pelo SAC.`,
   timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
   suggestedPrompts: [
-    'Quais os cuidados para o cliente Aurora?',
-    'Quais os cuidados para a Copacol?',
-    'Quais os cuidados para a Bunge?',
-    'Defeitos mais reclamados no SAC'
+    'Quais os defeitos mais reclamados no SAC?',
+    'Cuidados para evitar problemas de costura e solda',
+    'Procedimento de qualidade na laminação',
+    'Como evitar contaminação na paletização?'
   ],
-  source: 'gemini'
+  source: 'local_engine'
 };
-
-const TOP_CLIENTS_QUICK = [
-  'Aurora',
-  'Copacol',
-  'Bunge',
-  'Alisul',
-  'JBS',
-  'Yara'
-];
 
 export default function ChaoDeFabricaPage() {
   const { user, signOut } = useAuth();
   const { customers, defects, complaints, concessions } = useQuality();
+
+  // Deriva dinamicamente os clientes cadastrados mais relevantes a partir do banco de dados (sem expor nomes no bundle)
+  const quickClients = useMemo(() => {
+    if (!customers || customers.length === 0) return [];
+    return customers
+      .slice()
+      .sort((a, b) => (b.totalOrdersEstimate || 0) - (a.totalOrdersEstimate || 0) || a.name.localeCompare(b.name))
+      .slice(0, 6)
+      .map(c => c.name.split(' ')[0] || c.name);
+  }, [customers]);
 
   const [messages, setMessages] = useState<AiChatMessage[]>(() => {
     if (typeof window !== 'undefined') {
@@ -151,8 +153,6 @@ export default function ChaoDeFabricaPage() {
     setIsTyping(true);
 
     try {
-      const localGeminiKey = storageService.getGeminiApiKey();
-
       // Complaints payload with photos preserved for evidence visualization
       const lightComplaints = complaints.map(c => ({
         id: c.id,
@@ -200,9 +200,16 @@ export default function ChaoDeFabricaPage() {
         }))
       }));
 
+      // Autenticação corporativa JWT
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           prompt: text,
           history: newHistory.slice(-6),
@@ -210,8 +217,7 @@ export default function ChaoDeFabricaPage() {
           defects,
           complaints: lightComplaints,
           concessions: lightConcessions,
-          mode: 'chao_de_fabrica',
-          apiKey: localGeminiKey || undefined
+          mode: 'chao_de_fabrica'
         })
       });
 
@@ -292,13 +298,17 @@ export default function ChaoDeFabricaPage() {
       }
 
       // Refinamento de áudio por IA: elimina repetições e gaguejos, aplicando pontuação e entidades corretas
-      const localKey = storageService.getGeminiApiKey();
+      const { data: { session: voiceSession } } = await supabase.auth.getSession();
+      const voiceToken = voiceSession?.access_token;
+
       const refineRes = await fetch('/api/ai/refine-speech', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(voiceToken ? { 'Authorization': `Bearer ${voiceToken}` } : {})
+        },
         body: JSON.stringify({
-          text: raw,
-          apiKey: localKey || undefined
+          text: raw
         })
       });
 
@@ -396,7 +406,7 @@ export default function ChaoDeFabricaPage() {
           Clientes Rápidos:
         </span>
         <div className="flex items-center gap-1.5 shrink-0">
-          {TOP_CLIENTS_QUICK.map(clientName => (
+          {quickClients.map(clientName => (
             <button
               key={clientName}
               type="button"

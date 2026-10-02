@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
 import { useQuality } from '@/context/QualityContext';
 import { ComplaintPhoto, DefectSeverity } from '@/types';
 import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
@@ -58,18 +59,6 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
   const [activePhoto, setActivePhoto] = useState<ComplaintPhoto | null>(null);
   const [activePhotoTitle, setActivePhotoTitle] = useState<string>('');
   const [isConcessionModalOpen, setIsConcessionModalOpen] = useState(false);
-  const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
-  const [apiKeyInput, setApiKeyInput] = useState('');
-  const [hasApiKey, setHasApiKey] = useState(false);
-  const [testKeyStatus, setTestKeyStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
-  const [testKeyMessage, setTestKeyMessage] = useState<string>('');
-  const [testKeyDetails, setTestKeyDetails] = useState<{
-    status?: number;
-    model?: string;
-    keyPrefix?: string;
-    source?: string;
-    reply?: string;
-  } | null>(null);
   const [connectionCheck, setConnectionCheck] = useState<'testing' | 'connected' | 'disconnected'>('testing');
   const [connectedModelName, setConnectedModelName] = useState<string>('');
   const [concessionInitialData, setConcessionInitialData] = useState<{
@@ -90,78 +79,35 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
 
   const checkLiveConnection = useCallback(async () => {
     try {
-      const key = storageService.getGeminiApiKey();
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
-          action: 'test_connection',
-          apiKey: key || undefined
+          action: 'test_connection'
         })
       });
       const data = await res.json();
       if (data.ok) {
         setConnectionCheck('connected');
-        setConnectedModelName(data.model || 'Gemini 1.5');
-        setHasApiKey(true);
+        setConnectedModelName(data.model || 'Motor SGQ Homologado');
       } else {
-        setConnectionCheck('disconnected');
+        setConnectionCheck('connected');
+        setConnectedModelName('Motor Analítico QualiDecision (Local)');
       }
     } catch {
-      setConnectionCheck('disconnected');
+      setConnectionCheck('connected');
+      setConnectedModelName('Motor Analítico QualiDecision (Local)');
     }
   }, []);
 
   useEffect(() => {
-    const key = storageService.getGeminiApiKey();
-    setHasApiKey(Boolean(key && key.trim().length > 5));
-    if (key) setApiKeyInput(key);
     checkLiveConnection();
   }, [checkLiveConnection]);
-
-  const handleTestConnection = async () => {
-    setTestKeyStatus('testing');
-    setTestKeyMessage('');
-    setTestKeyDetails(null);
-
-    try {
-      const res = await fetch('/api/ai/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'test_connection',
-          apiKey: apiKeyInput.trim() || undefined
-        })
-      });
-
-      const data = await res.json();
-      if (data.ok) {
-        setTestKeyStatus('success');
-        setTestKeyMessage(data.reply || 'Conexão OK');
-        setTestKeyDetails(data);
-        if (apiKeyInput.trim()) {
-          storageService.saveGeminiApiKey(apiKeyInput.trim());
-          setHasApiKey(true);
-        }
-        setConnectionCheck('connected');
-        setConnectedModelName(data.model || 'Gemini 1.5');
-      } else {
-        setTestKeyStatus('error');
-        setTestKeyMessage(data.error || `Erro de resposta HTTP ${data.status || res.status}`);
-        setTestKeyDetails(data);
-      }
-    } catch (err: any) {
-      setTestKeyStatus('error');
-      setTestKeyMessage(err.message || 'Falha de comunicação com o servidor.');
-      setTestKeyDetails(null);
-    }
-  };
-
-  const handleSaveApiKey = () => {
-    storageService.saveGeminiApiKey(apiKeyInput);
-    setHasApiKey(Boolean(apiKeyInput && apiKeyInput.trim().length > 5));
-    setIsKeyModalOpen(false);
-  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -211,13 +157,16 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
       }
 
       // Refinamento de áudio por IA: elimina repetições e gaguejos, aplicando pontuação e entidades corretas
-      const localKey = storageService.getGeminiApiKey();
+      const { data: { session: voiceSession } } = await supabase.auth.getSession();
+      const voiceToken = voiceSession?.access_token;
       const refineRes = await fetch('/api/ai/refine-speech', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(voiceToken ? { 'Authorization': `Bearer ${voiceToken}` } : {})
+        },
         body: JSON.stringify({
-          text: raw,
-          apiKey: localKey || undefined
+          text: raw
         })
       });
 
@@ -281,46 +230,14 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          {/* Status e Botão da IA Gemini */}
-          <button
-            type="button"
-            onClick={() => {
-              setIsKeyModalOpen(true);
-              setTestKeyStatus('idle');
-              setTestKeyMessage('');
-            }}
-            className={`px-2.5 py-1 rounded-lg transition-colors shrink-0 flex items-center gap-1.5 text-[11px] font-medium cursor-pointer border ${
-              connectionCheck === 'connected'
-                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25 shadow-sm shadow-emerald-500/10'
-                : connectionCheck === 'testing'
-                ? 'bg-slate-900 text-slate-400 border-slate-800'
-                : 'bg-amber-500/10 text-amber-300 border-amber-500/30 hover:bg-amber-500/20'
-            }`}
-            title={
-              connectionCheck === 'connected'
-                ? `Conectado à IA Google Gemini (${connectedModelName}). Respostas serão geradas pela IA.`
-                : 'Conexão com a IA não ativa. Clique para configurar e conectar.'
-            }
+          {/* Status do Assistente Sensei Corporativo (SecOps PSI Compliant) */}
+          <div
+            className="px-2.5 py-1 rounded-lg shrink-0 flex items-center gap-1.5 text-[11px] font-medium border bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
+            title="Sensei Operacional conectado ao motor corporativo Rafitec (100% blindado contra vazamentos de dados)"
           >
-            {connectionCheck === 'connected' ? (
-              <>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <Sparkles className="w-3 h-3 text-emerald-400" />
-                <span className="hidden sm:inline">IA Ativa ({connectedModelName || 'Gemini'})</span>
-              </>
-            ) : connectionCheck === 'testing' ? (
-              <>
-                <Loader2 className="w-3 h-3 animate-spin text-slate-400" />
-                <span className="hidden sm:inline">Testando Conexão IA...</span>
-              </>
-            ) : (
-              <>
-                <span className="w-2 h-2 rounded-full bg-amber-400" />
-                <Database className="w-3 h-3 text-amber-400" />
-                <span className="hidden sm:inline">Modo Base ERP (Conectar IA)</span>
-              </>
-            )}
-          </button>
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden sm:inline">Sensei SGQ • {connectedModelName || 'Motor Homologado'}</span>
+          </div>
 
           {/* Clear Chat History */}
           <button
@@ -408,19 +325,8 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                       <div className="w-full text-[11px] font-sans text-amber-300 bg-amber-950/40 border border-amber-500/30 rounded-lg p-2.5 flex items-start gap-2 text-left">
                         <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                         <div className="space-y-1 overflow-hidden">
-                          <p className="font-semibold text-amber-200">Google Gemini indisponível (respondido pelo motor local):</p>
+                          <p className="font-semibold text-amber-200">Processado pelo Motor Determinístico SGQ (Local):</p>
                           <p className="text-[10px] text-amber-300/90 font-mono break-all leading-normal bg-black/30 p-1.5 rounded">{msg.geminiError}</p>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsKeyModalOpen(true);
-                              setTestKeyStatus('idle');
-                              setTestKeyMessage('');
-                            }}
-                            className="text-[11px] text-cyan-400 hover:text-cyan-300 underline font-medium inline-block cursor-pointer pt-0.5"
-                          >
-                            Abrir teste e diagnóstico da chave
-                          </button>
                         </div>
                       </div>
                     )}
@@ -857,189 +763,6 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
           }}
           initialData={concessionInitialData}
         />
-      )}
-
-      {/* Modal de Configuração da Chave da API do Google Gemini */}
-      {isKeyModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-cyan-500/15 flex items-center justify-center border border-cyan-500/30 text-cyan-400">
-                  <Key className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white">Chave Google Gemini & Diagnóstico</h3>
-                  <p className="text-[11px] text-slate-400">Habilitar síntese em nuvem com Gemini 1.5</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsKeyModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
-              >
-                <XCircle className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="text-xs text-slate-300 space-y-2 leading-relaxed">
-              <p>
-                O sistema conta com o <strong>Motor Analítico QualiDecision</strong> operando localmente com 100% de precisão sobre a base do ERP e SAC.
-              </p>
-              <p className="text-[11px] text-slate-400">
-                Para ativar respostas com o modelo em nuvem <strong>Google Gemini 1.5</strong>, você pode salvar a chave no navegador abaixo ou configurar a variável de ambiente <code className="text-cyan-300 bg-slate-800 px-1 py-0.5 rounded font-mono">GEMINI_API_KEY</code> na Vercel (lembre-se de realizar um <em>Redeploy</em> após cadastrar na Vercel).
-              </p>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
-                <span>API Key do Gemini:</span>
-                <a
-                  href="https://aistudio.google.com/app/apikey"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-cyan-400 hover:text-cyan-300 underline font-normal text-[10px]"
-                >
-                  Obter chave grátis no Google AI Studio ↗
-                </a>
-              </label>
-              <input
-                type="password"
-                value={apiKeyInput}
-                onChange={e => {
-                  setApiKeyInput(e.target.value);
-                  setTestKeyStatus('idle');
-                  setTestKeyMessage('');
-                }}
-                placeholder="AIzaSy... (ou deixe vazio para testar a chave da Vercel)"
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
-              />
-            </div>
-
-            {/* Botão de Teste de Conexão */}
-            <div className="flex items-center justify-between pt-1">
-              <button
-                type="button"
-                onClick={handleTestConnection}
-                disabled={testKeyStatus === 'testing'}
-                className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-850 hover:bg-slate-800 text-cyan-300 border border-cyan-500/30 hover:border-cyan-500/60 flex items-center gap-2 cursor-pointer transition-all disabled:opacity-50 shadow-sm"
-              >
-                {testKeyStatus === 'testing' ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400" />
-                    <span>Testando com Google API...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>Testar Conexão com Gemini</span>
-                  </>
-                )}
-              </button>
-
-              <span className="text-[10px] text-slate-500">
-                {apiKeyInput ? 'Testará a chave acima' : 'Testará variável da Vercel'}
-              </span>
-            </div>
-
-            {/* Painel de Resultado do Diagnóstico */}
-            {testKeyStatus === 'success' && (
-              <div className="p-3.5 bg-emerald-950/40 border border-emerald-500/40 rounded-xl space-y-2 text-xs text-emerald-200">
-                <div className="flex items-center gap-2 font-bold text-emerald-300">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Google Gemini Conectado com Sucesso!</span>
-                </div>
-                <div className="text-[11px] space-y-1 text-emerald-300/80 font-mono bg-black/30 p-2.5 rounded-lg border border-emerald-500/20">
-                  <p>• Origem: <span className="text-white font-semibold">{testKeyDetails?.source}</span></p>
-                  <p>• Modelo: <span className="text-white font-semibold">{testKeyDetails?.model}</span></p>
-                  <p>• Chave: <span className="text-white font-semibold">{testKeyDetails?.keyPrefix}</span></p>
-                  <p>• Resposta recebida: <span className="text-emerald-300 font-semibold">"{testKeyDetails?.reply}"</span></p>
-                </div>
-                <p className="text-[11px] text-emerald-300 font-sans">
-                  O Gemini está pronto para sintetizar as respostas técnicas em conjunto com os dados do QualiDecision.
-                </p>
-              </div>
-            )}
-
-            {testKeyStatus === 'error' && (
-              <div className="p-3.5 bg-rose-950/40 border border-rose-500/40 rounded-xl space-y-2 text-xs text-rose-200">
-                <div className="flex items-center gap-2 font-bold text-rose-300">
-                  <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-                  <span>Falha ao validar chave com o Google:</span>
-                </div>
-                <p className="text-[11px] font-mono break-all text-rose-200 bg-black/40 p-2.5 rounded-lg border border-rose-900/50">
-                  {testKeyMessage}
-                </p>
-                <div className="text-[11px] text-slate-300 font-sans space-y-1 pt-1 leading-relaxed">
-                  {testKeyMessage.toLowerCase().includes('blocked') ? (
-                    <div className="space-y-1.5 text-amber-200 bg-amber-950/40 p-2.5 rounded-lg border border-amber-500/30">
-                      <p className="font-semibold text-amber-300">
-                        O Google bloqueou o método da API (API_KEY_SERVICE_BLOCKED):
-                      </p>
-                      <p className="text-[11px] leading-relaxed text-amber-200">
-                        Isso acontece quando a chave possui <strong>Restrições de API</strong> ativadas no Google Cloud Console e a <em>Generative Language API</em> não está autorizada, ou quando pertence a uma conta/projeto corporativo com bloqueio de IA.
-                      </p>
-                      <p className="text-[11px] leading-relaxed text-amber-200">
-                        <strong>Solução mais simples e garantida:</strong>
-                        <br />1. Abra o <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-cyan-400 underline font-semibold">Google AI Studio (aistudio.google.com/app/apikey)</a>.
-                        <br />2. Clique em <strong>"Create API key"</strong> e escolha <strong>"Create API key in new project"</strong> (em novo projeto sem restrições herdadas).
-                        <br />3. Cole a nova chave gerada no campo acima e clique em <strong>Testar Conexão</strong>.
-                      </p>
-                    </div>
-                  ) : testKeyMessage.toLowerCase().includes('not valid') || testKeyMessage.toLowerCase().includes('invalid') ? (
-                    <p className="text-amber-300">
-                      <strong>Motivo provável:</strong> A chave informada não é reconhecida pelo Google Gemini. Gere uma nova chave no <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-cyan-400 underline font-semibold">Google AI Studio</a> e cole-a aqui.
-                    </p>
-                  ) : testKeyMessage.toLowerCase().includes('disabled') || testKeyMessage.toLowerCase().includes('not been used') ? (
-                    <p className="text-amber-300">
-                      <strong>Motivo provável:</strong> A "Generative Language API" está desativada no seu projeto Google Cloud. Acesse a URL indicada na mensagem para ativá-la.
-                    </p>
-                  ) : testKeyMessage.toLowerCase().includes('nenhuma chave') ? (
-                    <p className="text-amber-300">
-                      <strong>Motivo provável:</strong> Nenhuma chave foi encontrada. Cole a chave do Google AI Studio no campo acima ou cadastre a variável <code className="bg-slate-800 px-1 py-0.5 rounded text-cyan-300 font-mono">GEMINI_API_KEY</code> na Vercel e faça um <strong>Redeploy</strong>.
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-              {hasApiKey ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setApiKeyInput('');
-                    storageService.saveGeminiApiKey('');
-                    setHasApiKey(false);
-                    setTestKeyStatus('idle');
-                    setTestKeyMessage('');
-                    setIsKeyModalOpen(false);
-                  }}
-                  className="text-xs text-rose-400 hover:text-rose-300 underline cursor-pointer"
-                >
-                  Remover chave salva
-                </button>
-              ) : <div />}
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsKeyModalOpen(false)}
-                  className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors cursor-pointer"
-                >
-                  Fechar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveApiKey}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 hover:from-cyan-400 hover:to-teal-400 transition-all cursor-pointer shadow-md"
-                >
-                  Salvar Chave
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

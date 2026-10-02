@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { supabaseServer } from '@/lib/supabaseServer';
 
 export const dynamic = 'force-dynamic';
 
@@ -119,10 +120,35 @@ function cleanSpeechLocally(raw: string): string {
 
 /**
  * Endpoint de refinamento de voz 100% local.
- * Desconectado de IAs externas não homologadas (Gemini suspenso conforme PSI).
+ * Em conformidade com a PSI: Exige autenticação corporativa JWT e opera motor local seguro.
  */
 export async function POST(req: NextRequest) {
   try {
+    // 1. Verificação de Autenticação Corporativa (JWT)
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: 'Acesso corporativo não autorizado. Token ausente.' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Formato de autenticação inválido.' },
+        { status: 401 }
+      );
+    }
+
+    const { data: { user }, error: authErr } = await supabaseServer.auth.getUser(token);
+    if (authErr || !user) {
+      return NextResponse.json(
+        { error: 'Sessão corporativa inválida ou expirada. Faça login novamente.' },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json().catch(() => ({}));
     const rawText = (body.text || '').trim();
 
@@ -130,7 +156,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ refinedText: '' });
     }
 
-    const localCleaned = cleanSpeechLocally(rawText);
+    const localCleaned = cleanSpeechLocally(rawText.slice(0, 1000));
     return NextResponse.json({ refinedText: localCleaned, source: 'local_cleaner' });
   } catch (err: any) {
     console.error('Erro na rota refine-speech:', err);

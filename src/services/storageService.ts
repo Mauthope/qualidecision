@@ -227,7 +227,6 @@ export const storageService = {
   },
 
   getGeminiApiKey(): string {
-    if (!isBrowser) return '';
     return '';
   },
 
@@ -235,14 +234,14 @@ export const storageService = {
     // Desativado conforme diretriz de SecOps: nenhuma chave de IA é salva no navegador
   },
 
+  /**
+   * Expurgo total de dados em conformidade com o Pilar 8 da PSI do Grupo Vaccaro:
+   * Limpa 100% de localStorage e sessionStorage no encerramento de sessão.
+   */
   clearAll(): void {
     if (!isBrowser) return;
     try {
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('qualitrack_') || key.startsWith('perfilcliente_')) {
-          localStorage.removeItem(key);
-        }
-      });
+      localStorage.clear();
       sessionStorage.clear();
     } catch (e) {
       console.warn('Erro ao limpar cache local no logout:', e);

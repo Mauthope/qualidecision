@@ -8,6 +8,7 @@ import { qualityService } from '@/services/qualityService';
 import { aiAssistantService } from '@/services/aiAssistantService';
 import { DEFAULT_CUSTOMERS, DEFAULT_DEFECTS, DEFAULT_COMPLAINTS, DEFAULT_CONCESSIONS } from '@/data/defaultQualityData';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 interface ToastState {
   id: string;
@@ -1013,8 +1014,6 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsAiTyping(true);
 
     try {
-      const localGeminiKey = storageService.getGeminiApiKey();
-
       // Otimiza o payload mantendo metadados essenciais e referências leves de fotos (sem base64 para evitar HTTP 413)
       const lightComplaints = complaints.map(c => ({
         id: c.id,
@@ -1063,17 +1062,23 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }))
       }));
 
+      // Obtém o token JWT da sessão ativa para autenticação corporativa segura
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           prompt,
           history: newHistory.slice(-6),
           customers,
           defects,
           complaints: lightComplaints,
-          concessions: lightConcessions,
-          apiKey: localGeminiKey || undefined
+          concessions: lightConcessions
         })
       });
 
