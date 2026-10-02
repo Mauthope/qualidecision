@@ -41,8 +41,8 @@ interface Props {
 const QUICK_PROMPTS = [
   'Resumo do que foi enviado este ano',
   'Resumo das reclamações de clientes',
-  'Posso enviar 10.000 sacos com vinco para a Copacol?',
-  'Qual o perfil de tolerância da Alisul?',
+  'Posso enviar lote com desvio de refilamento?',
+  'Como consultar o perfil de tolerância do cliente?',
   'Quanto de scrap/refugo foi evitado no total?',
   'Quais clientes aceitam falha de solda?'
 ];

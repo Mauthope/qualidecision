@@ -184,7 +184,7 @@ export const QualityProvider: React.FC<{ children: React.ReactNode }> = ({ child
       {
         id: 'msg-welcome',
         sender: 'assistant',
-        text: 'Olá! Sou a **IA de Qualidade & Perfil de Clientes**.\n\nPergunte-me sobre reclamações de clientes (ex: *"Quais foram as reclamações do cliente Alisul?"*) ou simule um envio de lote com defeito (*"Posso mandar 5.000 sacos com vinco para a Alisul?"*).',
+        text: 'Olá! Sou a **IA de Qualidade & Perfil de Clientes**.\n\nPergunte-me sobre o histórico de ocorrências (ex: *"Quais os defeitos mais reclamados no SAC?"*) ou simule um envio de lote com desvio (*"Posso liberar lote com vinco para um cliente intolerante?"*).',
         timestamp: 'Agora'
       }
     ];
