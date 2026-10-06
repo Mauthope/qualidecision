@@ -84,6 +84,8 @@ export interface ConcessionShipment {
   photos?: ComplaintPhoto[];
 }
 
+export type Concession = ConcessionShipment;
+
 export interface QualityStats {
   totalConcessionsCount: number;
   totalUnitsSaved: number;

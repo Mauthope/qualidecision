@@ -63,24 +63,25 @@ export default function ClientesPage() {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/25 text-purple-300 text-xs font-semibold mb-1.5">
             <Users className="w-3.5 h-3.5" />
-            <span>Catálogo & Radar de Tolerância de Clientes</span>
+            <span>Tolerância de Clientes</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white font-heading">
-            Perfil de Tolerância a Defeitos & Histórico
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white font-heading tracking-tight">
+            Tolerância e Perfil de Clientes
           </h1>
           <p className="text-xs sm:text-sm text-slate-400">
-            Consulte as exigências de cada cliente antes de expedir lotes com concessões e não-conformidades.
+            Consulte o nível de rigor técnico de cada cliente antes de autorizar lotes com concessão.
           </p>
         </div>
 
         {canEdit && (
           <div className="flex items-center gap-3">
             <button
+              type="button"
               onClick={() => setIsNewCustomerModalOpen(true)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-cyan-500 text-slate-950 hover:bg-cyan-400 shadow-lg shadow-cyan-500/20 transition-all cursor-pointer"
             >
-              <Plus className="w-4 h-4" />
-              <span>Novo Cliente</span>
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span>Cadastrar Cliente</span>
             </button>
           </div>
         )}
@@ -125,8 +126,32 @@ export default function ClientesPage() {
       </div>
 
       {/* Customer Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-        {filteredCustomers.map(customer => {
+      {filteredCustomers.length === 0 ? (
+        <div className="glow-card p-12 text-center text-xs space-y-3 rounded-2xl bg-slate-950/80 border border-slate-800 flex flex-col items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400">
+            <Users className="w-6 h-6 text-purple-400" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-bold text-slate-200 font-heading">Nenhum cliente encontrado para os filtros selecionados.</p>
+            <p className="text-xs text-slate-400">Tente redefinir o termo de pesquisa ou alterar o segmento e nível de tolerância.</p>
+          </div>
+          {(search || filterSegment !== 'all' || filterTolerance !== 'all') && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch('');
+                setFilterSegment('all');
+                setFilterTolerance('all');
+              }}
+              className="mt-1 px-3.5 py-1.5 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-semibold hover:bg-cyan-500/25 transition-all cursor-pointer"
+            >
+              Limpar Filtros
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {filteredCustomers.map(customer => {
           const clientComplaints = complaints.filter(c => c.customerId === customer.id);
           const clientConcessions = concessions.filter(c => c.customerId === customer.id);
 
@@ -235,10 +260,11 @@ export default function ClientesPage() {
                       </button>
 
                       <button
+                        type="button"
                         onClick={() => setActiveCustomerForConcession(customer.id)}
                         className="px-2.5 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-semibold transition-colors cursor-pointer"
                       >
-                        + Envio
+                        + Concessão
                       </button>
                     </>
                   )}
@@ -256,6 +282,7 @@ export default function ClientesPage() {
           );
         })}
       </div>
+      )}
 
       {/* Edit Customer Modal */}
       {customerToEdit && (

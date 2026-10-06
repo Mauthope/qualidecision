@@ -72,7 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: <Users className="w-5 h-5 shrink-0" />
     },
     {
-      label: 'Envios / Concessões',
+      label: 'Gestão de Concessões',
       href: '/envios',
       icon: <Send className="w-5 h-5 shrink-0" />
     },
@@ -88,7 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: <Calculator className="w-5 h-5 shrink-0" />
     },
     {
-      label: 'Sensei (Chão de Fábrica)',
+      label: 'Terminal Sensei',
       href: '/chao-de-fabrica',
       icon: <Factory className="w-5 h-5 shrink-0" />
     }
@@ -293,7 +293,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               )}
               {!collapsed && (
                 <span className="truncate flex items-center justify-between w-full">
-                  <span>Novo Envio</span>
+                  <span>Nova Concessão</span>
                   {isViewer && (
                     <span className="text-[10px] font-mono text-slate-500 font-normal px-1 rounded bg-slate-900 border border-slate-700/50">
                       Leitura

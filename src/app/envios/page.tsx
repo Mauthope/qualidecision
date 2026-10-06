@@ -89,20 +89,21 @@ export default function EnviosPage() {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-cyan-300 text-xs font-semibold mb-1.5">
             <Send className="w-3.5 h-3.5" />
-            <span>Gestão de Envios & Concessões de Qualidade</span>
+            <span>Gestão de Concessões</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white font-heading">
-            Lotes Expedidos com Desvio / Refugo Evitado
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white font-heading tracking-tight">
+            Concessões e Envios com Desvio
           </h1>
           <p className="text-xs sm:text-sm text-slate-400">
-            Registro de concessões aprovadas para recuperação financeira de materiais e acompanhamento de aceitação.
+            Histórico de concessões técnicas aprovadas para recuperação financeira de materiais e acompanhamento de entrega.
           </p>
         </div>
 
         <div className="flex items-center gap-2 self-start md:self-auto">
           <button
+            type="button"
             onClick={exportCsv}
-            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-slate-900 border border-slate-700 text-slate-200 hover:bg-slate-800 transition-all"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-slate-900 border border-slate-700 text-slate-200 hover:bg-slate-800 transition-all cursor-pointer"
           >
             <Download className="w-4 h-4 text-cyan-400" />
             <span>Exportar CSV</span>
@@ -110,11 +111,12 @@ export default function EnviosPage() {
 
           {canEdit && (
             <button
+              type="button"
               onClick={() => setIsNewConcessionOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 hover:from-cyan-400 hover:to-teal-400 shadow-lg shadow-cyan-500/20 transition-all active:scale-95"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-cyan-500 text-slate-950 hover:bg-cyan-400 shadow-lg shadow-cyan-500/20 transition-all cursor-pointer"
             >
               <PlusCircle className="w-4 h-4" />
-              <span>Novo Envio com Desvio</span>
+              <span>Cadastrar Concessão</span>
             </button>
           )}
         </div>
@@ -124,7 +126,7 @@ export default function EnviosPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="glow-card p-4 rounded-2xl bg-cyan-950/20 border border-cyan-500/30 flex items-center justify-between">
           <div>
-            <div className="text-xs font-semibold text-slate-400">Total de Unidades Concedidas</div>
+            <div className="text-xs uppercase tracking-wider font-semibold text-slate-400 font-heading">Volume Concedido</div>
             <div className="flex items-baseline gap-2 flex-wrap mt-0.5">
               <span className="text-xl font-bold font-mono text-cyan-300">
                 {stats.totalUnitsSaved.toLocaleString('pt-BR')} <span className="text-xs font-normal text-slate-400 font-sans">un</span>
@@ -144,7 +146,7 @@ export default function EnviosPage() {
 
         <div className="glow-card p-4 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 flex items-center justify-between">
           <div>
-            <div className="text-xs font-semibold text-slate-400">Scrap Evitado (Lucro Salvo)</div>
+            <div className="text-xs uppercase tracking-wider font-semibold text-slate-400 font-heading">Scrap Evitado</div>
             <div className="text-xl font-bold font-mono text-emerald-400 mt-0.5">
               R$ {stats.totalSavedAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
@@ -156,9 +158,9 @@ export default function EnviosPage() {
 
         <div className="glow-card p-4 rounded-2xl bg-teal-950/20 border border-teal-500/30 flex items-center justify-between">
           <div>
-            <div className="text-xs font-semibold text-slate-400">Taxa de Sucesso / Aceite</div>
+            <div className="text-xs uppercase tracking-wider font-semibold text-slate-400 font-heading">Taxa de Aceite</div>
             <div className="text-xl font-bold font-mono text-teal-300 mt-0.5">
-              {stats.acceptanceRate.toFixed(1)}% aprovados
+              {stats.acceptanceRate.toFixed(1)}% sem queixa
             </div>
           </div>
           <div className="p-3 rounded-xl bg-teal-500/10 text-teal-400">
@@ -225,22 +227,24 @@ export default function EnviosPage() {
             </div>
             {concessions.length === 0 ? (
               <button
+                type="button"
                 onClick={() => setIsNewConcessionOpen(true)}
-                className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 hover:from-cyan-400 hover:to-teal-400 shadow-md shadow-cyan-500/20 transition-all cursor-pointer"
+                className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-cyan-500 text-slate-950 hover:bg-cyan-400 shadow-md shadow-cyan-500/20 transition-all cursor-pointer"
               >
                 <PlusCircle className="w-4 h-4" />
-                <span>Registrar Primeiro Envio</span>
+                <span>Cadastrar Primeira Concessão</span>
               </button>
             ) : (
               <button
+                type="button"
                 onClick={() => {
                   setSearch('');
                   setFilterCustomer('all');
                   setFilterDefect('all');
                 }}
-                className="mt-2 text-xs text-cyan-400 hover:underline cursor-pointer"
+                className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-semibold hover:bg-cyan-500/25 transition-all cursor-pointer"
               >
-                Limpar filtros de busca
+                Limpar Filtros
               </button>
             )}
           </div>

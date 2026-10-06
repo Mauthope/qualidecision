@@ -192,11 +192,12 @@ export default function ReclamacoesPage() {
 
           {canEdit && (
             <button
+              type="button"
               onClick={() => setIsNewComplaintModalOpen(true)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-rose-500 text-white hover:bg-rose-400 shadow-lg shadow-rose-500/25 transition-all cursor-pointer"
             >
-              <Plus className="w-4 h-4" />
-              <span>Acrescentar Reclamação</span>
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span>Registrar SAC</span>
             </button>
           )}
         </div>
@@ -523,9 +524,28 @@ export default function ReclamacoesPage() {
       {/* Complaints List */}
       <div className="space-y-4">
         {filteredComplaints.length === 0 ? (
-          <div className="glow-card p-10 text-center text-xs text-slate-500 space-y-2 rounded-2xl">
-            <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto opacity-60" />
-            <p className="text-sm font-semibold text-slate-300">Nenhuma reclamação encontrada com os filtros atuais.</p>
+          <div className="glow-card p-12 text-center text-xs space-y-3 rounded-2xl bg-slate-950/80 border border-slate-800 flex flex-col items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400">
+              <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-bold text-slate-200 font-heading">Nenhuma reclamação encontrada para os filtros selecionados.</p>
+              <p className="text-xs text-slate-400">Tente redefinir o ano, selecionar outro cliente ou limpar o termo de busca.</p>
+            </div>
+            {(search || filterCustomer !== 'all' || filterSeverity !== 'all' || filterYear !== 'all') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch('');
+                  setFilterCustomer('all');
+                  setFilterSeverity('all');
+                  setFilterYear('all');
+                }}
+                className="mt-1 px-3.5 py-1.5 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-semibold hover:bg-cyan-500/25 transition-all cursor-pointer"
+              >
+                Limpar Filtros
+              </button>
+            )}
           </div>
         ) : (
           filteredComplaints.map(item => (
