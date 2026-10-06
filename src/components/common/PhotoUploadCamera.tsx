@@ -6,7 +6,7 @@ import { ComplaintPhoto } from '@/types';
 import { CameraCaptureModal } from './CameraCaptureModal';
 import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
 import { processImageFile } from '@/lib/imageUtils';
-import { photoStorageService } from '@/services/photoStorageService';
+import { photoStorageService, sanitizePhotoUrl } from '@/services/photoStorageService';
 
 interface Props {
   photos: ComplaintPhoto[];
@@ -212,7 +212,7 @@ export const PhotoUploadCamera: React.FC<Props> = ({
               {/* Photo Image displayed with object-contain to PRESERVE 100% of the framing */}
               <div className="relative flex-1 w-full h-full flex items-center justify-center bg-black/80 p-1">
                 <img
-                  src={p.url}
+                  src={sanitizePhotoUrl(p.url)}
                   alt={p.caption}
                   className="w-full h-full object-contain"
                 />

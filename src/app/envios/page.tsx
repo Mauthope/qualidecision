@@ -26,6 +26,7 @@ import { EditConcessionModal } from '@/components/envios/EditConcessionModal';
 import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
 import { ComplaintPhoto, ConcessionShipment } from '@/types';
 import { useAuth } from '@/context/AuthContext';
+import { sanitizePhotoUrl } from '@/services/photoStorageService';
 
 export default function EnviosPage() {
   const { concessions, complaints, customers, defects, stats, settings, showToast, deleteConcession } = useQuality();
@@ -334,7 +335,7 @@ export default function EnviosPage() {
                               }}
                               className="relative group w-10 h-10 rounded-lg overflow-hidden border border-slate-700 hover:border-cyan-400 shrink-0 transition-all cursor-pointer bg-black"
                             >
-                              <img src={p.url} alt={p.caption} className="w-full h-full object-cover" />
+                              <img src={sanitizePhotoUrl(p.url)} alt={p.caption} className="w-full h-full object-cover" />
                               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                                 <Eye className="w-3.5 h-3.5 text-cyan-300" />
                               </div>

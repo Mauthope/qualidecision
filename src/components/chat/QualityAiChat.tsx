@@ -29,6 +29,7 @@ import {
   Package
 } from 'lucide-react';
 import { storageService } from '@/services/storageService';
+import { sanitizePhotoUrl } from '@/services/photoStorageService';
 import { useVoiceRecording } from '@/hooks/useVoiceRecording';
 import { VoiceMessageBubble } from './VoiceMessageBubble';
 import { VoiceRecordingBar } from './VoiceRecordingBar';
@@ -431,7 +432,7 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                                     className="relative group cursor-pointer w-32 sm:w-40 h-24 sm:h-28 rounded-xl overflow-hidden border border-slate-700 bg-black hover:border-cyan-400 transition-all shadow-md"
                                   >
                                     <img
-                                      src={photo.url}
+                                      src={sanitizePhotoUrl(photo.url)}
                                       alt={photo.caption}
                                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
                                     />
@@ -522,7 +523,7 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                                     className="relative group cursor-pointer w-32 sm:w-40 h-24 sm:h-28 rounded-xl overflow-hidden border border-amber-500/40 bg-black hover:border-amber-400 transition-all shadow-md"
                                   >
                                     <img
-                                      src={photo.url}
+                                      src={sanitizePhotoUrl(photo.url)}
                                       alt={photo.caption || 'Foto de referência'}
                                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
                                     />
@@ -601,7 +602,7 @@ export const QualityAiChat: React.FC<Props> = ({ isDrawer = false }) => {
                                     className="relative group cursor-pointer w-20 h-16 rounded-lg overflow-hidden border border-slate-700 hover:border-cyan-400 transition-all shadow-md bg-black"
                                   >
                                     <img
-                                      src={photo.url}
+                                      src={sanitizePhotoUrl(photo.url)}
                                       alt={photo.caption || 'Foto da concessão'}
                                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
                                     />

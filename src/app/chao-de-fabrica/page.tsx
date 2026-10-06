@@ -10,6 +10,7 @@ import { AiChatMessage, ComplaintPhoto } from '@/types';
 import { PhotoViewerModal } from '@/components/reclamacoes/PhotoViewerModal';
 import { PwaInstallButton } from '@/components/pwa/PwaInstallButton';
 import { RichChatMessage } from '@/components/chat/RichChatMessage';
+import { sanitizePhotoUrl } from '@/services/photoStorageService';
 import {
   Factory,
   ShieldCheck,
@@ -602,7 +603,7 @@ export default function ChaoDeFabricaPage() {
                                       className="relative group cursor-pointer w-28 sm:w-32 h-20 sm:h-24 rounded-xl overflow-hidden border border-slate-700 hover:border-cyan-400 transition-all shadow-md bg-black"
                                     >
                                       <img
-                                        src={photo.url}
+                                        src={sanitizePhotoUrl(photo.url)}
                                         alt={photo.caption || 'Foto da não conformidade'}
                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
                                       />
@@ -689,7 +690,7 @@ export default function ChaoDeFabricaPage() {
                                       className="relative group cursor-pointer w-28 sm:w-32 h-20 sm:h-24 rounded-xl overflow-hidden border border-amber-500/40 hover:border-amber-400 transition-all shadow-md bg-black"
                                     >
                                       <img
-                                        src={photo.url}
+                                        src={sanitizePhotoUrl(photo.url)}
                                         alt={photo.caption || 'Foto de referência'}
                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
                                       />
@@ -776,7 +777,7 @@ export default function ChaoDeFabricaPage() {
                                       className="relative group cursor-pointer w-28 sm:w-32 h-20 sm:h-24 rounded-xl overflow-hidden border border-slate-700 hover:border-cyan-400 transition-all shadow-md bg-black"
                                     >
                                       <img
-                                        src={photo.url}
+                                        src={sanitizePhotoUrl(photo.url)}
                                         alt={photo.caption || 'Foto da concessão'}
                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
                                       />

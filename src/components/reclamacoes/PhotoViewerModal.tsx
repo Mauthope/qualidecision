@@ -3,6 +3,7 @@
 import React from 'react';
 import { ComplaintPhoto } from '@/types';
 import { X, ZoomIn, MapPin, Image as ImageIcon } from 'lucide-react';
+import { sanitizePhotoUrl } from '@/services/photoStorageService';
 
 interface Props {
   photo: ComplaintPhoto | null;
@@ -39,7 +40,7 @@ export const PhotoViewerModal: React.FC<Props> = ({ photo, onClose, title }) => 
         {/* Image Area */}
         <div className="relative flex-1 bg-slate-950 flex items-center justify-center p-4 min-h-[350px] max-h-[65vh] overflow-hidden">
           <img
-            src={photo.url}
+            src={sanitizePhotoUrl(photo.url)}
             alt={photo.caption}
             className="max-h-[60vh] w-auto max-w-full object-contain rounded-xl shadow-lg border border-slate-800"
           />

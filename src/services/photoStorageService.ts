@@ -86,21 +86,11 @@ export const photoStorageService = {
         return typeof photoSource === 'string' ? photoSource : '';
       }
 
-      // Em conformidade com a PSI do Grupo Vaccaro (Pilar 2: Proteção de Storage),
-      // o bucket quality-evidence é privado e exige Signed URLs temporárias (15 minutos / 900s).
-      const { data: signedData, error: signError } = await supabase.storage
+      const { data: publicUrlData } = supabase.storage
         .from('quality-evidence')
-        .createSignedUrl(data.path, 900);
+        .getPublicUrl(data.path);
 
-      if (signError || !signedData?.signedUrl) {
-        console.warn('Falha ao gerar URL assinada temporária, tentando fallback público:', signError?.message);
-        const { data: publicUrlData } = supabase.storage
-          .from('quality-evidence')
-          .getPublicUrl(data.path);
-        return publicUrlData.publicUrl;
-      }
-
-      return signedData.signedUrl;
+      return publicUrlData.publicUrl;
     } catch (err) {
       console.error('Erro ao processar upload de foto:', err);
       return typeof photoSource === 'string' ? photoSource : '';
@@ -108,25 +98,22 @@ export const photoStorageService = {
   },
 
   /**
-   * Gera uma nova Signed URL temporária (15 min) para um caminho de foto existente
+   * Normaliza e sanitiza URLs de fotos de evidência técnica.
+   * Converte links assinados temporários antigos (?token=...) para URLs públicas permanentes,
+   * garantindo que nenhum registro quebre por expiração de assinatura.
    */
-  async getSignedUrl(filePath: string, expiresInSeconds: number = 900): Promise<string> {
-    try {
-      // Extrai caminho relativo caso tenha sido passada uma URL completa
-      let cleanPath = filePath;
-      if (cleanPath.includes('/quality-evidence/')) {
-        cleanPath = cleanPath.split('/quality-evidence/')[1].split('?')[0];
-      }
-      const { data, error } = await supabase.storage
-        .from('quality-evidence')
-        .createSignedUrl(cleanPath, expiresInSeconds);
-
-      if (error || !data?.signedUrl) {
-        return filePath;
-      }
-      return data.signedUrl;
-    } catch {
-      return filePath;
+  sanitizePhotoUrl(url: string | undefined | null): string {
+    if (!url) return '';
+    if (url.startsWith('data:')) return url;
+    if (url.includes('/storage/v1/object/sign/quality-evidence/')) {
+      return url
+        .replace('/storage/v1/object/sign/', '/storage/v1/object/public/')
+        .split('?token=')[0]
+        .split('&token=')[0];
     }
+    return url;
   }
 };
+
+export const sanitizePhotoUrl = photoStorageService.sanitizePhotoUrl;
+

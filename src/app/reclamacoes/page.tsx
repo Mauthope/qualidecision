@@ -40,6 +40,7 @@ import { DefectManagementModal } from '@/components/reclamacoes/DefectManagement
 import { ComplaintPhoto, Complaint } from '@/types';
 import { HARMONIOUS_CHART_COLORS } from '@/lib/chartColors';
 import { useAuth } from '@/context/AuthContext';
+import { sanitizePhotoUrl } from '@/services/photoStorageService';
 
 export default function ReclamacoesPage() {
   const { complaints, customers, defects, showToast, deleteComplaint } = useQuality();
@@ -647,7 +648,7 @@ export default function ReclamacoesPage() {
                         className="relative group cursor-pointer w-32 h-24 rounded-xl overflow-hidden border border-slate-700 hover:border-cyan-400 transition-all bg-black shadow-md"
                       >
                         <img
-                          src={photo.url}
+                          src={sanitizePhotoUrl(photo.url)}
                           alt={photo.caption}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
                         />
